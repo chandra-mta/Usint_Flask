@@ -10,7 +10,7 @@ import os
 import numpy
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 
-from flask              import current_app, render_template
+from flask              import current_app, render_template, request
 from cus_app.ocatdatapage   import bp
 from cus_app.ocatdatapage.forms import OcatParamForm
 import cus_app.supple.read_ocat_data         as rod
@@ -23,8 +23,14 @@ def index(obsid=None):
     #--- Render Ocat Data In A WTForm
     #
     ocat_data = rod.read_ocat_data(obsid)
-    form     = OcatParamForm(ocat_data = ocat_data)
+    form     = OcatParamForm(data = ocat_data)
     if form.validate_on_submit():
+        print("entered valid on submit")
+        form_obsid = form.obsid.data
+        targname = form.targname.data
+        return f"{form_obsid} and {targname}"
+    if request.method == 'POST':
+        print("entered via POST check")
         form_obsid = form.obsid.data
         targname = form.targname.data
         return f"{form_obsid} and {targname}"

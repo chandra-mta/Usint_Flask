@@ -1,0 +1,25 @@
+<head>
+<title>Chandra Uplink Support INTerface</title>
+<meta name="Subject" content="By Thread"></meta>
+
+</head>
+<body bgcolor="#FFFFFF" text="#000000">
+<!--1/31/23 Major Link Rewrite of USINT Home Page to link directly to subdirectories-->
+<!--1/31/23 Minimize Jumping through web server as much as possible and priorities cxc.cfa.harvard.edu for user ease-->
+
+<form>
+  <p>
+       Ocat Data Page (4 or 5 digit ObsID):
+       <input type=text   name="obsid"    id="obsid" size=10>
+       <input type=submit name='ocat_page' value='Submit' formaction='javascript:OpenOcatPage()'>
+  </p>
+</form>
+</body>
+
+<script>
+  function OpenOcatPage(){
+      var  obsid = document.getElementById('obsid').value;
+      var  html  = "{{url_for('ocatdatapage.index')}}" + obsid;
+      window.open(html,'Ocatdatapage'+obsid);
+  }
+</script>

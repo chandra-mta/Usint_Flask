@@ -12,5 +12,6 @@ from wtforms.validators import ValidationError, DataRequired, Length
 
 class OcatParamForm(FlaskForm):
 
-    obsid = StringField('obsid')
-    targname = StringField('targname')
+    obsid = StringField('Obsid')
+    targname = StringField('Target Name')
+    submit = SubmitField('Submit')
