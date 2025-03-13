@@ -24,9 +24,10 @@ def index(obsid=None):
     #
     ocat_data = rod.read_ocat_data(obsid)
     form     = OcatParamForm(request.form, data = ocat_data)
-    if request.method == 'POST':
-        form_obsid = form.obsid.data
-        targname = form.targname.data
-        return f"{form_obsid} and {targname}"
-    return render_template('ocatdatapage/index.html', form=form)
+    if request.method == 'POST' and form.submit.submit:
+        line = ''
+        for key in form:
+            line += f"<p>{key.label} : {key.data}</p>"
+        return line
+    return render_template('ocatdatapage/index.html', form=form, ocat_data=ocat_data)
 

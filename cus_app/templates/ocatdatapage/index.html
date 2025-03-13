@@ -1,5 +1,6 @@
 {% extends 'base.html' %}
 {% import 'bootstrap/wtf.html' as wtf %}
+
 <!-- -->
 <!-- import html macros -->
 <!-- -->
@@ -10,11 +11,11 @@
 <h1>Just  simple display of information with a header</h1>
 <form method="POST">
     <p>
-        {{ form.obsid.label }}</br>
-        {{ form.obsid()}}</br>
-        {{ form.targname.label }}</br>
-        {{ form.targname() }}</br>
+        {{ Obsid }}</br>
+        {{ ocat_data.get('obsid')}}</br>
+        {% for key in form %}
+            {{ key.label }} : {{key()}} </br>
+        {% endfor %}
     </p>
-    <p>{{ form.submit() }}</p>
 </form>
 {% endblock %}
