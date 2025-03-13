@@ -1,18 +1,20 @@
-<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Ocat Data Page</title>
-</head>
-<body>
-    <h1>Just  simple display of information with a header</h1>
-    <form method="POST">
-        <p>
-            {{ form.obsid.label }}</br>
-            {{ form.obsid()}}</br>
-            {{ form.targname.label }}</br>
-            {{ form.targname() }}</br>
-        </p>
-        <p>{{ form.submit() }}</p>
-    </form>
-</body>
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+<!-- -->
+<!-- import html macros -->
+<!-- -->
+
+{% block title %}Ocat Data Page{% endblock %}
+{% block main_title %}Ocat Data Page{% endblock %}
+{% block app_content %}
+<h1>Just  simple display of information with a header</h1>
+<form method="POST">
+    <p>
+        {{ form.obsid.label }}</br>
+        {{ form.obsid()}}</br>
+        {{ form.targname.label }}</br>
+        {{ form.targname() }}</br>
+    </p>
+    <p>{{ form.submit() }}</p>
+</form>
+{% endblock %}

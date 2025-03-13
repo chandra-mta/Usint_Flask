@@ -7,11 +7,15 @@
 """
 
 from flask import Flask, render_template
+from flask_bootstrap import Bootstrap
 from config import _CONFIG_DICT
+
+bootstrap = Bootstrap()
 
 def create_app(_configuration_name):
     app = Flask(__name__)
     app.config.from_object(_CONFIG_DICT[_configuration_name])
+    bootstrap.init_app(app)
     #
     # --- connect all apps with blueprint
     #
