@@ -23,17 +23,10 @@ def index(obsid=None):
     #--- Render Ocat Data In A WTForm
     #
     ocat_data = rod.read_ocat_data(obsid)
-    form     = OcatParamForm(data = ocat_data)
-    if form.validate_on_submit():
-        print("entered valid on submit")
-        form_obsid = form.obsid.data
-        targname = form.targname.data
-        return f"{form_obsid} and {targname}"
+    form     = OcatParamForm(request.form, data = ocat_data)
     if request.method == 'POST':
-        print("entered via POST check")
         form_obsid = form.obsid.data
         targname = form.targname.data
         return f"{form_obsid} and {targname}"
-
     return render_template('ocatdatapage/index.html', form=form)
 

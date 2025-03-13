@@ -9,9 +9,9 @@
     <form method="POST">
         <p>
             {{ form.obsid.label }}</br>
-            {{ form.obsid.data }}</br>
+            {{ form.obsid()}}</br>
             {{ form.targname.label }}</br>
-            {{ form.targname.data }}</br>
+            {{ form.targname() }}</br>
         </p>
         <p>{{ form.submit() }}</p>
     </form>
