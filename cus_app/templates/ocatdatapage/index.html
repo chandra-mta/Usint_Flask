@@ -5,17 +5,57 @@
 <!-- import html macros -->
 <!-- -->
 
+<style>
+    td {
+        padding: 10px;
+    }
+    th {
+        padding: 10px;
+    }
+</style>
+
 {% block title %}Ocat Data Page{% endblock %}
 {% block main_title %}Ocat Data Page{% endblock %}
 {% block app_content %}
 <h1>Just  simple display of information with a header</h1>
 <form method="POST">
     <p>
-        {{ Obsid }}</br>
+        Obsid</br>
         {{ ocat_data.get('obsid')}}</br>
-        {% for key in form %}
+        <b>General Parameters</b></br>
+        {% for key in form.gen_param %}
             {{ key.label }} : {{key()}} </br>
         {% endfor %}
+        <b>Dither Parameters</b></br>
+        {% for key in form.dither_param %}
+            {{ key.label }} : {{key()}} </br>
+        {% endfor %}
+        <b>Time Parameters</b></br>
+        <table border = 0>
+        <thead>
+        <tr>
+        <th>{{ form.time_param.time_ordr.label }}</th>
+        <th>{{ form.time_param.window_constraint.label }}</th>
+        <th>{{ form.time_param.tstart.label }}</th>
+        <th>{{ form.time_param.tstop.label }}</th>
+        </tr>
+        </thead>
+        </br>
+        <tbody>
+        {% for k in range(form.time_param.time_ordr.data) %}
+            <tr>
+            <th>{{ k+1 }}</th>
+            <td>{{ form.time_param.window_constraint[k]() }}</td>
+            <td>{{form.time_param.tstart[k]()}}</td>
+            <td>{{form.time_param.tstop[k]()}}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+        </table>
+        {% for error in form.time_param.all_invalid_time %}
+                <span style="color: red;">{{ error }}</span></br>
+        {% endfor %}
+        {{ form.submit.submit() }}<br/>
     </p>
 </form>
 {% endblock %}
