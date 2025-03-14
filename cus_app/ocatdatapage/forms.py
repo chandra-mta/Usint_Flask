@@ -29,10 +29,17 @@ allow for Jinja Template page generation to input initial data into the Ocat For
 input selections for fields with the validate_<field name> functions. Changing these names will break the form validation unless matched with corresponding
 initial data dictionary keys and field names.
 """
-
+class DateTimeValidator: #: Currently Unused. Revisit.
+    def __init__(self,format=_USINT_DATETIME_FORMAT):
+        self.format = format
+    def __call__(self,form,field):
+        try:
+            datetime.strptime(field.data, self.format)
+        except (ValueError, TypeError):
+            raise ValidationError(f'Invalid datetime format in {field.label.text}. Use MMM-DD-YYY HH:MM')
 
 class GeneralParamForm(FlaskForm):
-    targname = StringField("Target Name")
+    targname = StringField("Target Name", validators=[DataRequired()])
 
     choice = ("ACIS-I", "ACIS-S", "HRC-I", "HRC-S")
     instrument = SelectField("Instrument :", choices=[(x, x) for x in choice])
@@ -66,29 +73,8 @@ class DitherParamForm(FlaskForm):
 class TimeParamForm(FlaskForm):
     time_ordr = IntegerField("Rank")
     window_constraint = FieldList(SelectField("Window Constraint",choices=_CHOICE_NNPC))
-    tstart = FieldList(DateTimeField("Start", format=_USINT_DATETIME_FORMAT, validators=[DataRequired()]))
-    tstop = FieldList(DateTimeField("Stop", format=_USINT_DATETIME_FORMAT, validators=[DataRequired()]))
-    
-    all_invalid_time = []
-    #: TODO Why are both validations triggering when only one datetime box is erroring?
-    #: Now always triggering when submitting... try approach with custom validator class instead to feed into the Datetime Field.
-    def validate_tstart(form,field_list):
-        for field in field_list:
-            try:
-                datetime.strptime(field.data, _USINT_DATETIME_FORMAT)
-            except (ValueError, TypeError):
-                error = ValidationError(f'Invalid datetime format in {field.label.text}. Use MMM-DD-YYY HH:MM')
-                form.all_invalid_time.append(error)
-                raise error
-            
-    def validate_tstop(form,field_list):
-        for field in field_list:
-            try:
-                datetime.strptime(field.data, _USINT_DATETIME_FORMAT)
-            except (ValueError, TypeError):
-                error = ValidationError(f'Invalid datetime format in {field.label.text}. Use MMM-DD-YYY HH:MM')
-                form.all_invalid_time.append(error)
-                raise error
+    tstart = FieldList(DateTimeField(format=_USINT_DATETIME_FORMAT), label = "Start")
+    tstop = FieldList(DateTimeField(format=_USINT_DATETIME_FORMAT), label = "Stop")
 
 class SubmitParamForm(FlaskForm):
     refresh = SubmitField("Refresh :")

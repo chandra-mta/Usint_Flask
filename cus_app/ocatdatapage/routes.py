@@ -10,6 +10,7 @@ import os
 import numpy
 from datetime import datetime
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from wtforms.validators import ValidationError
 
 from flask import current_app, render_template, request
 from cus_app.ocatdatapage import bp
@@ -18,6 +19,29 @@ import cus_app.supple.read_ocat_data as rod
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
 
+
+def verbose_validate_on_submit(form):
+    if form.is_submitted():
+        is_valid = True
+        for field in form:
+            print(f"Checking validators for {field.name}")
+            for validator in field.validators:
+                try:
+                    validator(form, field)
+                except ValidationError as e:
+                    is_valid = False
+                    print(f"Validation failed for {field.name} with {validator.__class__.__name__}: {str(e)}")
+            if field.type == "FormField":
+                for subfield in field:
+                    print(f"Checking validators for {subfield.name}:")
+                    for validator in subfield.validators:
+                        try:
+                            validator(form, subfield)
+                            print(f"  {validator.__class__.__name__}: Passed")
+                        except ValidationError as e:
+                            print(f"  {validator.__class__.__name__}: Failed - {str(e)}")
+        return is_valid
+    return False
 
 @bp.route("/", methods=["GET", "POST"])
 @bp.route("/<obsid>", methods=["GET", "POST"])
@@ -43,7 +67,11 @@ def index(obsid=None):
     }
     form = OcatParamForm(request.form, data=form_starting_values)
     #if form.validate_on_submit():
-    if request.method == 'POST' and form.submit.submit:
+    if request.method == "POST":
+        if verbose_validate_on_submit(form):
+            print("Form is valid")
+        else:
+            print("Form is not valid")
         line = ""
         for key in form:
             line += f"<p>{key.label} : {key.data}</p>"

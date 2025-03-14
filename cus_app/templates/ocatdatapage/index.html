@@ -19,6 +19,7 @@
 {% block app_content %}
 <h1>Just  simple display of information with a header</h1>
 <form method="POST">
+    {{ form.hidden_tag() }}
     <p>
         Obsid</br>
         {{ ocat_data.get('obsid')}}</br>
@@ -44,17 +45,28 @@
         <tbody>
         {% for k in range(form.time_param.time_ordr.data) %}
             <tr>
-            <th>{{ k+1 }}</th>
-            <td>{{ form.time_param.window_constraint[k]() }}</td>
-            <td>{{form.time_param.tstart[k]()}}</td>
-            <td>{{form.time_param.tstop[k]()}}</td>
+                <th>{{ k+1 }}</th>
+                <td>{{ form.time_param.window_constraint[k]() }}</td>
+                <td>{{form.time_param.tstart[k]()}}</td>
+                <td>{{form.time_param.tstop[k]()}}</td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>
+                    {% for error in form.time_param.tstart[k].errors %}
+                        <span style="color: red;">{{ error }}</span><br>
+                    {% endfor %}
+                </td>
+                <td>
+                    {% for error in form.time_param.tstop[k].errors %}
+                        <span style="color: red;">{{ error }}</span><br>
+                    {% endfor %}
+                </td>
             </tr>
         {% endfor %}
         </tbody>
         </table>
-        {% for error in form.time_param.all_invalid_time %}
-                <span style="color: red;">{{ error }}</span></br>
-        {% endfor %}
         {{ form.submit.submit() }}<br/>
     </p>
 </form>
