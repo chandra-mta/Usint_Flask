@@ -46,8 +46,10 @@ _FORM_BY_CATEGORY = {
     "time_param": ["time_ordr", "window_constraint"],
 }
 
-
-def verbose_validate_on_submit(form):
+def _verbose_validate_on_submit(form):
+    """
+    Provide Command Line printout on listed validators
+    """
     if form.is_submitted():
         is_valid = True
         for field in form:
@@ -88,12 +90,7 @@ def index(obsid=None):
         form = OcatParamForm(data=form_starting_values)
     else:
         form = OcatParamForm(request.form)
-    #if form.validate_on_submit():
     if request.method == "POST":
-        if verbose_validate_on_submit(form):
-            print("Form is valid")
-        else:
-            print("Form is not valid")
         line = ""
         for key in form:
             line += f"<p>{key.label} : {key.data}</p>"
