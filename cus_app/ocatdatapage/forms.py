@@ -7,9 +7,10 @@
 """
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, SubmitField, FormField, FieldList, IntegerField, DateTimeField
-from wtforms.validators import ValidationError, DataRequired, Length
+from wtforms import SelectField, StringField, SubmitField, FormField, FieldList, HiddenField
+from wtforms.validators import ValidationError, DataRequired
 from datetime import datetime
+from calendar import month_abbr
 
 
 #
@@ -21,6 +22,16 @@ _CHOICE_NNY  = ((None, 'NA'), ('N', 'NO'), ('Y', 'YES'),)
 _CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
 _CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),)
 
+#
+#--- Time Selectors
+#
+_YEAR_LIST = [str(x + datetime.now().year) for x in range(-3,5)]
+_YEAR_CHOICE = [(None,'NA')] + [(x,x) for x in _YEAR_LIST]
+_MONTH_LIST = month_abbr[1:]
+_MONTH_CHOICE = [(None,'NA')] + [(x,x) for x in _MONTH_LIST]
+_DAY_LIST = [f"{x:02}" for x in range(1,32)]
+_DAY_CHOICE = [(None,'NA')] + [(x,x) for x in _DAY_LIST]
+
 _USINT_DATETIME_FORMAT = "%b-%d-%Y %H:%M"
 
 """
@@ -29,6 +40,7 @@ allow for Jinja Template page generation to input initial data into the Ocat For
 input selections for fields with the validate_<field name> functions. Changing these names will break the form validation unless matched with corresponding
 initial data dictionary keys and field names.
 """
+
 class DateTimeValidator: #: Currently Unused. Revisit.
     def __init__(self,format=_USINT_DATETIME_FORMAT):
         self.format = format
@@ -37,6 +49,13 @@ class DateTimeValidator: #: Currently Unused. Revisit.
             datetime.strptime(field.data, self.format)
         except (ValueError, TypeError):
             raise ValidationError(f'Invalid datetime format in {field.label.text}. Use MMM-DD-YYY HH:MM')
+        
+def time_validator(form,field): #: Currently Unused. Revisit.
+    print('function')
+    try:
+        datetime.strptime(field.data,"%H:%M")
+    except ValueError:
+        raise ValidationError("Invalid time format")
 
 class GeneralParamForm(FlaskForm):
     targname = StringField("Target Name", validators=[DataRequired()])
@@ -69,12 +88,27 @@ class GeneralParamForm(FlaskForm):
 
 class DitherParamForm(FlaskForm):
     dither_flag  = SelectField("Dither",  choices=_CHOICE_NNY,)
-
-class TimeParamForm(FlaskForm):
-    time_ordr = IntegerField("Rank")
-    window_constraint = FieldList(SelectField("Window Constraint",choices=_CHOICE_NNPC))
+"""
+class TimeParamForm(FlaskForm): #: Currently Unused. Revisit
     tstart = FieldList(DateTimeField(format=_USINT_DATETIME_FORMAT), label = "Start")
     tstop = FieldList(DateTimeField(format=_USINT_DATETIME_FORMAT), label = "Stop")
+"""
+class TimeParamForm(FlaskForm):
+    time_ordr = HiddenField("Rank") #: Hidden as this can change in the form but indirectly.
+    window_constraint = FieldList(SelectField("Window Constraint",choices=_CHOICE_NNPC)) #: label fix?
+
+    tstart_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
+    tstop_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
+
+    tstart_month = FieldList(SelectField("Month", choices=_MONTH_CHOICE), label="Month")
+    tstop_month = FieldList(SelectField("Month", choices=_MONTH_CHOICE), label="Month")
+
+    tstart_date = FieldList(SelectField("Day", choices=_DAY_CHOICE), label="Day")
+    tstop_date = FieldList(SelectField("Day", choices=_DAY_CHOICE), label="Year")
+    #: TODO include validators for time
+    tstart_time = FieldList(StringField("Time"),label="Time (24hr)")
+    tstop_time = FieldList(StringField("Time"),label="Time (24hr)")
+    
 
 class SubmitParamForm(FlaskForm):
     refresh = SubmitField("Refresh")

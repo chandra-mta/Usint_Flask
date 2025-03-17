@@ -43,7 +43,7 @@ _FORM_BY_CATEGORY = {
     "dither_param": [
         "dither_flag",
     ],
-    "time_param": ["time_ordr", "window_constraint", "tstart", "tstop"],
+    "time_param": ["time_ordr", "window_constraint"],
 }
 
 
@@ -82,14 +82,13 @@ def index(obsid=None):
     #
     # --- Render Ocat Data In A WTForm
     #
+    ocat_data = rod.read_ocat_data(obsid)
     if not request.form:
-        ocat_data = rod.read_ocat_data(obsid)
         form_starting_values = format_for_form(ocat_data)
-        print(form_starting_values)
         form = OcatParamForm(data=form_starting_values)
     else:
         form = OcatParamForm(request.form)
-    # if form.validate_on_submit():
+    #if form.validate_on_submit():
     if request.method == "POST":
         if verbose_validate_on_submit(form):
             print("Form is valid")
@@ -109,18 +108,22 @@ def format_for_form(ocat_data):
         for param in parameter_list:
             form[category][param] = ocat_data.get(param)
     #
-    # --- Adjustments for Form
+    # --- Adjustments for form variables which differ from Ocat approach
     #
-    tstart = form["time_param"].get("tstart")
-    if tstart is not None:
-        form["time_param"]["tstart"] = [
-            datetime.strptime(x, _OCAT_DATETIME_FORMAT) for x in tstart
-        ]
-
-    tstop = form["time_param"].get("tstop")
-    if tstop is not None:
-        form["time_param"]["tstop"] = [
-            datetime.strptime(x, _OCAT_DATETIME_FORMAT) for x in tstop
-        ]
-
+    if ocat_data.get("tstart") is not None: #: Time Constraints first
+        tstart = [datetime.strptime(x, _OCAT_DATETIME_FORMAT) for x in ocat_data.get('tstart')]
+        tstop = [datetime.strptime(x, _OCAT_DATETIME_FORMAT) for x in ocat_data.get('tstop')]
+        
+        form['time_param']['tstart_year'] = [dt.strftime("%Y") for dt in tstart]
+        form['time_param']['tstop_year'] = [dt.strftime("%Y") for dt in tstop]
+        
+        form['time_param']['tstart_month'] = [dt.strftime("%b") for dt in tstart]
+        form['time_param']['tstop_month'] = [dt.strftime("%b") for dt in tstop]
+        
+        form['time_param']['tstart_date'] = [dt.strftime("%d") for dt in tstart]
+        form['time_param']['tstop_date'] = [dt.strftime("%d") for dt in tstop]
+        
+        form['time_param']['tstart_time'] = [dt.strftime("%H:%M") for dt in tstart]
+        form['time_param']['tstop_time'] = [dt.strftime("%H:%M") for dt in tstop]
+        
     return form
