@@ -4,15 +4,7 @@
 <!-- -->
 <!-- import html macros -->
 <!-- -->
-
-<style>
-    td {
-        padding: 10px;
-    }
-    th {
-        padding: 10px;
-    }
-</style>
+{%  from 'ocatdatapage/macros.html' import create_entry, create_text_entry, create_select_entry %}
 
 {% block title %}Ocat Data Page{% endblock %}
 {% block main_title %}Ocat Data Page{% endblock %}
@@ -21,21 +13,40 @@
 <form method="POST">
     {{ form.hidden_tag() }}
     <p>
-        Obsid</br>
-        {{ ocat_data.get('obsid')}}</br>
-        <b>General Parameters</b></br>
-        {% for key in form.gen_param %}
-            {{ key.label }} : {{key()}} </br>
-        {% endfor %}
-        <b>Dither Parameters</b></br>
-        {% if form.dither_param.dither_flag == 'Y' %}
-            <p>Thing</p><br>
+        <h2>Dither</h2>
+        {% if form.dither_param.dither_flag.data != 'Y' %}
+            {{form.open_dither()}}<br>
         {% else %}
-            {{ form.submit.open_dither() }}
+        {{ create_entry(form.dither_param.dither_flag) }}
+            <div style='margin-left:40px;'>
+                <table border=0>
+                    <tr>
+                    {{ create_entry(form.dither_param.y_amp_asec) }}
+                    {{ create_entry(form.dither_param.y_freq_asec) }}
+                    {{ create_entry(form.dither_param.y_phase) }}
+                    </tr>
+                    <tr>
+                    {{ create_entry(form.dither_param.y_amp, nonedit=True) }}
+                    {{ create_entry(form.dither_param.y_freq, nonedit=True) }}
+                    <td colspan=1>&#160;</td>
+                    </tr>
+                    <tr>
+                    {{ create_entry(form.dither_param.z_amp_asec) }}
+                    {{ create_entry(form.dither_param.z_freq_asec) }}
+                    {{ create_entry(form.dither_param.z_phase) }}
+                    </tr>
+                    <tr>
+                    {{ create_entry(form.dither_param.z_amp, nonedit=True) }}
+                    {{ create_entry(form.dither_param.z_freq, nonedit=True) }}
+                    <td colspan=1>&#160;</td>
+                    </tr>
+                </table>
+            </div>
+            <p style='padding-top:10px;'>
+            To reflect the changes made in arcsec windows to degree displays or Dither YES/NO/NA confirmation, click: {{ form.refresh() }}
+            </p>
         {% endif %}
-        <b>Time Parameters</b></br>
-        
-        {{ form.submit.submit() }}<br/>
+        {{ form.submit() }}<br/>
     </p>
 </form>
 {% endblock %}
