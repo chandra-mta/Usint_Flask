@@ -28,74 +28,13 @@
             {{ key.label }} : {{key()}} </br>
         {% endfor %}
         <b>Dither Parameters</b></br>
-        {% for key in form.dither_param %}
-            {{ key.label }} : {{key()}} </br>
-        {% endfor %}
+        {% if form.dither_param.dither_flag == 'Y' %}
+            <p>Thing</p><br>
+        {% else %}
+            {{ form.submit.open_dither() }}
+        {% endif %}
         <b>Time Parameters</b></br>
-        {{ form.time_param.time_ordr() }}
-        <table border = 0>
-        <thead>
-        <tr>
-        <th>{{ form.time_param.time_ordr.label }}</th>
-        <th>{{ form.time_param.window_constraint.label }}</th>
-        <th></th>
-        <th>{{ form.time_param.tstart_month.label }}</th>
-        <th>{{ form.time_param.tstart_date.label }}</th>
-        <th>{{ form.time_param.tstart_year.label }}</th>
-        <th>{{ form.time_param.tstart_time.label }}</th>
-        </tr>
-        </thead>
-        </br>
-        <tbody>
-        {% set time_ordr = form.time_param.time_ordr.data | int%}
-        {% for k in range(time_ordr) %}
-            <tr>
-                <th>{{ k+1 }}</th>
-                <td>{{ form.time_param.window_constraint[k]() }}</td>
-                <th>Start</th>
-                <td>{{form.time_param.tstart_month[k]()}}</td>
-                <td>{{form.time_param.tstart_date[k]()}}</td>
-                <td>{{form.time_param.tstart_year[k]()}}</td>
-                <td>{{form.time_param.tstart_time[k](size=5)}}</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>
-                    {% for error in form.time_param.tstart_time[k].errors %}
-                        <span style="color: red;">{{ error }}</span><br>
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <th>Stop</th>
-                <td>{{form.time_param.tstop_month[k]()}}</td>
-                <td>{{form.time_param.tstop_date[k]()}}</td>
-                <td>{{form.time_param.tstop_year[k]()}}</td>
-                <td>{{form.time_param.tstop_time[k](size=5)}}</td>
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td>
-                    {% for error in form.time_param.tstop_time[k].errors %}
-                        <span style="color: red;">{{ error }}</span><br>
-                    {% endfor %}
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
-        </table>
+        
         {{ form.submit.submit() }}<br/>
     </p>
 </form>

@@ -91,10 +91,13 @@ def index(obsid=None):
     else:
         form = OcatParamForm(request.form)
     if request.method == "POST":
-        line = ""
-        for key in form:
-            line += f"<p>{key.label} : {key.data}</p>"
-        return line
+        if form.submit.open_dither.data:
+            form.dither_param.dither_flag.data = 'Y'
+        elif form.submit.submit.data:
+            line = ""
+            for key in form:
+                line += f"<p>{key.label} : {key.data}</p>"
+            return line
     return render_template("ocatdatapage/index.html", form=form, ocat_data=ocat_data)
 
 
