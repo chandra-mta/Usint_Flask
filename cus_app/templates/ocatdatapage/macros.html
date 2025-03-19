@@ -9,7 +9,7 @@
     <th style='padding-left:5px;'> {{ param.label.text }}: </th>
     {% if param.render_kw['readonly'] %}
         <td> {{ param.data }} </td>
-    {% elif param.type == 'StringField' or param.type == 'FloatField'%}
+    {% elif param.type in ('StringField', 'FloatField', 'IntegerField')%}
         <td> {{ param(size = len) }} </td>
     {% elif param.type == 'SelectField'%}
         <td> {{ param() }} </td>

@@ -243,6 +243,97 @@
                     </tr>
                 </table>
             </div>
+
+        <hr>
+        <!-- -->
+        <!-- Other Constraints -->
+        <!-- -->
+            <h2>Other Constraints
+            {{ help_popup_page('../static/ocatdatapage/user_help.html#other_constraints', ' (Help)', 55) }}
+        
+            </h2>
+        
+            <table border=0>
+                <tr>{{ create_entry(form.other_param.constr_in_remarks) }}</tr>
+                <tr>{{ create_entry(form.other_param.pointing_constraint) }}</tr>
+                {% if form.other_param.phase_constraint_flag.data in ['Y', 'P'] %}
+                    <tr>
+                    {{ create_entry(form.other_param.phase_constraint_flag) }}
+                    <table bordr =0>
+                        <tr>
+                            {{ create_entry(form.other_param.phase_epoch) }}
+                            {{ create_entry(form.other_param.phase_period) }}
+                        </tr>
+                        <tr>
+                            {{ create_entry(form.other_param.phase_start) }}
+                            {{ create_entry(form.other_param.phase_start_margin) }}
+                        </tr>
+                        <tr>
+                            {{ create_entry(form.other_param.phase_end) }}
+                            {{ create_entry(form.other_param.phase_end_margin) }}
+                        </tr>
+                    </table>
+                    </tr>
+                    </table>
+                    <table bordr=0>
+                {% else %}
+                    <tr>{{ create_entry(form.other_param.phase_constraint_flag) }}</tr>
+                {% endif %}
+                    
+                <tr>
+                    {{ create_entry(form.other_param.group_id) }}
+                    {{ create_entry(form.other_param.monitor_flag) }}
+                </tr>
+                <tr>
+                {% if 'group_id' in form.data['other_param'].keys() %}
+                    <th>Remaining Observations in the Group: </th>
+                    <td colspan=3>
+                        {% if form.other_param.group_obsid.data|length > 0 %}
+                            {% for ent in form.other_param.group_obsid.data %}
+                                <span style='padding-left:5px;'></span>
+                                <a href='../ocatdatapage/{{ ent }} '>{{ ent }}</a> 
+                            {% endfor %}
+                        {% else %}
+                            <i style='padding-left:10px;'>NA</i>
+                        {% endif %}
+                    </td>
+                {% elif form.other_param.monitor_flag.data == 'Y' %}
+                    <th>Remaining Observation in the Monitoring: </th>
+                    <td colspan=3>
+                        {% if form.other_param.monitor_series.data|length > 0 %}
+                            {% for ent in form.other_param.monitor_series.data %}
+                                <span style='padding-left:5px;'></span>
+                                <a href='../ocatdatapage/{{ ent }} '>{{ ent }}</a> 
+                            {% endfor %}
+                        {% else %}
+                            <i style='padding-left:10px;'>NA</i>
+                        {% endif %}
+                    </td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+                </tr>
+            
+                <tr>
+                    {{ create_entry(form.other_param.pre_id) }}
+                    {{ create_entry(form.other_param.pre_min_lead) }}
+                </tr>
+                <tr>
+                    <td colspan=2>&#160;</td>
+                    {{ create_entry(form.other_param.pre_max_lead) }}
+                </tr>
+                <tr>
+                    {{ create_entry(form.other_param.multitelescope) }}
+                    {{ create_entry(form.other_param.observatories) }}
+                </tr>
+                <tr>
+                    {{ create_entry(form.other_param.multitelescope_interval) }}
+                    <td colspan=2>&#160;</td>
+                </tr>
+            </table>
+        
+            <hr>
+
             <p style='padding-top:10px;'>
             To reflect the changes made in arcsec windows to degree displays or Dither YES/NO/NA confirmation, click: {{ form.refresh() }}
             </p>

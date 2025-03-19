@@ -64,6 +64,27 @@ _PULL_FORM_BY_CATEGORY = {
         "z_freq",
         "z_phase"
     ],
+    "other_param":[
+        "constr_in_remarks",
+        "pointing_constraint",
+        "phase_constraint_flag",
+        "phase_epoch",
+        "phase_period",
+        "phase_start",
+        "phase_start_margin",
+        "phase_end",
+        "phase_end_margin",
+        "group_id",
+        "monitor_flag",
+        "group_obsid",
+        "monitor_series",
+        "pre_id",
+        "pre_min_lead",
+        "pre_max_lead",
+        "multitelescope",
+        "observatories",
+        "multitelescope_interval"
+    ]
 }
 _NONE_FORM_EXCEPTIONS = ['dither_flag'] #: list of parameters to include in form initialization even if they are None.
 
