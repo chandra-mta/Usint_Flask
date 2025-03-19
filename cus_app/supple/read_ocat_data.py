@@ -189,6 +189,7 @@ def general_params(obsid):
     else:
         p_dict = _convert_astropy_to_native(result[0])
         p_dict['comments'] = p_dict.pop('mp_remarks')
+        p_dict['obs_type'] = p_dict.pop('type')
         return p_dict
     
 def monitor_params(obsid, pre_id, group_id):

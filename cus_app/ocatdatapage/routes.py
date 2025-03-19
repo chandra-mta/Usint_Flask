@@ -29,8 +29,9 @@ def index(obsid=None):
     # --- Render Ocat Data In A WTForm
     #
     ocat_data = rod.read_ocat_data(obsid)
-    form_dict = fod.format_for_form(ocat_data) #: This contains form information which we mark as directly editable
+    form_dict = fod.format_for_form(ocat_data) #: Formats information into form and provides additional form-specific parameters
     form = OcatParamForm(request.form,data=form_dict)
+    print(request.form)
     if request.method == 'POST' and form.is_submitted():
         #: Processing a POSTed form
         if form.open_dither.data:

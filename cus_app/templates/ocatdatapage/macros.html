@@ -5,19 +5,9 @@
 ##
 ##--- Sections
 ##
-{% macro create_text_entry(param, len=10) %}
+{% macro create_entry(param, len=10) %}
     <th style='padding-left:5px;'> {{ param.label }}: </th>
-    <td> {{ param(size = len) }} </td>
-{% endmacro %}
-
-{% macro create_select_entry(param) %}
-    <th style='padding-left:5px;'> {{ param.label }}: </th>
-    <td> {{ param() }} </td>
-{% endmacro %}
-
-{% macro create_entry(param, len=10, nonedit=False) %}
-    <th style='padding-left:5px;'> {{ param.label }}: </th>
-    {% if nonedit %}
+    {% if param.render_kw['readonly'] %}
         <td> {{ param.data }} </td>
     {% elif param.type == 'StringField' or param.type == 'FloatField'%}
         <td> {{ param(size = len) }} </td>
@@ -25,5 +15,24 @@
         <td> {{ param() }} </td>
     {% else %}
         <td>Unspecified Field Type</td>
+    {% endif %}
+{% endmacro %}
+
+{% macro help_popup_page(html, link_name, font_size=100, name='help') %}
+    <a href="javascript:WindowOpener('{{ html }}', '{{ name }}')">
+        <span style="font-size:{{ font_size }}%;">
+            {{ link_name }}
+        </span>
+    </a>
+{% endmacro %}
+
+{% macro map_image_opener(param, color) %}    
+    {% if param.data ==  'NoImage'%}
+        <span style='color:{{ color }};'>No {{ param.data }} Link</span>
+    {% else %}
+        {% set link = form %}
+        <a href="javascript:ImageOpener('{{ param.data }}')">
+        <span style='color:{{ color }};'>{{ param.name }}</span>
+        </a>
     {% endif %}
 {% endmacro %}
