@@ -27,8 +27,8 @@ _PULL_FORM_BY_CATEGORY = {
         "obs_type",
         "pi_name",
         "observer",
-        "approve_exposure_time",
-        "rep_exp_time",
+        "approved_exposure_time",
+        "rem_exp_time",
         "proposal_join",
         "proposal_hst",
         "proposal_noao",
@@ -88,6 +88,10 @@ def synchronize_values(form):
     #
     #--- Perform RA, DEC, and Dither conversions of the editable form values to change the non-editable versions
     #
+    ra_hms = form.gen_param.ra_hms.data
+    dec_dms = form.gen_param.dec_dms.data
+    if ra_hms not in ('', None) and dec_dms not in ('', None):
+        form.gen_param.ra.data, form.gen_param.dec.data = convert_ra_dec_format(ra_hms,dec_dms, oformat='dd')
     if form.dither_param.dither_flag.data == 'Y':
         form.dither_param.y_amp.data = convert_from_arcsec(form.dither_param.y_amp_asec.data)
         form.dither_param.y_freq.data = convert_from_arcsec(form.dither_param.y_freq_asec.data)
@@ -134,6 +138,12 @@ def general_additionals(form, ocat_data):
         ra_hms, dec_dms = convert_ra_dec_format(ra, dec, 'hmsdms')
         form['gen_param']['ra_hms'] = ra_hms
         form['gen_param']['dec_dms'] = dec_dms
+    
+    #
+    #--- Corrections
+    #
+    if form['gen_param'].get('rem_exp_time') < 0:
+        form['gen_param']['rem_exp_time'] = 0.0
 
     return form
 

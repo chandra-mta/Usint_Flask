@@ -11,15 +11,62 @@
 {% set sobsid = form.gen_param.obsid.data | string %}
 {% set hlink  = cda_http + sobsid %}
 
+
 {% block title %}Ocat Data Page{% endblock %}
 {% block main_title %}Ocat Data Page{% endblock %}
 {% block app_content %}
-<h1>Just  simple display of information with a header</h1>
+
+<!-- -->
+<!-- if there are any warnings, display here -->
+<!-- -->
+{% if warning != '' %}
+<h3 style='color:#db1709;'>{{ warning }}</h3>
+{% else %}
+{% if ct_dict.get('status')[-1] in ['unobserved', 'scheduled', 'untriggered'] and ct_dict.get('approved')[-1] == 1 %}
+    <h3 style='color:#db1709;'>This Observation Is Already On the Approved List</h3>
+{% endif %}
+{% endif %}
+<!-- -->
+<!-- if something went wrong with updating the data file... --->
+<!-- -->
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <p style='color:red; font-size:160%;'>
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<!-- -->
+<!-- a popup help page link -->
+<!-- -->
 <p>
 <b>A brief description of the listed parameters is given in: 
 {{ help_popup_page('../static/ocatdatapage/user_help.html', 'Ocat Data Help') }}
 </b>
 </p>
+<!-- -->
+<!-- DSS/ROSAT/RASS map links -->
+<!-- -->
+<table>
+    <tr>
+    <th class='link1'>{{ map_image_opener(form.gen_param.dss, 'magenta') }}</th>
+    <td>&#160;</td>
+    <th class='link1'>{{ map_image_opener(form.gen_param.rosat, 'orange') }}</th>
+    <td>&#160;</td>
+    <th class='link1'>{{ map_image_opener(form.gen_param.rass, 'yellow') }}</th>
+    </tr>
+</table>
+<!-- -->
+<!-- observation summary table link -->
+<!-- -->
+<p style='padding-top:10px;'>
+{{ help_popup_page(hlink, 'Sequence  # Summary', 120, 'seq_nbr') }}
+(with Roll/Pitch/Visibility Plots)
+</p>
+<hr>
 <form method="POST">
     {{ form.hidden_tag() }}
     <h2>General Parameters
@@ -27,7 +74,7 @@
     </h2>
     <table border=0>
         <tr>
-        <th>{{form.gen_param.seq_nbr.label}}: </th>
+        <th>{{form.gen_param.seq_nbr.label.text}}: </th>
         <td>
             <a href="javascript:WindowOpener('{{ hlink }}','seq_nbr')">
                 {{ form.gen_param.seq_nbr.data }}
@@ -48,7 +95,7 @@
     </table>
     <table border=0>
         <tr>
-        {{ create_entry(form.gen_param.targname) }}
+        {{ create_entry(form.gen_param.targname, len=20) }}
         {{ create_entry(form.gen_param.si_mode) }}
         {{ create_entry(form.gen_param.aca_mode) }}
         </tr>
@@ -165,7 +212,9 @@
         </tr>
     </table>
     <hr>
-        <h2>Dither</h2>
+        <h2>Dither
+            {{ help_popup_page('../static/ocatdatapage/user_help.html#dither_flag', ' (Help)', 55) }}
+        </h2>
         {% if form.dither_param.dither_flag.data != 'Y' %}
             {{form.open_dither()}}<br>
         {% else %}

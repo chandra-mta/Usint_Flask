@@ -62,10 +62,10 @@ class GeneralParamForm(FlaskForm):
 
     pi_name = StringField("PI Name", render_kw={'readonly': True})
     observer = StringField("Observer", render_kw={'readonly': True})
-    approved_exposure_time = StringField("Approved Exposure Time", render_kw={'readonly': True})
+    approved_exposure_time = StringField("Exposure Time", render_kw={'readonly': True})
     rem_exp_time = StringField("Remaining Exposure Time", render_kw={'readonly': True})
 
-    proposal_joint = StringField("Joint", render_kw={'readonly': True})
+    proposal_joint = StringField("Joint Proposal", render_kw={'readonly': True})
     proposal_hst = StringField("HST Approved Time", render_kw={'readonly': True})
     proposal_noao = StringField("NOAO Approved Time", render_kw={'readonly': True})
     proposal_xmm = StringField("XMM Approved Time", render_kw={'readonly': True})

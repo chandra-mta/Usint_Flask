@@ -20,6 +20,10 @@ from cus_app.ocatdatapage.forms import OcatParamForm
 import cus_app.supple.read_ocat_data as rod
 import cus_app.ocatdatapage.format_ocat_data as fod
 
+_OCAT_DATETIME_FORMAT = (
+    "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero.
+)
+
 
 @bp.route("/", methods=["GET", "POST"])
 @bp.route("/<obsid>", methods=["GET", "POST"])
@@ -29,15 +33,112 @@ def index(obsid=None):
     # --- Render Ocat Data In A WTForm
     #
     ocat_data = rod.read_ocat_data(obsid)
-    form_dict = fod.format_for_form(ocat_data) #: Formats information into form and provides additional form-specific parameters
-    form = OcatParamForm(request.form,data=form_dict)
-    print(request.form)
-    if request.method == 'POST' and form.is_submitted():
+    warning = create_warning_line(ocat_data)
+    #: Formats information into form and provides additional form-specific parameters
+    form_dict = fod.format_for_form(ocat_data)
+    form = OcatParamForm(request.form, data=form_dict)
+    if request.method == "POST" and form.is_submitted():
         #: Processing a POSTed form
         if form.open_dither.data:
             #: Refresh the page with the dither entries as initialized by **format_for_form()**
-            form.dither_param.dither_flag.data = 'Y'
+            form.dither_param.dither_flag.data = "Y"
         if form.refresh.data:
             #: Process the changes submitted to the form for how they would update the form and param_dict objects
             form = fod.synchronize_values(form)
-    return render_template("ocatdatapage/index.html", form=form)
+    return render_template("ocatdatapage/index.html", form=form, warning=warning)
+
+
+def create_warning_line(ocat_data):
+    """
+    Check the observation status and create warning
+
+    :param ocat_data: Ocat Data
+    :type ocat_data: dict
+    :return: Line detailing warning information
+    :rtype: str
+    """
+    line = ""
+    #
+    # --- observation status; if not unobserved or schedule, a warning is flashed
+    #
+    if ocat_data.get("status") in ["unobserved", "scheduled", "untriggered"]:
+        pass
+    elif ocat_data.get("status") in ["observed", "archived", "triggered"]:
+        line = f"This observation was already {ocat_data.get('status').upper()}."
+        return line
+    else:
+        line = f"This observation was {ocat_data.get('status').upper()}."
+        return line
+    #
+    # --- check lts/scheduled observation date
+    #
+    lts_chk = False
+    obs_date = ocat_data.get("soe_st_sched_date")
+    if obs_date is None:
+        obs_date = ocat_data.get("lts_lt_plan")
+        lts_chk = True
+
+    if obs_date is not None:
+        time_diff = (
+            datetime.strptime(obs_date, _OCAT_DATETIME_FORMAT) - datetime.now()
+        ).total_seconds()
+        inday = int(time_diff/86400)
+        if inday < 0:
+            inday = 0
+    else:
+        time_diff = 1e8
+        inday = 1e3
+    #
+    # --- check whether this observation is on OR list
+    #
+    ifile = os.path.join(current_app.config["OBS_SS"], "scheduled_obs_list")
+    with open(ifile) as f:
+        mp_list = [line.strip().split() for line in f.readlines()]
+    mp_chk = False
+    for ent in mp_list:
+        if ent[0] == ocat_data.get('obsid'):
+            mp_chk = True
+            break
+    #
+    # --- for the case that lts date is passed but not observed yet
+    #
+    if lts_chk and time_diff < 0:
+        line = "The scheduled (LTS) date of this observation was already passed."
+
+    elif not lts_chk and inday == 0:
+        line = "This observation is scheduled for today."
+    #
+    # --- less than 10 days to scheduled date
+    #
+    elif time_diff < 864000:
+        #
+        # --- if the observation is on OR list
+        #
+        if mp_chk:
+            if ocat_data.get("status") == "scheduled":
+                line = f"{inday} days left to the scheduled date. You must get a permission from MP to modify entries (Scheduled on: {obs_date}.)"
+            else:
+                line = f"This observation is currently under review in an active OR list. You must get a permission from MP to modify entries (LTS Date: {obs_date}.)"
+        #
+        # --- if the observation is not on the OR list yet
+        #
+        else:
+            if lts_chk and ocat_data.get("status") == "unobserved":
+                line = f"{inday}  (LTS) days left, but the observation is not scheduled yet. You may want to check whether this is still a possible observation date with MP."
+            else:
+                if ocat_data["status"][-1] in [
+                    "unobserved",
+                    "scheduled",
+                    "untriggered",
+                ]:
+                    line = f"This observation is scheduled on {obs_date}."
+    #
+    # --- if the observation is on OR list, but more than 10 days away
+    #
+    elif mp_chk:
+        line = "This observation is currently under review in an active OR list. You must get a permission from MP to modify entries"
+        if lts_chk:
+            line += f" (LTS Date: {obs_date}.)"
+        else:
+            line += f" (Scheduled on: {obs_date}.)"
+    return line
