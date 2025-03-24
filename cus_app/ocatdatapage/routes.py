@@ -37,11 +37,16 @@ def index(obsid=None):
     #: Formats information into form and provides additional form-specific parameters
     form_dict = fod.format_for_form(ocat_data)
     form = OcatParamForm(request.form, data=form_dict)
-    if request.method == "POST" and form.is_submitted():
-        #: Processing a POSTed form
+    if request.method == "POST" and form.is_submitted(): 
+        #
+        #--- Processing Dither Submissions
+        #
         if form.open_dither.data:
             #: Refresh the page with the dither entries as initialized by **format_for_form()**
             form.dither_param.dither_flag.data = "Y"
+        #
+        #--- Processing TIme Submissions
+        #
         elif form.open_time.data:
             #: Refresh the page with time entries as initialized by **format_for_form()**
             form.time_param.window_flag.data = "Y"
@@ -50,6 +55,20 @@ def index(obsid=None):
             form = add_time_rank(form)
         elif form.time_param.remove_time.data:
             form = remove_time_rank(form)
+        #
+        #--- Processing Roll Submissions
+        #
+        elif form.open_roll.data:
+            #: Refresh the page with roll entries as initialized by **format_for_form()**
+            form.roll_param.roll_flag.data = "Y"
+            form = add_roll_rank(form)
+        elif form.roll_param.add_roll.data:
+            form = add_roll_rank(form)
+        elif form.roll_param.remove_roll.data:
+            form = remove_roll_rank(form)
+        #
+        #--- General Refresh
+        #
         elif form.refresh.data:
             #: Process the changes submitted to the form for how they would update the form and param_dict objects
             form = fod.synchronize_values(form)
@@ -77,7 +96,7 @@ def add_time_rank(form):
     
 def remove_time_rank(form):
     """
-    Pop all entries in the form field lists, and recreate the field lists, skipping over "NA" marked indices.
+    Remove all "NA" Entries from the field lists, turning flag off if no entries remain.
     """
     rm_idx = []
     for i, field in enumerate(form.time_param.window_constraint.entries):
@@ -95,6 +114,14 @@ def remove_time_rank(form):
         form.time_param.time_ordr.data = val
         if form.time_param.time_ordr.data == 0:
             form.time_param.window_flag.data = 'N'
+    return form
+
+def add_roll_rank(form):
+
+    return form
+
+def remove_roll_rank(form):
+    
     return form
 
 def create_warning_line(ocat_data):

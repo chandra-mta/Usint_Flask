@@ -278,7 +278,6 @@
                 <th style='padding-left:5px;'>{{ form.time_param.tstart_time.label.text }}</th>
                 </tr>
             </thead>
-        </br>
         <tbody>
         {% set time_ordr = form.time_param.time_ordr.data | int %}
         {% for k in range(time_ordr) %}
@@ -322,9 +321,56 @@
     {% endif %}
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
+    <h2>Roll Constraints
+        {{ help_popup_page('../static/ocatdatapage/user_help.html#roll_constraints', ' (Help)', 55) }}
+    </h2>
+    <p>{{ help_popup_page('../static/ocatdatapage/ranked_entries.html', 'How To Change The Same Parameter Values In Multiple ObsIDs: Ranked Entries for Constraints')}}</p>
+
+    {{ form.roll_param.roll_ordr() }}
+    {% if form.roll_param.roll_flag.data != 'Y' %}
+        {{form.open_roll()}}<br>
+    {% else %}
+        <p>
+        If you want to add ranks, press "Add Roll Rank." 
+        If you want to remove a rank, set "Rank" to "NA", 
+        then press "Remove NA Roll Entry."
+        </p>
+        <p>
+        <b>Rank: </b>
+        {{ form.roll_param.add_roll() }}
+        {{ form.roll_param.remove_roll() }}
+        </p>
+        <div style='margin-left:40px;'>
+            <table border = 0>
+                <thead>
+                    <tr>
+                        <th style='padding-left:5px;'>{{ form.roll_param.roll_ordr.label.text }}</th>
+                        <th style='padding-left:5px;'>{{ form.roll_param.roll_constraint.label.text }}</th>
+                        <th style='padding-left:5px;'>{{ form.roll_param.roll_180.label.text }}</th>
+                        <th style='padding-left:5px;'>{{ form.roll_param.roll.label.text }}</th>
+                        <th style='padding-left:5px;'>{{ form.roll_param.roll_tolerance.label.text }}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set roll_ordr = form.roll_param.roll_ordr.data | int %}
+                    {% for k in range(roll_ordr) %}
+                        <tr>
+                            <th style='padding-left:5px;'>{{ k+1 }}</th>
+                            <td>{{ form.roll_param.roll_constraint[k]() }}</td>
+                            <td>{{ form.roll_param.roll_180[k]() }}</td>
+                            <td>{{ form.roll_param.roll[k]() }}</td>
+                            <td>{{ form.roll_param.roll_tolerance[k]() }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% endif %}
+    <hr>
+    <!------------------------------------------------------------------------------------------------------------------------------->
     <h2>Other Constraints
     {{ help_popup_page('../static/ocatdatapage/user_help.html#other_constraints', ' (Help)', 55) }}
-    </h2>    
+    </h2>
     <table border=0>
         <tr>{{ create_entry(form.other_param.constr_in_remarks) }}</tr>
         <tr>{{ create_entry(form.other_param.pointing_constraint) }}</tr>

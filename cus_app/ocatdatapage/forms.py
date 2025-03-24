@@ -128,7 +128,7 @@ class DitherParamForm(FlaskForm):
 class TimeParamForm(FlaskForm):
     window_flag = HiddenField("Window Flag") #: Hidden as this can change in the form but indirectly.
     time_ordr = HiddenField("Rank") #: Hidden as this can change in the form but indirectly.
-    window_constraint = FieldList(SelectField("Window Constraint",choices=_CHOICE_NNPC))
+    window_constraint = FieldList(SelectField("Window Constraint",choices=_CHOICE_NNPC), label = "Window Constraint")
 
     tstart_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
     tstop_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
@@ -144,6 +144,17 @@ class TimeParamForm(FlaskForm):
 
     add_time = SubmitField("Add Time Rank")
     remove_time = SubmitField("Remove NA Time Entry")
+
+class RollParamForm(FlaskForm):
+    roll_flag = HiddenField("Roll Flag") #: Hidden as this can change in the form but indirectly.
+    roll_ordr = HiddenField("Rank") #: Hidden as this can change in the form but indirectly.
+    roll_constraint = FieldList(SelectField("Type of Constraint",choices=_CHOICE_NNPC), label = "Type of Constraint")
+    roll_180 = FieldList(SelectField("Roll 180?",choices=_CHOICE_NNY), label = "Roll 180?")
+    roll = FieldList(StringField("Roll"), label = "Roll")
+    roll_tolerance = FieldList(StringField("Roll Tolerance"), label = "Roll Tolerance")
+
+    add_roll = SubmitField("Add Roll Rank")
+    remove_roll = SubmitField("Remove NA Roll Entry")
 
 class OtherParamForm(FlaskForm):
     constr_in_remarks = SelectField("Constraint in Remarks?", choices=_CHOICE_NNPY)
@@ -178,9 +189,11 @@ class OcatParamForm(FlaskForm):
     gen_param = FormField(GeneralParamForm)
     dither_param = FormField(DitherParamForm)
     time_param = FormField(TimeParamForm)
+    roll_param = FormField(RollParamForm)
     other_param = FormField(OtherParamForm)
     
     open_dither = SubmitField("Open Dither")
     open_time = SubmitField("Open Time")
+    open_roll = SubmitField("Open Roll")
     refresh = SubmitField("Refresh")
     submit = SubmitField("Submit")

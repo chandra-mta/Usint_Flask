@@ -70,6 +70,14 @@ _PULL_FORM_BY_CATEGORY = {
         "time_ordr",
         "window_constraint"
     ],
+    "roll_param": [
+        "roll_flag",
+        "roll_ordr",
+        "roll_constraint",
+        "roll_180",
+        "roll",
+        "roll_tolerance"
+    ],
     "other_param":[
         "constr_in_remarks",
         "pointing_constraint",
