@@ -180,6 +180,11 @@ class OtherParamForm(FlaskForm):
     observatories = StringField("Observatories")
     multitelescope_interval = StringField("Max Coordination Offset")
 
+class HRCParamForm(FlaskForm):
+    hrc_timing_mode = SelectField("HRC Timing Mode", choices=_CHOICE_NY)
+    hrc_zero_block = SelectField("Zero Block", choices=_CHOICE_NY)
+    hrc_si_mode = StringField("SI Mode")
+
 class OcatParamForm(FlaskForm):
     """
     Extension of FlaskForm for Ocat Parameter Data Page Form.
@@ -191,6 +196,7 @@ class OcatParamForm(FlaskForm):
     time_param = FormField(TimeParamForm)
     roll_param = FormField(RollParamForm)
     other_param = FormField(OtherParamForm)
+    hrc_param = FormField(HRCParamForm)
     
     open_dither = SubmitField("Open Dither")
     open_time = SubmitField("Open Time")

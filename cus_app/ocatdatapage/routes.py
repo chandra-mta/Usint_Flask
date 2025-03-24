@@ -45,7 +45,7 @@ def index(obsid=None):
             #: Refresh the page with the dither entries as initialized by **format_for_form()**
             form.dither_param.dither_flag.data = "Y"
         #
-        #--- Processing TIme Submissions
+        #--- Processing Time Submissions
         #
         elif form.open_time.data:
             #: Refresh the page with time entries as initialized by **format_for_form()**

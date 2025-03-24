@@ -78,6 +78,11 @@ _PULL_FORM_BY_CATEGORY = {
         "roll",
         "roll_tolerance"
     ],
+    "hrc_param": [
+        "hrc_zero_block",
+        "hrc_timing_mode",
+        "hrc_si_mode"
+    ],
     "other_param":[
         "constr_in_remarks",
         "pointing_constraint",

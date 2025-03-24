@@ -448,6 +448,23 @@
         </tr>
         </table>
         <hr>
+        <!------------------------------------------------------------------------------------------------------------------------------->
+        <h2>HRC Parameters
+            {{ help_popup_page('../static/ocatdatapage/user_help.html#hrc_parameters', ' (Help)', 55) }}
+        </h2>
+            {% if form.gen_param.instrument.data not in ['HRC-I', 'HRC-S'] %}
+                <h3>
+                    ObsID {{ form.gen_param.obsid.data }} is not an HRC observation. Instrument {{ form.gen_param.instrument.data }} is selected.
+                </h3>
+            {% else %}
+                <table border=0>
+                    <tr>    
+                    {{ create_entry(form.hrc_param.hrc_timing_mode) }}
+                    {{ create_entry(form.hrc_param.hrc_zero_block) }}
+                    {{ create_entry(form.hrc_param.hrc_si_mode) }}
+                    </tr>
+                </table>
+            {% endif %}
         {{ form.submit() }}<br/>
 </form>
 {% endblock %}
