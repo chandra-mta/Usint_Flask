@@ -42,25 +42,29 @@ def index(obsid=None):
         if form.open_dither.data:
             #: Refresh the page with the dither entries as initialized by **format_for_form()**
             form.dither_param.dither_flag.data = "Y"
-        if form.open_time.data:
-            #: Refresh the page with the dither entries as initialized by **format_for_form()**
+        elif form.open_time.data:
+            #: Refresh the page with time entries as initialized by **format_for_form()**
             form.time_param.window_flag.data = "Y"
             form = add_time_rank(form)
-        if form.refresh.data:
+        elif form.time_param.add_time.data:
+            form = add_time_rank(form)
+        elif form.time_param.remove_time.data:
+            form = remove_time_rank(form)
+        elif form.refresh.data:
             #: Process the changes submitted to the form for how they would update the form and param_dict objects
             form = fod.synchronize_values(form)
-    print(form.time_param.data)
     return render_template("ocatdatapage/index.html", form=form, warning=warning)
 
 def add_time_rank(form):
-    val = form.time_param.time_ordr.data
-    if val is not None and val!='':
-        form.time_param.time_ordr.data += int(val) + 1
+    """
+    Add an entry to the time constraints ranking.
+    """
+    val = form.time_param.time_ordr.data #: TODO fix with field coercion into correct returned data type
+    if val not in (None, ''):
+        form.time_param.time_ordr.data = int(val) + 1
     else:
         form.time_param.time_ordr.data = 1
     form.time_param.window_constraint.append_entry('Y')
-    form.time_param.tstart.append_entry(None)
-    form.time_param.tstop.append_entry(None)
     form.time_param.tstart_year.append_entry(None)
     form.time_param.tstop_year.append_entry(None)
     form.time_param.tstart_month.append_entry(None)
@@ -71,6 +75,27 @@ def add_time_rank(form):
     form.time_param.tstop_time.append_entry("00:00")
     return form
     
+def remove_time_rank(form):
+    """
+    Pop all entries in the form field lists, and recreate the field lists, skipping over "NA" marked indices.
+    """
+    rm_idx = []
+    for i, field in enumerate(form.time_param.window_constraint.entries):
+        if field.data in (None, 'None'):
+            rm_idx.append(i)
+    rm_idx = sorted(rm_idx,reverse=True) #: Reverse so that pop method won't interfere with indices later in list.
+    subtract_last_index = len(rm_idx)
+    if subtract_last_index > 0:
+        for field in form.time_param:
+            if field.type == 'FieldList':
+                for i in rm_idx:
+                    field.entries.pop(i)
+                field.last_index -= subtract_last_index
+        val = int(form.time_param.time_ordr.data) - subtract_last_index #: TODO fix with field coercion with correct returned data type
+        form.time_param.time_ordr.data = val
+        if form.time_param.time_ordr.data == 0:
+            form.time_param.window_flag.data = 'N'
+    return form
 
 def create_warning_line(ocat_data):
     """

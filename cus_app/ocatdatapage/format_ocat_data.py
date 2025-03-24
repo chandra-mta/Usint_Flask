@@ -68,9 +68,7 @@ _PULL_FORM_BY_CATEGORY = {
     "time_param": [
         "window_flag",
         "time_ordr",
-        "window_constraint",
-        "tstart",
-        "tstop"
+        "window_constraint"
     ],
     "other_param":[
         "constr_in_remarks",

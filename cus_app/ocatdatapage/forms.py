@@ -129,8 +129,6 @@ class TimeParamForm(FlaskForm):
     window_flag = HiddenField("Window Flag") #: Hidden as this can change in the form but indirectly.
     time_ordr = HiddenField("Rank") #: Hidden as this can change in the form but indirectly.
     window_constraint = FieldList(SelectField("Window Constraint",choices=_CHOICE_NNPC))
-    tstart = FieldList(HiddenField("Start"))
-    tstop = FieldList(HiddenField("Stop"))
 
     tstart_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
     tstop_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
@@ -143,6 +141,9 @@ class TimeParamForm(FlaskForm):
     #: TODO include validators for time
     tstart_time = FieldList(StringField("Time", default= "00:00"),label="Time (24hr)")
     tstop_time = FieldList(StringField("Time", default= "00:00"),label="Time (24hr)")
+
+    add_time = SubmitField("Add Time Rank")
+    remove_time = SubmitField("Remove NA Time Entry")
 
 class OtherParamForm(FlaskForm):
     constr_in_remarks = SelectField("Constraint in Remarks?", choices=_CHOICE_NNPY)

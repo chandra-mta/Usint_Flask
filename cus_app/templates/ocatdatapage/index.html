@@ -257,6 +257,15 @@
     {% if form.time_param.window_flag.data != 'Y' %}
         {{form.open_time()}}<br>
     {% else %}
+        <p>
+        If you want to add ranks, press "Add Time Rank." 
+        If you want to remove a rank, set "Window Constraint" to "NA", 
+        then press "Remove NA Time Entry."<br>
+        <b>Rank:</b>
+        {{ form.time_param.add_time() }}
+        {{ form.time_param.remove_time() }}
+        </p>
+        <div style="margin-left:40px">
         <table border = 0>
             <thead>
                 <tr>
@@ -271,7 +280,7 @@
             </thead>
         </br>
         <tbody>
-        {% set time_ordr = form.time_param.time_ordr.data | int%}
+        {% set time_ordr = form.time_param.time_ordr.data | int %}
         {% for k in range(time_ordr) %}
             <tr>
                 <th style='padding-left:5px;'>{{ k+1 }}</th>
@@ -309,6 +318,7 @@
         {% endfor %}
         </tbody>
         </table>
+        </div>
     {% endif %}
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
