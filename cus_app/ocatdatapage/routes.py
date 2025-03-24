@@ -42,11 +42,35 @@ def index(obsid=None):
         if form.open_dither.data:
             #: Refresh the page with the dither entries as initialized by **format_for_form()**
             form.dither_param.dither_flag.data = "Y"
+        if form.open_time.data:
+            #: Refresh the page with the dither entries as initialized by **format_for_form()**
+            form.time_param.window_flag.data = "Y"
+            form = add_time_rank(form)
         if form.refresh.data:
             #: Process the changes submitted to the form for how they would update the form and param_dict objects
             form = fod.synchronize_values(form)
+    print(form.time_param.data)
     return render_template("ocatdatapage/index.html", form=form, warning=warning)
 
+def add_time_rank(form):
+    val = form.time_param.time_ordr.data
+    if val is not None and val!='':
+        form.time_param.time_ordr.data += int(val) + 1
+    else:
+        form.time_param.time_ordr.data = 1
+    form.time_param.window_constraint.append_entry('Y')
+    form.time_param.tstart.append_entry(None)
+    form.time_param.tstop.append_entry(None)
+    form.time_param.tstart_year.append_entry(None)
+    form.time_param.tstop_year.append_entry(None)
+    form.time_param.tstart_month.append_entry(None)
+    form.time_param.tstop_month.append_entry(None)
+    form.time_param.tstart_date.append_entry(None)
+    form.time_param.tstop_date.append_entry(None)
+    form.time_param.tstart_time.append_entry("00:00")
+    form.time_param.tstop_time.append_entry("00:00")
+    return form
+    
 
 def create_warning_line(ocat_data):
     """

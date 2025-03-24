@@ -7,6 +7,7 @@
 """
 from astropy.coordinates import Angle
 import os
+from datetime import datetime
 
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
@@ -64,6 +65,13 @@ _PULL_FORM_BY_CATEGORY = {
         "z_freq",
         "z_phase"
     ],
+    "time_param": [
+        "window_flag",
+        "time_ordr",
+        "window_constraint",
+        "tstart",
+        "tstop"
+    ],
     "other_param":[
         "constr_in_remarks",
         "pointing_constraint",
@@ -86,7 +94,7 @@ _PULL_FORM_BY_CATEGORY = {
         "multitelescope_interval"
     ]
 }
-_NONE_FORM_EXCEPTIONS = ['dither_flag'] #: list of parameters to include in form initialization even if they are None.
+_NONE_FORM_EXCEPTIONS = ['dither_flag', 'window_flag'] #: list of parameters to include in form initialization even if they are None.
 
 def format_for_form(ocat_data):
     form = {}
@@ -103,6 +111,7 @@ def format_for_form(ocat_data):
     #--- Initialize category specific form parameters
     form = general_additionals(form, ocat_data)
     form = dither_additionals(form,ocat_data)
+    form = time_additionals(form, ocat_data)
     return form
 
 def synchronize_values(form):
@@ -243,3 +252,23 @@ def convert_from_arcsec(arcsec):
     elif arcsec is None:
         return None
 
+#
+#--- Time Constraint Functions
+#
+def time_additionals(form, ocat_data):
+    if ocat_data.get("tstart") is not None:
+        tstart = [datetime.strptime(x, _OCAT_DATETIME_FORMAT) for x in ocat_data.get('tstart')]
+        tstop = [datetime.strptime(x, _OCAT_DATETIME_FORMAT) for x in ocat_data.get('tstop')]
+        
+        form['time_param']['tstart_year'] = [dt.strftime("%Y") for dt in tstart]
+        form['time_param']['tstop_year'] = [dt.strftime("%Y") for dt in tstop]
+        
+        form['time_param']['tstart_month'] = [dt.strftime("%b") for dt in tstart]
+        form['time_param']['tstop_month'] = [dt.strftime("%b") for dt in tstop]
+        
+        form['time_param']['tstart_date'] = [dt.strftime("%d") for dt in tstart]
+        form['time_param']['tstop_date'] = [dt.strftime("%d") for dt in tstop]
+        
+        form['time_param']['tstart_time'] = [dt.strftime("%H:%M") for dt in tstart]
+        form['time_param']['tstop_time'] = [dt.strftime("%H:%M") for dt in tstop]
+    return form

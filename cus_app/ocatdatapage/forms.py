@@ -27,8 +27,7 @@ _CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),
 #
 _YEAR_LIST = [str(x + datetime.now().year) for x in range(-3,5)]
 _YEAR_CHOICE = [(None,'NA')] + [(x,x) for x in _YEAR_LIST]
-_MONTH_LIST = month_abbr[1:]
-_MONTH_CHOICE = [(None,'NA')] + [(x,x) for x in _MONTH_LIST]
+_MONTH_CHOICE = [(None,'NA')] + [(x,x) for x in month_abbr[1:]]
 _DAY_LIST = [f"{x:02}" for x in range(1,32)]
 _DAY_CHOICE = [(None,'NA')] + [(x,x) for x in _DAY_LIST]
 
@@ -126,6 +125,25 @@ class DitherParamForm(FlaskForm):
     z_amp = FloatField("Z_Amp (in degrees)", default = 0.0, render_kw=_NONEDIT)
     z_freq = FloatField("Z_Freq (in degrees/sec)", default = 0.0, render_kw=_NONEDIT)
 
+class TimeParamForm(FlaskForm):
+    window_flag = HiddenField("Window Flag") #: Hidden as this can change in the form but indirectly.
+    time_ordr = HiddenField("Rank") #: Hidden as this can change in the form but indirectly.
+    window_constraint = FieldList(SelectField("Window Constraint",choices=_CHOICE_NNPC))
+    tstart = FieldList(HiddenField("Start"))
+    tstop = FieldList(HiddenField("Stop"))
+
+    tstart_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
+    tstop_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
+
+    tstart_month = FieldList(SelectField("Month", choices=_MONTH_CHOICE), label="Month")
+    tstop_month = FieldList(SelectField("Month", choices=_MONTH_CHOICE), label="Month")
+
+    tstart_date = FieldList(SelectField("Day", choices=_DAY_CHOICE), label="Day")
+    tstop_date = FieldList(SelectField("Day", choices=_DAY_CHOICE), label="Year")
+    #: TODO include validators for time
+    tstart_time = FieldList(StringField("Time", default= "00:00"),label="Time (24hr)")
+    tstop_time = FieldList(StringField("Time", default= "00:00"),label="Time (24hr)")
+
 class OtherParamForm(FlaskForm):
     constr_in_remarks = SelectField("Constraint in Remarks?", choices=_CHOICE_NNPY)
     pointing_constraint = SelectField("Pointing Update", choices=_CHOICE_NNY)
@@ -158,8 +176,10 @@ class OcatParamForm(FlaskForm):
     """
     gen_param = FormField(GeneralParamForm)
     dither_param = FormField(DitherParamForm)
+    time_param = FormField(TimeParamForm)
     other_param = FormField(OtherParamForm)
     
     open_dither = SubmitField("Open Dither")
+    open_time = SubmitField("Open Time")
     refresh = SubmitField("Refresh")
     submit = SubmitField("Submit")
