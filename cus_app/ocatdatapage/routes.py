@@ -117,11 +117,40 @@ def remove_time_rank(form):
     return form
 
 def add_roll_rank(form):
-
+    """
+    Add an entry to the roll constraints ranking.
+    """
+    val = form.roll_param.roll_ordr.data #: TODO fix with field coercion into correct returned data type
+    if val not in (None, ''):
+        form.roll_param.roll_ordr.data = int(val) + 1
+    else:
+        form.roll_param.roll_ordr.data = 1
+    form.roll_param.roll_constraint.append_entry('Y')
+    form.roll_param.roll_180.append_entry(None)
+    form.roll_param.roll.append_entry(None)
+    form.roll_param.roll_tolerance.append_entry(None)
     return form
 
 def remove_roll_rank(form):
-    
+    """
+    Remove all "NA" Entries from the field lists, turning flag off if no entries remain.
+    """
+    rm_idx = []
+    for i, field in enumerate(form.roll_param.roll_constraint.entries):
+        if field.data in (None, 'None'):
+            rm_idx.append(i)
+    rm_idx = sorted(rm_idx,reverse=True) #: Reverse so that pop method won't interfere with indices later in list.
+    subtract_last_index = len(rm_idx)
+    if subtract_last_index > 0:
+        for field in form.roll_param:
+            if field.type == 'FieldList':
+                for i in rm_idx:
+                    field.entries.pop(i)
+                field.last_index -= subtract_last_index
+        val = int(form.roll_param.roll_ordr.data) - subtract_last_index #: TODO fix with field coercion with correct returned data type
+        form.roll_param.roll_ordr.data = val
+        if form.roll_param.roll_ordr.data == 0:
+            form.roll_param.roll_flag.data = 'N'
     return form
 
 def create_warning_line(ocat_data):
