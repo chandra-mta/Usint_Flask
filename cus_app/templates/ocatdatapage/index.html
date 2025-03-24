@@ -22,9 +22,7 @@
 {% if warning != '' %}
 <h3 style='color:#db1709;'>{{ warning }}</h3>
 {% else %}
-{% if ct_dict.get('status')[-1] in ['unobserved', 'scheduled', 'untriggered'] and ct_dict.get('approved')[-1] == 1 %}
-    <h3 style='color:#db1709;'>This Observation Is Already On the Approved List</h3>
-{% endif %}
+<h3 style='color:#db1709;'>TODO: include future check here for ['unobserved', 'scheduled', 'untriggered'] status obsid which are in our "Approved" list and warn that this observation is already on the approved list.</h3>
 {% endif %}
 <!-- -->
 <!-- if something went wrong with updating the data file... --->
