@@ -452,19 +452,108 @@
         <h2>HRC Parameters
             {{ help_popup_page('../static/ocatdatapage/user_help.html#hrc_parameters', ' (Help)', 55) }}
         </h2>
-            {% if form.gen_param.instrument.data not in ['HRC-I', 'HRC-S'] %}
-                <h3>
-                    ObsID {{ form.gen_param.obsid.data }} is not an HRC observation. Instrument {{ form.gen_param.instrument.data }} is selected.
-                </h3>
-            {% else %}
-                <table border=0>
-                    <tr>    
-                    {{ create_entry(form.hrc_param.hrc_timing_mode) }}
-                    {{ create_entry(form.hrc_param.hrc_zero_block) }}
-                    {{ create_entry(form.hrc_param.hrc_si_mode) }}
-                    </tr>
-                </table>
-            {% endif %}
+        {% if form.gen_param.instrument.data not in ['HRC-I', 'HRC-S'] %}
+            <h3>
+                ObsID {{ form.gen_param.obsid.data }} is not an HRC observation. Instrument {{ form.gen_param.instrument.data }} is selected.
+            </h3>
+        {% else %}
+            <table border=0>
+                <tr>    
+                {{ create_entry(form.hrc_param.hrc_timing_mode) }}
+                {{ create_entry(form.hrc_param.hrc_zero_block) }}
+                {{ create_entry(form.hrc_param.hrc_si_mode) }}
+                </tr>
+            </table>
+        {% endif %}
+        <hr>
+        <!------------------------------------------------------------------------------------------------------------------------------->
+        <h2>ACIS Parameters
+            {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_parameters', ' (Help)', 55) }}
+        </h2>
+        {% if form.gen_param.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
+            <h3>
+                ObsID {{ form.gen_param.obsid.data }} is not an ACIS observation. Instrument {{ form.gen_param.instrument.data }} is selected.
+            </h3>
+        {% else %}
+            <table>
+                <tr>
+                {{ create_entry(form.acis_param.exp_mode) }}
+                {{ create_entry(form.acis_param.bep_pack) }}
+                {{ create_entry(form.acis_param.frame_time) }}
+                </tr>
+                <tr>
+                <td colspan=4>&#160;</td>
+                {{ create_entry(form.acis_param.most_efficient) }}
+                </tr>
+            </table>
+            <table>
+                <tr>
+                {{ create_entry(form.acis_param.dropped_chip_count) }}
+                <tr>
+            </table>
+        
+            <table>
+                <tr>
+                <td colspan=4>&#160;</td>
+                {{ create_entry(form.acis_param.ccdi0_on) }}
+                {{ create_entry(form.acis_param.ccdi1_on) }}
+                <td colspan=4>&#160;</td>
+                </tr>
+                <tr>
+                <td colspan=4>&#160;</td>
+                {{ create_entry(form.acis_param.ccdi2_on) }}
+                {{ create_entry(form.acis_param.ccdi3_on) }}
+                <td colspan=4>&#160;</td>
+                </tr>
+                <tr>
+                {{ create_entry(form.acis_param.ccds0_on) }}
+                {{ create_entry(form.acis_param.ccds1_on) }}
+                {{ create_entry(form.acis_param.ccds2_on) }}
+                {{ create_entry(form.acis_param.ccds3_on) }}
+                {{ create_entry(form.acis_param.ccds4_on) }}
+                {{ create_entry(form.acis_param.ccds5_on) }}
+                </tr>
+            </table>
+            <div style='padding-top:20px;'></div>
+            <table>
+                <tr>
+                {{ create_entry(form.acis_param.subarray) }}
+                <td colspan=4>
+                <b>If you select YES, please fill the next two entries.</b>
+                </td>
+                </tr>
+                <tr>
+                {{ create_entry(form.acis_param.subarray_start_row) }}
+                {{ create_entry(form.acis_param.subarray_row_count) }}
+                <td>&#160;</td>
+                </tr>
+                <tr>
+                {{ create_entry(form.acis_param.duty_cycle) }}
+                <td colspan=4>
+                <b>If you select YES, please fill the next two entries.</b>
+                </td>
+                </tr>
+                <tr>
+                {{ create_entry(form.acis_param.secondary_exp_count) }}
+                {{ create_entry(form.acis_param.primary_exp_time) }}
+                <td>&#160;</td>
+                </tr>
+                <tr>
+                {{ create_entry(form.acis_param.onchip_sum) }}
+                {{ create_entry(form.acis_param.onchip_row_count) }}
+                {{ create_entry(form.acis_param.onchip_column_count) }}
+                </tr>
+                <tr>
+                {{ create_entry(form.acis_param.eventfilter) }}
+                {{ create_entry(form.acis_param.eventfilter_lower) }}
+                {{ create_entry(form.acis_param.eventfilter_higher) }}
+                </tr>
+                <tr>
+                {{ create_entry(form.acis_param.multiple_spectral_lines) }}
+                {{ create_entry(form.acis_param.spectra_max_count) }}
+                </tr>
+            </table>
+        {% endif %}
         {{ form.submit() }}<br/>
 </form>
 {% endblock %}

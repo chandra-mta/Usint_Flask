@@ -21,6 +21,9 @@ _CHOICE_NY   = (('N','NO'), ('Y','YES'),)
 _CHOICE_NNY  = ((None, 'NA'), ('N', 'NO'), ('Y', 'YES'),)
 _CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
 _CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),)
+_CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
+_CHOICE_CHIP = [('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
+_CHOICE_WINDOW = [(None,'NA')] + [(x, x) for x in ('I0', 'I1',  'I2', 'I3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5')]
 
 #
 #--- Time Selectors
@@ -185,6 +188,37 @@ class HRCParamForm(FlaskForm):
     hrc_zero_block = SelectField("Zero Block", choices=_CHOICE_NY)
     hrc_si_mode = StringField("SI Mode")
 
+class ACISParamForm(FlaskForm):
+    exp_mode = SelectField("Acis Exposure Mode", choices=((None,"NA"),("TE","TE"),("CC","CC")))
+    bep_pack = SelectField("Event TM Format", choices = _CHOICE_EVENT)
+    frame_time = StringField("Frame Time")
+    most_efficient = SelectField("Most Efficient", choices = _CHOICE_NNY)
+    dropped_chip_count = StringField("Dropped Chip Count", render_kw=_NONEDIT)
+    ccdi0_on = SelectField("I0", choices=_CHOICE_CHIP)
+    ccdi1_on = SelectField("I1", choices=_CHOICE_CHIP)
+    ccdi2_on = SelectField("I2", choices=_CHOICE_CHIP)
+    ccdi3_on = SelectField("I3", choices=_CHOICE_CHIP)
+    ccds0_on = SelectField("SO", choices=_CHOICE_CHIP)
+    ccds1_on = SelectField("S1", choices=_CHOICE_CHIP)
+    ccds2_on = SelectField("S2", choices=_CHOICE_CHIP)
+    ccds3_on = SelectField("S3", choices=_CHOICE_CHIP)
+    ccds4_on = SelectField("S4", choices=_CHOICE_CHIP)
+    ccds5_on = SelectField("S5", choices=_CHOICE_CHIP)
+    subarray = SelectField("Use Subarray", choices=[("NONE", "NONE"), ("N", "NO"), ("CUSTOM", "YES")])
+    subarray_start_row = StringField("Start")
+    subarray_row_count = StringField("Rows")
+    duty_cycle = SelectField("Duty Cycle", choices=_CHOICE_NNY)
+    secondary_exp_count = StringField("Number")
+    primary_exp_time = StringField("Tprimary")
+    onchip_sum = SelectField("Onchip Summing", choices=_CHOICE_NNY)
+    onchip_row_count = IntegerField("Onchip Rows")
+    onchip_column_count = IntegerField("Onchip Columns")
+    eventfilter = SelectField("Energy Filter", choices=_CHOICE_NNY)
+    eventfilter_lower = StringField("Lowest Energy")
+    eventfilter_higher = StringField("Energy Range")
+    multiple_spectral_lines = SelectField("Multi Spectral Lines", choices=_CHOICE_NNY)
+    spectra_max_count = StringField("Spectra Max Count")
+
 class OcatParamForm(FlaskForm):
     """
     Extension of FlaskForm for Ocat Parameter Data Page Form.
@@ -197,6 +231,7 @@ class OcatParamForm(FlaskForm):
     roll_param = FormField(RollParamForm)
     other_param = FormField(OtherParamForm)
     hrc_param = FormField(HRCParamForm)
+    acis_param = FormField(ACISParamForm)
     
     open_dither = SubmitField("Open Dither")
     open_time = SubmitField("Open Time")

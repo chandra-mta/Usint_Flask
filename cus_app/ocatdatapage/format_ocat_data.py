@@ -78,11 +78,6 @@ _PULL_FORM_BY_CATEGORY = {
         "roll",
         "roll_tolerance"
     ],
-    "hrc_param": [
-        "hrc_zero_block",
-        "hrc_timing_mode",
-        "hrc_si_mode"
-    ],
     "other_param":[
         "constr_in_remarks",
         "pointing_constraint",
@@ -103,7 +98,43 @@ _PULL_FORM_BY_CATEGORY = {
         "multitelescope",
         "observatories",
         "multitelescope_interval"
-    ]
+    ],
+    "hrc_param": [
+        "hrc_zero_block",
+        "hrc_timing_mode",
+        "hrc_si_mode"
+    ],
+    "acis_param": [
+        "exp_mode",
+        "bep_pack",
+        "frame_time",
+        "most_efficient",
+        "dropped_chip_count",
+        "ccdi0_on",
+        "ccdi1_on",
+        "ccdi2_on",
+        "ccdi3_on",
+        "ccds0_on",
+        "ccds1_on",
+        "ccds2_on",
+        "ccds3_on",
+        "ccds4_on",
+        "ccds5_on",
+        "subarray",
+        "subarray_start_row",
+        "subarray_row_count",
+        "duty_cycle",
+        "secondary_exp_count",
+        "primary_exp_time",
+        "onchip_sum",
+        "onchip_row_count",
+        "onchip_column_count",
+        "eventfilter",
+        "eventfilter_lower",
+        "eventfilter_higher",
+        "multiple_spectral_lines",
+        "spectra_max_count",
+    ],
 }
 _NONE_FORM_EXCEPTIONS = ['dither_flag', 'window_flag'] #: list of parameters to include in form initialization even if they are None.
 
