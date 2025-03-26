@@ -253,6 +253,7 @@
         {{ help_popup_page('../static/ocatdatapage/user_help.html#time_constraints', ' (Help)', 55) }}
     </h2>
     <p>{{ help_popup_page('../static/ocatdatapage/ranked_entries.html', 'How To Change The Same Parameter Values In Multiple ObsIDs: Ranked Entries for Constraints')}}</p>
+    {{ form.time_param.window_flag() }}
     {{ form.time_param.time_ordr() }}
     {% if form.time_param.window_flag.data != 'Y' %}
         {{form.open_time()}}<br>
@@ -326,6 +327,7 @@
     </h2>
     <p>{{ help_popup_page('../static/ocatdatapage/ranked_entries.html', 'How To Change The Same Parameter Values In Multiple ObsIDs: Ranked Entries for Constraints')}}</p>
 
+    {{ form.roll_param.roll_flag() }}
     {{ form.roll_param.roll_ordr() }}
     {% if form.roll_param.roll_flag.data != 'Y' %}
         {{form.open_roll()}}<br>
@@ -356,8 +358,8 @@
                     {% for k in range(roll_ordr) %}
                         <tr>
                             <th style='padding-left:5px;'>{{ k+1 }}</th>
-                            <td>{{ form.roll_param.roll_constraint[k](size=10) }}</td>
-                            <td>{{ form.roll_param.roll_180[k](size=10) }}</td>
+                            <td>{{ form.roll_param.roll_constraint[k]() }}</td>
+                            <td>{{ form.roll_param.roll_180[k]() }}</td>
                             <td>{{ form.roll_param.roll[k](size=10) }}</td>
                             <td>{{ form.roll_param.roll_tolerance[k](size=10) }}</td>
                         </tr>
@@ -559,6 +561,8 @@
         <h2>ACIS Window Constraints
         {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_window', ' (Help)', 55) }}
         </h2>
+        {{ form.aciswin_param.spwindow_flag() }}
+        {{ form.aciswin_param.aciswin_no() }}
         {% if form.gen_param.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
             <h3>
                 ObsID {{ form.gen_param.obsid.data }} is not an ACIS Observation. Instrument {{ form.gen_param.instrument.data }} is selected.

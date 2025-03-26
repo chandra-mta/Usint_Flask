@@ -67,6 +67,17 @@ def index(obsid=None):
         elif form.roll_param.remove_roll.data:
             form = remove_roll_rank(form)
         #
+        #--- processing Acis Window Submissions
+        elif form.open_aciswin.data:
+            #: Refresh the page with aciswin entires as initialized by **format_for_form()**
+            form.aciswin_param.spwindow_flag.data = "Y"
+            form = add_window_rank(form)
+        elif form.aciswin_param.add_window.data:
+            form = add_window_rank(form)
+        elif form.aciswin_param.remove_window.data:
+            form = remove_window_rank(form)
+        #
+        #
         #--- General Refresh
         #
         elif form.refresh.data:
@@ -74,6 +85,9 @@ def index(obsid=None):
             form = fod.synchronize_values(form)
     return render_template("ocatdatapage/index.html", form=form, warning=warning)
 
+#
+#--- Helper Functions
+#
 def add_time_rank(form):
     """
     Add an entry to the time constraints ranking.
@@ -151,6 +165,47 @@ def remove_roll_rank(form):
         form.roll_param.roll_ordr.data = val
         if form.roll_param.roll_ordr.data == 0:
             form.roll_param.roll_flag.data = 'N'
+    return form
+
+def add_window_rank(form):
+    """
+    Add an entry to the roll constraints ranking.
+    """
+    val = form.aciswin_param.aciswin_no.data #: TODO fix with field coercion into correct returned data type
+    if val not in (None, ''):
+        form.aciswin_param.aciswin_no.data = int(val) + 1
+    else:
+        form.aciswin_param.aciswin_no.data = 1
+    form.aciswin_param.chip.append_entry('I0')
+    form.aciswin_param.start_row.append_entry(1)
+    form.aciswin_param.start_column.append_entry(1)
+    form.aciswin_param.height.append_entry(1023)
+    form.aciswin_param.width.append_entry(1023)
+    form.aciswin_param.lower_threshold.append_entry(0.08)
+    form.aciswin_param.pha_range.append_entry(13.0)
+    form.aciswin_param.sample.append_entry(0)
+    return form
+
+def remove_window_rank(form):
+    """
+    Remove all "NA" Entries from the field lists, turning flag off if no entries remain.
+    """
+    rm_idx = []
+    for i, field in enumerate(form.aciswin_param.chip.entries):
+        if field.data in (None, 'None'):
+            rm_idx.append(i)
+    rm_idx = sorted(rm_idx,reverse=True) #: Reverse so that pop method won't interfere with indices later in list.
+    subtract_last_index = len(rm_idx)
+    if subtract_last_index > 0:
+        for field in form.aciswin_param:
+            if field.type == 'FieldList':
+                for i in rm_idx:
+                    field.entries.pop(i)
+                field.last_index -= subtract_last_index
+        val = int(form.aciswin_param.aciswin_no.data) - subtract_last_index #: TODO fix with field coercion with correct returned data type
+        form.aciswin_param.aciswin_no.data = val
+        if form.aciswin_param.aciswin_no.data == 0:
+            form.aciswin_param.spwindow_flag.data = 'N'
     return form
 
 def create_warning_line(ocat_data):
