@@ -56,7 +56,8 @@ _PULL_FORM_BY_CATEGORY = {
         "est_cnt_rate",
         "forder_cnt_rate",
         "remarks",
-        "comments"
+        "comments",
+        "proposal_number",
     ],
     "dither_param": [
         "dither_flag",

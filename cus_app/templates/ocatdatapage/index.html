@@ -697,6 +697,79 @@
         </table>
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
-        {{ form.submit() }}<br/>
+        <h2>Options</h2>
+        {% if form.gen_param.status.data in ['unobserved', 'scheduled', 'untriggered'] %}
+        <table>
+            <tr>
+            <th>Normal Change</th>
+            <td>Any changes other than APPROVAL status</td>
+            </tr>
+            <tr>
+            <th>Observation is Approved for flight</th>
+            <td>Adds ObsID to the Approved List - nothing else</td>
+            </tr>
+            <tr>
+            <th>ObsID no Longer ready to go</th>
+            <td>REMOVE ObsID from the Approved List - nothing else</td>
+            </tr>
+            <tr>
+            <th>Split this ObsID</th>
+            <td style='color:deeppink;'>
+                Please add an explanation why you need<br>
+                to split this observation in the comment area.
+            </td>
+            </tr>
+        </table>
+    
+        <table>
+            <tr>
+            {% for subfield in form.asis %}
+                <td>{{ subfield() }}</td>
+                <td>{{ subfield.label }}</td>
+            {% endfor %}
+            </tr>
+        </table>
+        <p style='padding-top:10px;'>
+            If you want to apply the same changes to other obsids, please list them blow.
+            <br>
+            Please read: 
+            <a href="javascript:WindowOpener('../static/ocatdatapage/multi_obsids.html','multi')">
+                how to use multiple obsid editing
+            </a>
+            for more details.
+        </p>
+        {{ form.multiobsid(size=80) }}
+        <div style='padding-top:30px;'></div>
+        {{ form.submit() }}
+        {% else %}
+
+        <p style='padding-bottom:20px;'>
+            <strong style='font-size:130%;'>
+            {% if ct_dict.get('status')[-1] in ['observed', 'archived', 'triggered'] %}
+                This observation was already
+            {% else %}
+                This observation was 
+            {% endif %}
+
+            <span style='color:red;'>{{ ct_dict.get('status')[-1].upper() }}</span>,
+            and you cannot update its parameter values anymore.
+            </strong>
+        </p>
+
+        {% endif %}
+        <hr>
+        <!------------------------------------------------------------------------------------------------------------------------------->
+        <p style="padding-bottom:20px;">
+        <span style="font-size:110%;">Link to:</span><br>
+        <a href="javascript:void(0);" onclick="openTab('../express', 'Express');">Express Approval</a>
+        <br>
+        <a href="{{ cdo_http }}review_report/disp_report.cgi?{{ form.gen_param.proposal_number.data }}">Peer Review Report And Proposal</a>
+        <br>
+        <a href="{{ hlink }}">
+        ChaSeR Sequence Summary (with Roll/Pitch/Visibility, etc.)</a>
+        <br>
+        <a href='https://cxc.cfa.harvard.edu/cgi-bin/target_search/search.html'>
+        Chandra User Observation Search</a>
+        </p>
 </form>
 {% endblock %}

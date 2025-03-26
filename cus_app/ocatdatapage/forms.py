@@ -7,7 +7,7 @@
 """
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import Field, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField
+from wtforms import SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField, RadioField
 from wtforms.validators import ValidationError, DataRequired
 from datetime import datetime
 from calendar import month_abbr
@@ -24,6 +24,11 @@ _CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),
 _CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
 _CHOICE_CHIP = [('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
 _CHOICE_WINDOW = [(None,'NA')] + [(x, x) for x in ('I0', 'I1',  'I2', 'I3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5')]
+_CHOICE_ASIS = [("Normal Change", "Normal Change"),
+                ("Observation is Approved for flight","Observation is Approved for flight"),
+                (" ObsID no longer ready to go"," ObsID no longer ready to go"),
+                ("Split this ObsID","Split this ObsID")
+            ]
 
 #
 #--- Time Selectors
@@ -113,6 +118,7 @@ class GeneralParamForm(FlaskForm):
 
     remarks = TextAreaField("Remarks", default = '')
     comments = TextAreaField("Comments", default = '')
+    proposal_number = StringField("Proposal Number", render_kw=_NONEDIT)
 
 class DitherParamForm(FlaskForm):
     dither_flag = SelectField("Dither",  choices=_CHOICE_NNY)
@@ -268,4 +274,6 @@ class OcatParamForm(FlaskForm):
     open_roll = SubmitField("Open Roll")
     open_aciswin = SubmitField("Open Window")
     refresh = SubmitField("Refresh")
+    asis = RadioField("Submit Options", choices=_CHOICE_ASIS)
+    multiobsid = StringField("Multi-Obsid")
     submit = SubmitField("Submit")
