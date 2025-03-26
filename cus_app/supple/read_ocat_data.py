@@ -109,12 +109,12 @@ def read_ocat_data(obsid):
     :return: p_dict: a dictionary of <param name> <--> <param value>
     :rtype: dict
 
-    :Note: there are severl parameter names  different from those in the database:
+    :Note: there are several parameter names  different from those in the database:
                 TOO/DDT: 'type','trig','start','stop','followup','remarks']
                         will be with prefix 'too_'
-                HRC SI Mode: si_mode will be hrc_si_mode to distingush from ACIS si_mode
+                HRC SI Mode: si_mode will be hrc_si_mode to distinguish from ACIS si_mode
                 Joint Prop: 'prop_num', 'title', 'joint' will be:
-                            'proposal_number', 'proposal_titile', 'proposal_joint'
+                            'proposal_number', 'proposal_title', 'proposal_joint'
                             see prop_params for others.
     """
     p_dict = general_params(obsid)
@@ -219,7 +219,7 @@ def monitor_params(obsid, pre_id, group_id):
         p_dict['group_obsid'] = sorted(full_group[sel]['obsid'].tolist())
     else:
         #
-        # --- Monitor Series Actions, involves overridding monitor_flag
+        # --- Monitor Series Actions, involves overriding monitor_flag
         #
         if pre_id is not None:
             p_dict['monitor_flag'] = 'Y'

@@ -7,7 +7,7 @@
 """
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import Field, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField
+from wtforms import Field, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField
 from wtforms.validators import ValidationError, DataRequired
 from datetime import datetime
 from calendar import month_abbr
@@ -110,6 +110,9 @@ class GeneralParamForm(FlaskForm):
     vmagnitude = StringField("V Mag")
     est_cnt_rate = StringField("Count Rate")
     forder_cnt_rate = StringField("1st Order Rate")
+
+    remarks = TextAreaField("Remarks", default = '')
+    comments = TextAreaField("Comments", default = '')
 
 class DitherParamForm(FlaskForm):
     dither_flag = SelectField("Dither",  choices=_CHOICE_NNY)

@@ -659,6 +659,44 @@
         {% endif %}
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
+        <h2>Comments and Remarks
+        {{ help_popup_page('../static/ocatdatapage/user_help.html#comments', ' (Help)', 55) }}
+        </h2>
+        <p>
+        <strong>
+        The remarks area below is reserved for remarks related to constraints, 
+        actions/considerations that apply to the observation.
+        Please put all other remarks/comments into the comment area below.
+        </strong>
+        </p>
+        <table>
+            <tr>
+            <th>{{ form.gen_param.remarks.label.text }}:</th>
+            <td>
+                {{ form.gen_param.remarks(rows=10, cols=60) }}
+            </td>
+            </tr>
+        </table>
+        
+        <p>
+        <strong> 
+        Comments are kept as a record of why a change was made.
+        <br>
+        If a CDO approval is required, or if you have a special 
+        instruction for ARCOPS, add the comment in this area.
+        </strong> 
+        </p>
+        
+        <table>
+            <tr>
+            <th>{{ form.gen_param.comments.label.text }}:</th>
+            <td>
+                {{ form.gen_param.comments(rows=10, cols=60) }}
+            </td>
+            </tr>
+        </table>
+        <hr>
+        <!------------------------------------------------------------------------------------------------------------------------------->
         {{ form.submit() }}<br/>
 </form>
 {% endblock %}

@@ -55,6 +55,8 @@ _PULL_FORM_BY_CATEGORY = {
         "vmagnitude",
         "est_cnt_rate",
         "forder_cnt_rate",
+        "remarks",
+        "comments"
     ],
     "dither_param": [
         "dither_flag",
