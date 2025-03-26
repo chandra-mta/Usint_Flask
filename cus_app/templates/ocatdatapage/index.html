@@ -619,6 +619,46 @@
                     </tbody>
                 </table>
         {% endif %}
+        <hr>
+        <!------------------------------------------------------------------------------------------------------------------------------->
+        <h2 id="too_param">TOO Parameters
+        {{ help_popup_page('../static/ocatdatapage/user_help.html#too_parameters', ' (Help)', 55) }}
+        </h2>
+        {% if form.too_param.tooid.data == None %}
+            <h3>ObsID: {{ form.gen_param.obsid.data }} is not a DDT/TOO observation.</h3>
+        {% else %}
+            <table>
+                <tr>
+                {{ create_entry(form.too_param.tooid) }}
+                </tr>
+                <tr>
+                {{ create_entry(form.too_param.too_trig) }}
+                </tr>
+                <tr>
+                {{ create_entry(form.too_param.too_type) }}
+                </tr>
+                <tr>
+            </table>
+            <table>
+                <th colspan=4>
+                Exact response window (days):
+                <span style='padding-right:30px;'></span>
+                </th>
+                {{ create_entry(form.too_param.too_start) }}
+                {{ create_entry(form.too_param.too_stop) }}
+                </tr>
+            </table>
+            <table>
+                <tr>
+                {{ create_entry(form.too_param.too_followup) }}
+                </tr>
+                <tr>
+                {{ create_entry(form.too_param.too_remarks) }}
+                </tr>
+            </table>
+        {% endif %}
+        <hr>
+        <!------------------------------------------------------------------------------------------------------------------------------->
         {{ form.submit() }}<br/>
 </form>
 {% endblock %}

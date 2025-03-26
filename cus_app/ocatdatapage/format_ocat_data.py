@@ -146,6 +146,15 @@ _PULL_FORM_BY_CATEGORY = {
         'lower_threshold',
         'pha_range',
         'sample'
+        ],
+    "too_param": [
+        'tooid',
+        'too_trig',
+        'too_type',
+        'too_start',
+        'too_stop',
+        'too_followup',
+        'too_remarks'
         ]
 }
 _NONE_FORM_EXCEPTIONS = ['dither_flag', 'window_flag', 'spwindow_flag'] #: list of parameters to include in form initialization even if they are None.
