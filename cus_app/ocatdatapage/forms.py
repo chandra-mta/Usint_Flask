@@ -219,6 +219,21 @@ class ACISParamForm(FlaskForm):
     multiple_spectral_lines = SelectField("Multi Spectral Lines", choices=_CHOICE_NNY)
     spectra_max_count = StringField("Spectra Max Count")
 
+class ACISWinParamForm(FlaskForm):
+    spwindow_flag = HiddenField("Window Flag") #: Hidden as this can change in the form but indirectly.
+    aciswin_no = HiddenField("Rank") #: Hidden as this can change in the form but indirectly.
+    chip = FieldList(SelectField("Chip",choices=_CHOICE_WINDOW), label = "Chip")
+    start_row = FieldList(StringField("Start Row"), label = "Start Row")
+    start_column = FieldList(StringField("Start Column"), label = "Start Column")
+    height = FieldList(StringField("Height"), label = "Height")
+    width = FieldList(StringField("Width"), label = "Width")
+    lower_threshold = FieldList(StringField("Lowest Energy"), label = "Lowest Energy")
+    pha_range = FieldList(StringField("Energy Range"), label = "Energy Range")
+    sample = FieldList(StringField("Sample Rate"), label = "Sample Rate")
+
+    add_window = SubmitField("Add Window Rank")
+    remove_window = SubmitField("Remove NA Window Entry")
+
 class OcatParamForm(FlaskForm):
     """
     Extension of FlaskForm for Ocat Parameter Data Page Form.
@@ -232,9 +247,11 @@ class OcatParamForm(FlaskForm):
     other_param = FormField(OtherParamForm)
     hrc_param = FormField(HRCParamForm)
     acis_param = FormField(ACISParamForm)
+    aciswin_param = FormField(ACISWinParamForm)
     
     open_dither = SubmitField("Open Dither")
     open_time = SubmitField("Open Time")
     open_roll = SubmitField("Open Roll")
+    open_aciswin = SubmitField("Open Window")
     refresh = SubmitField("Refresh")
     submit = SubmitField("Submit")

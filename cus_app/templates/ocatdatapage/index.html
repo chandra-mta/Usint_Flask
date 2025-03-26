@@ -94,7 +94,7 @@
     </table>
     <table border=0>
         <tr>
-        {{ create_entry(form.gen_param.targname, len=20) }}
+        {{ create_entry(form.gen_param.targname, size=20) }}
         {{ create_entry(form.gen_param.si_mode) }}
         {{ create_entry(form.gen_param.aca_mode) }}
         </tr>
@@ -356,10 +356,10 @@
                     {% for k in range(roll_ordr) %}
                         <tr>
                             <th style='padding-left:5px;'>{{ k+1 }}</th>
-                            <td>{{ form.roll_param.roll_constraint[k]() }}</td>
-                            <td>{{ form.roll_param.roll_180[k]() }}</td>
-                            <td>{{ form.roll_param.roll[k]() }}</td>
-                            <td>{{ form.roll_param.roll_tolerance[k]() }}</td>
+                            <td>{{ form.roll_param.roll_constraint[k](size=10) }}</td>
+                            <td>{{ form.roll_param.roll_180[k](size=10) }}</td>
+                            <td>{{ form.roll_param.roll[k](size=10) }}</td>
+                            <td>{{ form.roll_param.roll_tolerance[k](size=10) }}</td>
                         </tr>
                     {% endfor %}
                 </tbody>
@@ -553,6 +553,67 @@
                 {{ create_entry(form.acis_param.spectra_max_count) }}
                 </tr>
             </table>
+        {% endif %}
+        <hr>
+        <!------------------------------------------------------------------------------------------------------------------------------->
+        <h2>ACIS Window Constraints
+        {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_window', ' (Help)', 55) }}
+        </h2>
+        {% if form.gen_param.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
+            <h3>
+                ObsID {{ form.gen_param.obsid.data }} is not an ACIS Observation. Instrument {{ form.gen_param.instrument.data }} is selected.
+            </h3>
+    
+        {% elif form.aciswin_param.spwindow_flag.data != 'Y' %}
+            {{form.open_aciswin()}}<br>
+        {% else %}
+            <p>
+            If you want to add ranks, press "Add Window Rank." 
+            If you want to remove a row, set <i>Chip</i> to "NA", then press "Remove NA Window Rank." 
+            </p>
+            {{ form.aciswin_param.add_window() }}
+            {{ form.aciswin_param.remove_window() }}
+            <p style='padding-top:20px; padding-bottom:10px;margin-left:20px; margin-right:20px;'>
+            <b>Note</b>: By default, the sample rate is 0 and the window specified is an 
+            <b>EXCLUSION</b> area. 
+            To set an INCLUSION area, in ithe first window, set the sample rate to 1, and choose 
+            a desired inclusion area.
+            In the second window, set the sample rate to 0 and the window area to 1024 x 1024.
+            For the case with the sample rate > 1, please refer to:
+            {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_window', 'Help') }}.
+            </p>
+            
+                <table border = 0>
+                    <thead>
+                        <tr>
+                            <th style='padding-left:5px;'>{{ form.aciswin_param.aciswin_no.label.text }}</th>
+                            <th style='padding-left:5px;'>{{ form.aciswin_param.chip.label.text }}</th>
+                            <th style='padding-left:5px;'>{{ form.aciswin_param.start_row.label.text }}</th>
+                            <th style='padding-left:5px;'>{{ form.aciswin_param.start_column.label.text }}</th>
+                            <th style='padding-left:5px;'>{{ form.aciswin_param.height.label.text }}</th>
+                            <th style='padding-left:5px;'>{{ form.aciswin_param.width.label.text }}</th>
+                            <th style='padding-left:5px;'>{{ form.aciswin_param.lower_threshold.label.text }}</th>
+                            <th style='padding-left:5px;'>{{ form.aciswin_param.pha_range.label.text }}</th>
+                            <th style='padding-left:5px;'>{{ form.aciswin_param.sample.label.text }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% set aciswin_no = form.aciswin_param.aciswin_no.data | int %}
+                        {% for k in range(aciswin_no) %}
+                            <tr>
+                                <th style='padding-left:5px;'>{{ k+1 }}</th>
+                                <td>{{ form.aciswin_param.chip[k]() }}</td>
+                                <td>{{ form.aciswin_param.start_row[k](size=10) }}</td>
+                                <td>{{ form.aciswin_param.start_column[k](size=10) }}</td>
+                                <td>{{ form.aciswin_param.height[k](size=10) }}</td>
+                                <td>{{ form.aciswin_param.width[k](size=10) }}</td>
+                                <td>{{ form.aciswin_param.lower_threshold[k](size=10) }}</td>
+                                <td>{{ form.aciswin_param.pha_range[k](size=10) }}</td>
+                                <td>{{ form.aciswin_param.sample[k](size=10) }}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
         {% endif %}
         {{ form.submit() }}<br/>
 </form>

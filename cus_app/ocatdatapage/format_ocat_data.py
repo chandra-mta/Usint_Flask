@@ -135,8 +135,20 @@ _PULL_FORM_BY_CATEGORY = {
         "multiple_spectral_lines",
         "spectra_max_count",
     ],
+    "aciswin_param": [
+        'spwindow_flag',
+        'aciswin_no',
+        'chip',
+        'start_row',
+        'start_column',
+        'height',
+        'width',
+        'lower_threshold',
+        'pha_range',
+        'sample'
+        ]
 }
-_NONE_FORM_EXCEPTIONS = ['dither_flag', 'window_flag'] #: list of parameters to include in form initialization even if they are None.
+_NONE_FORM_EXCEPTIONS = ['dither_flag', 'window_flag', 'spwindow_flag'] #: list of parameters to include in form initialization even if they are None.
 
 def format_for_form(ocat_data):
     form = {}

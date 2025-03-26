@@ -5,12 +5,12 @@
 ##
 ##--- Sections
 ##
-{% macro create_entry(param, len=10) %}
+{% macro create_entry(param, size=10) %}
     <th style='padding-left:5px;'> {{ param.label.text }}: </th>
     {% if param.render_kw['readonly'] %}
         <td> {{ param.data }} </td>
     {% elif param.type in ('StringField', 'FloatField', 'IntegerField')%}
-        <td> {{ param(size = len) }} </td>
+        <td> {{ param(size = size) }} </td>
     {% elif param.type == 'SelectField'%}
         <td> {{ param() }} </td>
     {% else %}
