@@ -68,7 +68,7 @@
 <!------------------------------------------------------------------------------------------------------------------------------->
 <form method="POST">
     {{ form.hidden_tag() }}
-    <h2>General Parameters
+    <h2 id="gen_param">General Parameters
         {{ help_popup_page('../static/ocatdatapage/user_help.html#general_parameters', ' (Help)', 55) }}
     </h2>
     <table border=0>
@@ -212,7 +212,7 @@
     </table>
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
-    <h2>Dither
+    <h2 id="dither_param">Dither
         {{ help_popup_page('../static/ocatdatapage/user_help.html#dither_flag', ' (Help)', 55) }}
     </h2>
     {% if form.dither_param.dither_flag.data != 'Y' %}
@@ -249,7 +249,7 @@
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
     {% endif %}
-    <h2>Time Constraints
+    <h2 id="time_param">Time Constraints
         {{ help_popup_page('../static/ocatdatapage/user_help.html#time_constraints', ' (Help)', 55) }}
     </h2>
     <p>{{ help_popup_page('../static/ocatdatapage/ranked_entries.html', 'How To Change The Same Parameter Values In Multiple ObsIDs: Ranked Entries for Constraints')}}</p>
@@ -322,7 +322,7 @@
     {% endif %}
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
-    <h2>Roll Constraints
+    <h2 id="roll_param">Roll Constraints
         {{ help_popup_page('../static/ocatdatapage/user_help.html#roll_constraints', ' (Help)', 55) }}
     </h2>
     <p>{{ help_popup_page('../static/ocatdatapage/ranked_entries.html', 'How To Change The Same Parameter Values In Multiple ObsIDs: Ranked Entries for Constraints')}}</p>
@@ -370,7 +370,7 @@
     {% endif %}
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
-    <h2>Other Constraints
+    <h2 id="other_param">Other Constraints
     {{ help_popup_page('../static/ocatdatapage/user_help.html#other_constraints', ' (Help)', 55) }}
     </h2>
     <table border=0>
@@ -451,7 +451,7 @@
         </table>
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
-        <h2>HRC Parameters
+        <h2 id="hrc_param">HRC Parameters
             {{ help_popup_page('../static/ocatdatapage/user_help.html#hrc_parameters', ' (Help)', 55) }}
         </h2>
         {% if form.gen_param.instrument.data not in ['HRC-I', 'HRC-S'] %}
@@ -469,7 +469,7 @@
         {% endif %}
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
-        <h2>ACIS Parameters
+        <h2 id="acis_param">ACIS Parameters
             {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_parameters', ' (Help)', 55) }}
         </h2>
         {% if form.gen_param.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
@@ -558,7 +558,7 @@
         {% endif %}
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
-        <h2>ACIS Window Constraints
+        <h2 id="aciswin_param">ACIS Window Constraints
         {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_window', ' (Help)', 55) }}
         </h2>
         {{ form.aciswin_param.spwindow_flag() }}
