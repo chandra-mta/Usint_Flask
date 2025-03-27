@@ -319,7 +319,7 @@ def convert_from_arcsec(arcsec):
         return None
 
 #
-#--- Time Constraint Functions
+#--- Time Category Functions
 #
 def time_additionals(form, ocat_data):
     if ocat_data.get("tstart") is not None:
@@ -337,4 +337,128 @@ def time_additionals(form, ocat_data):
         
         form['time_param']['tstart_time'] = [dt.strftime("%H:%M") for dt in tstart]
         form['time_param']['tstop_time'] = [dt.strftime("%H:%M") for dt in tstop]
+    return form
+
+def add_time_rank(form):
+    """
+    Add an entry to the time constraints ranking.
+    """
+    val = form.time_param.time_ordr.data #: TODO fix with field coercion into correct returned data type
+    if val not in (None, ''):
+        form.time_param.time_ordr.data = int(val) + 1
+    else:
+        form.time_param.time_ordr.data = 1
+    form.time_param.window_constraint.append_entry('Y')
+    form.time_param.tstart_year.append_entry(None)
+    form.time_param.tstop_year.append_entry(None)
+    form.time_param.tstart_month.append_entry(None)
+    form.time_param.tstop_month.append_entry(None)
+    form.time_param.tstart_date.append_entry(None)
+    form.time_param.tstop_date.append_entry(None)
+    form.time_param.tstart_time.append_entry("00:00")
+    form.time_param.tstop_time.append_entry("00:00")
+    return form
+    
+def remove_time_rank(form):
+    """
+    Remove all "NA" Entries from the field lists, turning flag off if no entries remain.
+    """
+    rm_idx = []
+    for i, field in enumerate(form.time_param.window_constraint.entries):
+        if field.data in (None, 'None'):
+            rm_idx.append(i)
+    rm_idx = sorted(rm_idx,reverse=True) #: Reverse so that pop method won't interfere with indices later in list.
+    subtract_last_index = len(rm_idx)
+    if subtract_last_index > 0:
+        for field in form.time_param:
+            if field.type == 'FieldList':
+                for i in rm_idx:
+                    field.entries.pop(i)
+                field.last_index -= subtract_last_index
+        val = int(form.time_param.time_ordr.data) - subtract_last_index #: TODO fix with field coercion with correct returned data type
+        form.time_param.time_ordr.data = val
+        if form.time_param.time_ordr.data == 0:
+            form.time_param.window_flag.data = 'N'
+    return form
+#
+#--- Roll Category Functions
+#
+def add_roll_rank(form):
+    """
+    Add an entry to the roll constraints ranking.
+    """
+    val = form.roll_param.roll_ordr.data #: TODO fix with field coercion into correct returned data type
+    if val not in (None, ''):
+        form.roll_param.roll_ordr.data = int(val) + 1
+    else:
+        form.roll_param.roll_ordr.data = 1
+    form.roll_param.roll_constraint.append_entry('Y')
+    form.roll_param.roll_180.append_entry(None)
+    form.roll_param.roll.append_entry(None)
+    form.roll_param.roll_tolerance.append_entry(None)
+    return form
+
+def remove_roll_rank(form):
+    """
+    Remove all "NA" Entries from the field lists, turning flag off if no entries remain.
+    """
+    rm_idx = []
+    for i, field in enumerate(form.roll_param.roll_constraint.entries):
+        if field.data in (None, 'None'):
+            rm_idx.append(i)
+    rm_idx = sorted(rm_idx,reverse=True) #: Reverse so that pop method won't interfere with indices later in list.
+    subtract_last_index = len(rm_idx)
+    if subtract_last_index > 0:
+        for field in form.roll_param:
+            if field.type == 'FieldList':
+                for i in rm_idx:
+                    field.entries.pop(i)
+                field.last_index -= subtract_last_index
+        val = int(form.roll_param.roll_ordr.data) - subtract_last_index #: TODO fix with field coercion with correct returned data type
+        form.roll_param.roll_ordr.data = val
+        if form.roll_param.roll_ordr.data == 0:
+            form.roll_param.roll_flag.data = 'N'
+    return form
+#
+#--- Window Category Functions
+#
+def add_window_rank(form):
+    """
+    Add an entry to the roll constraints ranking.
+    """
+    val = form.aciswin_param.aciswin_no.data #: TODO fix with field coercion into correct returned data type
+    if val not in (None, ''):
+        form.aciswin_param.aciswin_no.data = int(val) + 1
+    else:
+        form.aciswin_param.aciswin_no.data = 1
+    form.aciswin_param.chip.append_entry('I0')
+    form.aciswin_param.start_row.append_entry(1)
+    form.aciswin_param.start_column.append_entry(1)
+    form.aciswin_param.height.append_entry(1023)
+    form.aciswin_param.width.append_entry(1023)
+    form.aciswin_param.lower_threshold.append_entry(0.08)
+    form.aciswin_param.pha_range.append_entry(13.0)
+    form.aciswin_param.sample.append_entry(0)
+    return form
+
+def remove_window_rank(form):
+    """
+    Remove all "NA" Entries from the field lists, turning flag off if no entries remain.
+    """
+    rm_idx = []
+    for i, field in enumerate(form.aciswin_param.chip.entries):
+        if field.data in (None, 'None'):
+            rm_idx.append(i)
+    rm_idx = sorted(rm_idx,reverse=True) #: Reverse so that pop method won't interfere with indices later in list.
+    subtract_last_index = len(rm_idx)
+    if subtract_last_index > 0:
+        for field in form.aciswin_param:
+            if field.type == 'FieldList':
+                for i in rm_idx:
+                    field.entries.pop(i)
+                field.last_index -= subtract_last_index
+        val = int(form.aciswin_param.aciswin_no.data) - subtract_last_index #: TODO fix with field coercion with correct returned data type
+        form.aciswin_param.aciswin_no.data = val
+        if form.aciswin_param.aciswin_no.data == 0:
+            form.aciswin_param.spwindow_flag.data = 'N'
     return form
