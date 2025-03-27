@@ -255,7 +255,7 @@
     <p>{{ help_popup_page('../static/ocatdatapage/ranked_entries.html', 'How To Change The Same Parameter Values In Multiple ObsIDs: Ranked Entries for Constraints')}}</p>
     {{ form.time_param.window_flag() }}
     {{ form.time_param.time_ordr() }}
-    {% if form.time_param.window_flag.data != 'Y' %}
+    {% if form.time_param.window_flag.data not in ('P', 'Y') %}
         {{form.open_time()}}<br>
     {% else %}
         <p>
@@ -723,7 +723,7 @@
     
         <table>
             <tr>
-            {% for subfield in form.asis %}
+            {% for subfield in form.submit_choice %}
                 <td>{{ subfield() }}</td>
                 <td>{{ subfield.label }}</td>
             {% endfor %}
@@ -745,13 +745,13 @@
 
         <p style='padding-bottom:20px;'>
             <strong style='font-size:130%;'>
-            {% if ct_dict.get('status')[-1] in ['observed', 'archived', 'triggered'] %}
+            {% if form.gen_param.status.data in ['observed', 'archived', 'triggered'] %}
                 This observation was already
             {% else %}
                 This observation was 
             {% endif %}
 
-            <span style='color:red;'>{{ ct_dict.get('status')[-1].upper() }}</span>,
+            <span style='color:red;'>{{ form.gen_param.status.data.upper() }}</span>
             and you cannot update its parameter values anymore.
             </strong>
         </p>

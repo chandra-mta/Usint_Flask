@@ -6,10 +6,8 @@
 
 """
 
-from multiprocessing import synchronize
 import os
-import numpy
-import copy
+import re
 from datetime import datetime
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from wtforms.validators import ValidationError
@@ -23,7 +21,7 @@ import cus_app.ocatdatapage.format_ocat_data as fod
 _OCAT_DATETIME_FORMAT = (
     "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero.
 )
-
+_COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
 
 @bp.route("/", methods=["GET", "POST"])
 @bp.route("/<obsid>", methods=["GET", "POST"])
@@ -68,6 +66,7 @@ def index(obsid=None):
             form = fod.remove_roll_rank(form)
         #
         #--- processing Acis Window Submissions
+        #
         elif form.open_aciswin.data:
             #: Refresh the page with aciswin entires as initialized by **format_for_form()**
             form.aciswin_param.spwindow_flag.data = "Y"
@@ -77,17 +76,102 @@ def index(obsid=None):
         elif form.aciswin_param.remove_window.data:
             form = fod.remove_window_rank(form)
         #
-        #
         #--- General Refresh
         #
         elif form.refresh.data:
             #: Process the changes submitted to the form for how they would update the form and param_dict objects
             form = fod.synchronize_values(form)
+        #
+        #--- Submission
+        #
+        elif form.submit.data:
+            render_finalize_page(form, ocat_data)
     return render_template("ocatdatapage/index.html", form=form, warning=warning)
 
+def render_finalize_page(form, ocat_data):
+
+    #: Read selected submit options ( and perform same actions to multi-obsids)
+    form = fod.synchronize_values(form)
+    if form.submit_choice.data == 'norm':
+        form_dict = form.data
+        indicator = indicate_changes(form_dict, ocat_data)
+
+        #: Perform change to the other obsids as well
+        if form_dict.get('multiobsid') not in (None,''):
+            multi_obsid = create_obsid_list(form_dict.get('multiobsid'), int(form_dict['gen_param'].get('obsid')))
+        #create_revision()
+    elif form.submit_choice.data == 'asis':
+        #create_revision()
+        pass
+    elif form.submit_choice.data == 'remove':
+        #create_revision()
+        pass
+    elif form.submit_choice.data == 'clone':
+        #create_revision()
+        pass
+
+def indicate_changes(form_dict, ocat_data):
+    """
+    Generate indicators of changed parameters and their new values.
+    """
+    #
+    #--- Due to slight differences in the available parameters in the ocat and in the form, we process through their shared keys.
+    #
+    
+
+
+    #
+    #--- Special Cases
+    #
+    if form_dict['time_param'].get('window_flag') in ('Y', 'P'):
+            tstart, tstop = combine_times(form_dict['time_param']) #: Combine the separate times into two lists of datetime objects
 #
 #--- Helper Functions
 #
+def combine_times(time_param):
+    """
+    Combine times from the form into ordered list of comparison datetime objects.
+    """
+    tstart = []
+    tstop = []
+    for i in range(int(time_param.get('time_ordr'))):
+        start_string = f"{time_param.get('tstart_month')[i]}"
+        stop_string = f"{time_param.get('tstop_month')[i]}"
+        start_string += f"{time_param.get('tstart_date')[i]}"
+        stop_string += f"{time_param.get('tstop_date')[i]}"
+        start_string += f"{time_param.get('tstart_year')[i]}"
+        stop_string += f"{time_param.get('tstop_year')[i]}"
+        start_string += f"{time_param.get('tstart_time')[i]}"
+        stop_string += f"{time_param.get('tstop_time')[i]}"
+        tstart.append(datetime.strptime(start_string, _COMBINE_DATETIME_FORMAT))
+        tstop.append(datetime.strptime(stop_string, _COMBINE_DATETIME_FORMAT))
+    return tstart, tstop
+
+def create_obsid_list(list_string, obsid):
+    """
+    Create a list of obsids from form input for a parameter display page.
+    """
+    #: Split the input string into elements
+    raw_elements = [x for x in re.split(r'\s+|,|:|;', list_string) if x != '']
+    
+    #: Combine into string replaceable format for dash parsing
+    combined = ','.join(raw_elements)
+    combined = combined.replace(',-,','-').replace('-,','-').replace(',-','-')
+    
+    #: Process Ranges
+    obsids_list = []
+    for element in combined.split(','):
+        if element.isdigit():
+            obsids_list.append(int(element))
+        else:
+            start, end = element.split('-')
+            obsids_list.extend(list(range(int(start), int(end) + 1)))
+    
+    #: Remove duplicates, sort, and exclude the main obsid
+    obsids_list = sorted(set(obsids_list) - {obsid})
+    return obsids_list
+
+
 def create_warning_line(ocat_data):
     """
     Check the observation status and create warning

@@ -24,10 +24,10 @@ _CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),
 _CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
 _CHOICE_CHIP = [('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
 _CHOICE_WINDOW = [(None,'NA')] + [(x, x) for x in ('I0', 'I1',  'I2', 'I3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5')]
-_CHOICE_ASIS = [("Normal Change", "Normal Change"),
-                ("Observation is Approved for flight","Observation is Approved for flight"),
-                (" ObsID no longer ready to go"," ObsID no longer ready to go"),
-                ("Split this ObsID","Split this ObsID")
+_CHOICE_SUBMIT = [("norm", "Normal Change"),
+                ("asis","Observation is Approved for flight"),
+                ("remove","ObsID no longer ready to go"),
+                ("clone","Split this ObsID")
             ]
 
 #
@@ -274,6 +274,6 @@ class OcatParamForm(FlaskForm):
     open_roll = SubmitField("Open Roll")
     open_aciswin = SubmitField("Open Window")
     refresh = SubmitField("Refresh")
-    asis = RadioField("Submit Options", choices=_CHOICE_ASIS)
+    submit_choice = RadioField("Submit Options", choices=_CHOICE_SUBMIT)
     multiobsid = StringField("Multi-Obsid")
     submit = SubmitField("Submit")
