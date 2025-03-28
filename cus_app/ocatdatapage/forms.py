@@ -41,6 +41,7 @@ _DAY_CHOICE = [(None,'NA')] + [(x,x) for x in _DAY_LIST]
 
 _USINT_DATETIME_FORMAT = "%b-%d-%Y %H:%M"
 _NONEDIT = {'readonly': True}
+_NULL_LIST = (None, 'None', '')
 
 """
 **CONCEPT MEMO**: All of the variable and function names within the form classes follow specific FlaskForm criteria in order to
@@ -51,7 +52,7 @@ initial data dictionary keys and field names.
 
 def coerce_none(value):
     #: Apply as coerce argument to any field to cast None to correct data type
-    if value == 'None':
+    if value in _NULL_LIST:
         return None
     return value
 
