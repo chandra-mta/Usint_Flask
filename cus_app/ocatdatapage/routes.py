@@ -14,7 +14,7 @@ from wtforms.validators import ValidationError
 
 from flask import current_app, render_template, request
 from cus_app.ocatdatapage import bp
-from cus_app.ocatdatapage.forms import OcatParamForm
+from cus_app.ocatdatapage.forms import OcatParamForm, coerce_none
 import cus_app.supple.read_ocat_data as rod
 import cus_app.ocatdatapage.format_ocat_data as fod
 
@@ -22,6 +22,156 @@ _OCAT_DATETIME_FORMAT = (
     "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero.
 )
 _COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
+_NULL_LIST = (None, 'None', '')
+_DISPLAY_CHANGE_BY_CATEGORY = {
+    "gen_param": [
+        "instrument",
+        "grating",
+        "obs_type",
+        "targname",
+        'ra_hms',
+        'dec_dms'
+        "ra",
+        "dec",
+        "y_det_offset",
+        "z_det_offset",
+        "trans_offset",
+        "focus_offset",
+        "uninterrupt",
+        "extend_src",
+        "obj_flag",
+        "object",
+        "photometry_flag",
+        "vmagnitude",
+        "est_cnt_rate",
+        "forder_cnt_rate",
+        "remarks",
+        "comments",
+    ],
+    "dither_param": [
+        "dither_flag",
+        "y_amp",
+        "y_amp_asec",
+        "y_freq",
+        "y_freq_asec",
+        "y_phase",
+        "z_amp",
+        "z_amp_asec",
+        "z_freq",
+        "z_freq_asec",
+        "z_phase"
+    ],
+    "time_param": [
+        "window_flag",
+        "time_ordr",
+        "window_constraint",
+    ],
+    "roll_param": [
+        "roll_flag",
+        "roll_ordr",
+        "roll_constraint",
+        "roll_180",
+        "roll",
+        "roll_tolerance"
+    ],
+    "other_param":[
+        "constr_in_remarks",
+        "pointing_constraint",
+        "phase_epoch",
+        "phase_period",
+        "phase_start",
+        "phase_start_margin",
+        "phase_end",
+        "phase_end_margin",
+        "monitor_flag",
+        "pre_id",
+        "pre_min_lead",
+        "pre_max_lead",
+        "multitelescope",
+        "observatories",
+        "multitelescope_interval"
+    ],
+    "hrc_param": [
+        "hrc_zero_block",
+        "hrc_timing_mode",
+        "hrc_si_mode"
+    ],
+    "acis_param": [
+        "exp_mode",
+        "bep_pack",
+        "frame_time",
+        "most_efficient",
+        "dropped_chip_count",
+        "ccdi0_on",
+        "ccdi1_on",
+        "ccdi2_on",
+        "ccdi3_on",
+        "ccds0_on",
+        "ccds1_on",
+        "ccds2_on",
+        "ccds3_on",
+        "ccds4_on",
+        "ccds5_on",
+        "subarray",
+        "subarray_start_row",
+        "subarray_row_count",
+        "duty_cycle",
+        "secondary_exp_count",
+        "primary_exp_time",
+        "onchip_sum",
+        "onchip_row_count",
+        "onchip_column_count",
+        "eventfilter",
+        "eventfilter_lower",
+        "eventfilter_higher",
+        "multiple_spectral_lines",
+        "spectra_max_count",
+    ],
+    "aciswin_param": [
+        'spwindow_flag',
+        'aciswin_no',
+        'chip',
+        'start_row',
+        'start_column',
+        'height',
+        'width',
+        'lower_threshold',
+        'pha_range',
+        'sample'
+        ],
+    "too_param": [
+        'tooid',
+        'too_trig',
+        'too_type',
+        'too_start',
+        'too_stop',
+        'too_followup',
+        'too_remarks'
+        ]
+}
+_FOR_RANK = {
+    'time_param':[
+        "window_constraint",
+        "tstart",
+        "tstop"
+    ],
+    'roll_param':[
+        "roll_constraint",
+        "roll_180",
+        "roll",
+        "roll_tolerance"
+    ],
+    'aciswin_param': [
+        'chip',
+        'start_row',
+        'start_column',
+        'height',
+        'width',
+        'lower_threshold',
+        'pha_range',
+        'sample'
+    ]
+}
 
 @bp.route("/", methods=["GET", "POST"])
 @bp.route("/<obsid>", methods=["GET", "POST"])
@@ -85,19 +235,20 @@ def index(obsid=None):
         #--- Submission
         #
         elif form.submit.data:
+            form = fod.synchronize_values(form)
             render_finalize_page(form, ocat_data)
     return render_template("ocatdatapage/index.html", form=form, warning=warning)
 
 def render_finalize_page(form, ocat_data):
 
-    #: Read selected submit options ( and perform same actions to multi-obsids)
+    #: Read selected submit options (and perform same actions to multi-obsids)
     form = fod.synchronize_values(form)
     if form.submit_choice.data == 'norm':
         form_dict = form.data
-        indicator = indicate_changes(form_dict, ocat_data)
+        ind_dict = indicate_changes(form_dict, ocat_data)
 
         #: Perform change to the other obsids as well
-        if form_dict.get('multiobsid') not in (None,''):
+        if form_dict.get('multiobsid') not in _NULL_LIST:
             multi_obsid = create_obsid_list(form_dict.get('multiobsid'), int(form_dict['gen_param'].get('obsid')))
         #create_revision()
     elif form.submit_choice.data == 'asis':
@@ -117,17 +268,50 @@ def indicate_changes(form_dict, ocat_data):
     #
     #--- Due to slight differences in the available parameters in the ocat and in the form, we process through their shared keys.
     #
-    
-
-
+    ind_dict = {}
+    for category, parameter_list in _DISPLAY_CHANGE_BY_CATEGORY.items():
+        ind_dict[category] = {}
+        for parameter in parameter_list:
+            org = ocat_data.get(parameter)
+            new = form_dict[category].get(parameter)
+            if not compare_values(org,new):
+                ind_dict[category][parameter] = [org,new]
     #
     #--- Special Cases
     #
+    form_tstart = None
+    form_tstop = None
+    ocat_tstart = None
+    ocat_tstop = None
     if form_dict['time_param'].get('window_flag') in ('Y', 'P'):
-            tstart, tstop = combine_times(form_dict['time_param']) #: Combine the separate times into two lists of datetime objects
+            form_tstart, form_tstop = combine_times(form_dict['time_param']) #: Combine the separate times into two lists of datetime objects
+            if ocat_data.get('window_flag') in ('Y', 'P'):
+                ocat_tstart = [datetime.strptime(x,_OCAT_DATETIME_FORMAT) for x in ocat_data.get('tstart')]
+                ocat_tstop = [datetime.strptime(x,_OCAT_DATETIME_FORMAT) for x in ocat_data.get('tstop')]
+    if (str(form_tstart) != str(ocat_tstart)) or (str(form_tstop) != str(ocat_tstop)):
+        ind_dict[category]['tstart'] = [ocat_tstart, form_tstart]
+        ind_dict[category]['tstop'] = [ocat_tstop, form_tstop]
+    
+    return ind_dict
 #
 #--- Helper Functions
 #
+def compare_values(org,new):
+    """
+    Compare values within reason for a revision.
+    """
+    if isinstance(org,(int,float)) and isinstance(new,(int,float)):
+        return round(org,4) == round(new,4)
+    elif isinstance(org,str) and isinstance(new,str):
+        return org.replace(" ","") == new.replace(" ","")
+    elif isinstance(org,list) and isinstance(new,list):
+        return str(org) == str(new)
+    elif isinstance(org,datetime) and isinstance(new,datetime):
+        diff = (new - org).total_seconds()
+        return diff > 60
+    else:
+        return org == new
+
 def combine_times(time_param):
     """
     Combine times from the form into ordered list of comparison datetime objects.
