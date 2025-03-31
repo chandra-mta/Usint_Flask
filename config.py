@@ -1,7 +1,5 @@
 import os
 from datetime import timedelta
-import binascii
-
 
 class BaseConfig(object):
     CONFIGURATION_NAME = "baseconfig"
@@ -11,7 +9,7 @@ class BaseConfig(object):
     #
     # --- Database and CSRF secret key
     #
-    SECRET_KEY = binascii.b2a_hex(os.urandom(15)).decode()
+    SECRET_KEY = 'secret_key_for_test'
     #
     # --- SQLAlchemy
     #
