@@ -41,7 +41,6 @@ _DAY_CHOICE = [(None,'NA')] + [(x,x) for x in _DAY_LIST]
 
 _USINT_DATETIME_FORMAT = "%b-%d-%Y %H:%M"
 _NONEDIT = {'readonly': True}
-_NULL_LIST = (None, 'None', '')
 
 """
 **CONCEPT MEMO**: All of the variable and function names within the form classes follow specific FlaskForm criteria in order to
@@ -49,12 +48,6 @@ allow for Jinja Template page generation to input initial data into the Ocat For
 input selections for fields with the validate_<field name> functions. Changing these names will break the form validation unless matched with corresponding
 initial data dictionary keys and field names.
 """
-
-def coerce_none(value):
-    #: Apply as coerce argument to any field to cast None to correct data type
-    if value in _NULL_LIST:
-        return None
-    return value
 
 class GeneralParamForm(FlaskForm):
     seq_nbr = IntegerField("Sequence Number", render_kw=_NONEDIT)

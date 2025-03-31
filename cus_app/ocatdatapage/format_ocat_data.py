@@ -11,7 +11,9 @@ from datetime import datetime
 
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
-
+_COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
+_NULL_LIST = (None, 'None', '', [])
+_NONE_FORM_EXCEPTIONS = ['dither_flag', 'window_flag', 'spwindow_flag'] #: list of parameters to include in form initialization even if they are None.
 _PULL_FORM_BY_CATEGORY = {
     "gen_param": [
         "seq_nbr",
@@ -160,9 +162,158 @@ _PULL_FORM_BY_CATEGORY = {
         'too_remarks'
         ]
 }
-_NONE_FORM_EXCEPTIONS = ['dither_flag', 'window_flag', 'spwindow_flag'] #: list of parameters to include in form initialization even if they are None.
+_DISPLAY_CHANGE_BY_CATEGORY = {
+    "gen_param": [
+        "instrument",
+        "grating",
+        "obs_type",
+        "targname",
+        "ra",
+        "dec",
+        "y_det_offset",
+        "z_det_offset",
+        "trans_offset",
+        "focus_offset",
+        "uninterrupt",
+        "extend_src",
+        "obj_flag",
+        "object",
+        "photometry_flag",
+        "vmagnitude",
+        "est_cnt_rate",
+        "forder_cnt_rate",
+        "remarks",
+        "comments",
+    ],
+    "dither_param": [
+        "dither_flag",
+        "y_amp",
+        "y_freq",
+        "y_phase",
+        "z_amp",
+        "z_freq",
+        "z_phase"
+    ],
+    "time_param": [
+        "window_flag",
+        "time_ordr",
+        "window_constraint",
+    ],
+    "roll_param": [
+        "roll_flag",
+        "roll_ordr",
+        "roll_constraint",
+        "roll_180",
+        "roll",
+        "roll_tolerance"
+    ],
+    "other_param":[
+        "constr_in_remarks",
+        "pointing_constraint",
+        "phase_epoch",
+        "phase_period",
+        "phase_start",
+        "phase_start_margin",
+        "phase_end",
+        "phase_end_margin",
+        "monitor_flag",
+        "pre_id",
+        "pre_min_lead",
+        "pre_max_lead",
+        "multitelescope",
+        "observatories",
+        "multitelescope_interval"
+    ],
+    "hrc_param": [
+        "hrc_zero_block",
+        "hrc_timing_mode",
+        "hrc_si_mode"
+    ],
+    "acis_param": [
+        "exp_mode",
+        "bep_pack",
+        "frame_time",
+        "most_efficient",
+        "dropped_chip_count",
+        "ccdi0_on",
+        "ccdi1_on",
+        "ccdi2_on",
+        "ccdi3_on",
+        "ccds0_on",
+        "ccds1_on",
+        "ccds2_on",
+        "ccds3_on",
+        "ccds4_on",
+        "ccds5_on",
+        "subarray",
+        "subarray_start_row",
+        "subarray_row_count",
+        "duty_cycle",
+        "secondary_exp_count",
+        "primary_exp_time",
+        "onchip_sum",
+        "onchip_row_count",
+        "onchip_column_count",
+        "eventfilter",
+        "eventfilter_lower",
+        "eventfilter_higher",
+        "multiple_spectral_lines",
+        "spectra_max_count",
+    ],
+    "aciswin_param": [
+        'spwindow_flag',
+        'aciswin_no',
+        'chip',
+        'start_row',
+        'start_column',
+        'height',
+        'width',
+        'lower_threshold',
+        'pha_range',
+        'sample'
+        ],
+    "too_param": [
+        'tooid',
+        'too_trig',
+        'too_type',
+        'too_start',
+        'too_stop',
+        'too_followup',
+        'too_remarks'
+        ]
+}
+_FOR_RANK = {
+    'time_param':[
+        "window_constraint",
+        "tstart",
+        "tstop"
+    ],
+    'roll_param':[
+        "roll_constraint",
+        "roll_180",
+        "roll",
+        "roll_tolerance"
+    ],
+    'aciswin_param': [
+        'chip',
+        'start_row',
+        'start_column',
+        'height',
+        'width',
+        'lower_threshold',
+        'pha_range',
+        'sample'
+    ]
+} #: In case we need to process separately.
 
 def format_for_form(ocat_data):
+    """Format a set of ocat data for the category->parameter keyed dictionary of form data
+
+    :param ocat_data: Ocat Data keyed by parameter directly (Represents only what's in the ocat in original form)
+    :type ocat_data: dict(str, value)
+    :return: category->parameter keyed dictionary of form data
+    :rtype: dict(dict(str,value))
+    """
     form = {}
     #
     #--- Initialize form values which are direct fetches from the ocat_data
@@ -194,6 +345,55 @@ def synchronize_values(form):
         form.dither_param.z_amp.data = convert_from_arcsec(form.dither_param.z_amp_asec.data)
         form.dither_param.z_freq.data = convert_from_arcsec(form.dither_param.z_freq_asec.data)
     return form
+
+def coerce(value):
+    def _coerce_single(value):
+        if isinstance(value,(int,float)):
+            return value #: No coercion necessary
+        try: 
+            value = int(value)
+            return value
+        except (ValueError, TypeError):
+            pass
+        try:
+            value = float(value)
+            return value
+        except (ValueError, TypeError):
+            pass
+        try:
+            value = datetime.strptime(value,_OCAT_DATETIME_FORMAT)
+            return value
+        except (ValueError, TypeError):
+            pass
+        try:
+            value = datetime.strptime(value,_COMBINE_DATETIME_FORMAT)
+            return value
+        except (ValueError, TypeError):
+            pass
+        if value in _NULL_LIST:
+            return None #: Apply as coerce argument to any field to cast None to correct data type
+        return value #: Simple string
+    if isinstance(value,list):
+        if value == []:
+            return None
+        else:
+            value_list = [_coerce_single(x) for x in value]
+        return value_list
+    else:
+        return _coerce_single(value)
+
+def format_for_comparison(form):
+    """
+    Format the Flask Form into a coerced dictionary
+    """
+    form_dict = form.data
+    for category, value in form_dict.items():
+        if isinstance(value,dict): #: Handling parameter dictionary
+            for param, data in value.items():
+                form_dict[category][param] = coerce(data)
+        else:
+            form_dict[category] = coerce(value)
+    return form_dict
 #
 #--- General Category Functions
 #
