@@ -12,9 +12,9 @@ from datetime import datetime
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from wtforms.validators import ValidationError
 
-from flask import current_app, render_template, request
+from flask import current_app, render_template, request, session, redirect, url_for
 from cus_app.ocatdatapage import bp
-from cus_app.ocatdatapage.forms import OcatParamForm
+from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
 import cus_app.ocatdatapage.format_ocat_data as fod
 
@@ -25,7 +25,10 @@ def index(obsid=None):
     #
     # --- Render Ocat Data In A WTForm
     #
-    ocat_data = rod.read_ocat_data(obsid)
+    ocat_data = session.get('ocat_data')
+    if ocat_data is None:
+        ocat_data = rod.read_ocat_data(obsid)
+        session['ocat_data'] = ocat_data
     warning = create_warning_line(ocat_data)
     #: Formats information into form and provides additional form-specific parameters
     form_dict = fod.format_for_form(ocat_data)
@@ -80,18 +83,47 @@ def index(obsid=None):
         #--- Submission
         #
         elif form.submit.data:
-            render_finalize_page(form, ocat_data)
+            prepare_confirmation_page(form, ocat_data)
+            return redirect(url_for('ocatdatapage.confirm'))
     return render_template("ocatdatapage/index.html", form=form, warning=warning)
 
-def render_finalize_page(form, ocat_data):
+
+@bp.route('/confirm', methods=['GET', 'POST'])
+def confirm():
+    ind_dict = session.get('ind_dict')
+    multi_obsid = session.get('multi_obsid',[])
+    ocat_data = session.get('ocat_data')
+    form_dict = session.get('form_dict')
+    or_dict = {} #: TODO create check for whether the obsid is in the or_list so that the parameter changes can provided the user with a warning.
+    form = ConfirmForm(request.form)
+    if request.method == "POST" and form.is_submitted():
+        pass
+    return render_template('ocatdatapage/confirm.html',
+                           form = form,
+                           ind_dict = ind_dict,
+                           multi_obsid = multi_obsid,
+                           ocat_data = ocat_data,
+                           form_dict = form_dict,
+                           or_dict = or_dict)
+
+@bp.route('/finalize', methods=['GET', 'POST'])
+def finalize():
+    #: TODO make sure that the finalized submission will run the functions to submit the SQLAlchemy commit and then clear the session data
+    #: Then display the page informing the user that their revision went through.
+    #: Needed so that we can complete a revision action and keep the cache clear (particularly of ocat data) for the next obsid revision
+    pass
+
+def prepare_confirmation_page(form, ocat_data):
 
     #: Read selected submit options (and perform same actions to multi-obsids)
     if form.submit_choice.data == 'norm':
         form_dict = fod.format_for_comparison(form)
         ind_dict = indicate_changes(form_dict, ocat_data)
+        session['ind_dict'] = ind_dict
         #: Perform change to the other obsids as well
         if form_dict.get('multiobsid') not in fod._NULL_LIST:
             multi_obsid = create_obsid_list(form_dict.get('multiobsid'), int(form_dict['gen_param'].get('obsid')))
+            session['multi_obsid'] = multi_obsid
         #create_revision()
     elif form.submit_choice.data == 'asis':
         #create_revision()
@@ -121,6 +153,7 @@ def indicate_changes(form_dict, ocat_data):
     #
     #--- Special Cases
     #
+    #: TODO Clean up implementation for how the indicator_dict is storing changed datetime information.
     form_tstart = None
     form_tstop = None
     ocat_tstart = None
@@ -131,6 +164,10 @@ def indicate_changes(form_dict, ocat_data):
                 ocat_tstart = [datetime.strptime(x,fod._OCAT_DATETIME_FORMAT) for x in ocat_data.get('tstart')]
                 ocat_tstop = [datetime.strptime(x,fod._OCAT_DATETIME_FORMAT) for x in ocat_data.get('tstop')]
     if (str(form_tstart) != str(ocat_tstart)) or (str(form_tstop) != str(ocat_tstop)):
+        ocat_tstart = [x.strftime(fod._OCAT_DATETIME_FORMAT) for x in ocat_tstart]
+        ocat_tstop = [x.strftime(fod._OCAT_DATETIME_FORMAT) for x in ocat_tstop]
+        form_tstart = [x.strftime(fod._OCAT_DATETIME_FORMAT) for x in form_tstart]
+        form_tstop = [x.strftime(fod._OCAT_DATETIME_FORMAT) for x in form_tstop]
         ind_dict[category]['tstart'] = [ocat_tstart, form_tstart]
         ind_dict[category]['tstop'] = [ocat_tstop, form_tstop]
     

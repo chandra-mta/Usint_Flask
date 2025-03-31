@@ -271,3 +271,10 @@ class OcatParamForm(FlaskForm):
     submit_choice = RadioField("Submit Options", choices=_CHOICE_SUBMIT)
     multiobsid = StringField("Multi-Obsid")
     submit = SubmitField("Submit")
+
+class ConfirmForm(FlaskForm):
+    """
+    Extension of FlaskForm for the parameter change confirmation page.
+    """
+    previous_page = SubmitField("Previous Page")
+    finalize = SubmitField("Finalize")

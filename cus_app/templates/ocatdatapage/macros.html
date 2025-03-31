@@ -36,3 +36,35 @@
         </a>
     {% endif %}
 {% endmacro %}
+
+{% macro remark_section(remark_change) %}
+    {% if remark_change != None %}
+        <h4 style='text-decoration: underline;'>Original</h4>
+            <p>
+                {% if remark_change[0] != None %}
+                    <span style='padding-left:50px;font-style:italic'>NA</span>
+                {% else %}
+                    <p style='padding-left:20px;'>{{remark_change[0].replace('\n','<br>')}}</p>
+                {% endif %}
+            </p>
+        <hr style='border-top:1px dotted;'>
+        <h4 style='text-decoration: underline;'>New</h4>
+            <p>
+                {% if remark_change[1] != None %}
+                    <span style='padding-left:50px;color:red;font-style:italic'>NA</span>
+                {% else %}
+                    <p style='padding-left:20px;color:red;'>{{remark_change[1].replace('\n','<br>')}}</p>
+                {% endif %}
+            </p>
+    {% else %}
+        <h4 style='text-decoration: underline;'>Original</h4>
+            <p>
+                <span style='padding-left:50px;font-style:italic;'>NA</span>
+            </p>
+        <hr style='border-top:1px dotted;'>
+        <h4 style='text-decoration: underline;'>New</h4>
+            <p>
+                <span style='padding-left:50px;font-style:italic;'>NA</span>
+            </p>
+    {% endif %}
+{% endmacro %}

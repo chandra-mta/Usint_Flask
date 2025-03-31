@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% from 'ocatdatapage/macros.html' import remark_section  %}
+
+{% block title %}Ocat Data Page{% endblock %}
+{% block main_title %}Ocat Data Page{% endblock %}
+{% block app_content %}
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <p style='color:red; font-size:160%;'>
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+{% set ns = namespace(multi_count=0, multi_orcnt=0, param_count=0) %}
+
+<form method="POST">
+<!-- TODO asis, remove, clone case. Either here or separate confirmation page?-->
+    {{ form.previous_page() }} {{ form.finalize() }}
+    <div style='padding-bottom:20px;'></div>
+    <h3>You have submitted the following value updates on Obsid {{ocat_data.get('obsid') }}.</h3>
+    <!--if multiple obsids are submitted, display the obsids-->
+    {% if multi_obsid|length > 0 %}
+        <div style='margin-left: 40px;padding-bottom:30px;'>
+        <h4>The same changes will also apply to obsid(s): </h4>
+        <table border=0>
+            <tr>
+        {% for obsid in multi_obsid %}
+            {% set sobsid = obsid | string %}
+            {% if ns.multi_count % 8 == 0 %}
+                </tr>
+                <tr>
+            {% endif %}
+            {% set slink = '../ocatdatapage/' + sobsid %}
+            <td>
+                    <span style='padding-left:5px;'>
+                &#8729;
+                <a href="javascript:WindowOpener(' {{ slink }} ')"><b>
+                {% if or_dict.get(sobsid) %}
+                    <span style='color:red;'>
+                        {{ sobsid }}
+                        {% set ns.multi_orcnt = ns.multi_orcnt + 1 %}
+                    </span>
+                {% else %}
+                        {{ sobsid }}
+                {% endif %}
+                </b></a>
+                </span>
+                </td>
+            {% set ns.multi_count = ns.multi_count + 1 %}
+        {% endfor %}
+        </tr>
+        </table>
+        <!-- if some of the obsids are on the active OR list, display the warning -->
+        {% if ns.multi_orcnt > 0 %}
+            <p>
+                <span style='color:red;'>Warning: </span>
+               obsid(s) marked by <span style='color:red;'>red</span> color is/are
+               on the active OR list. You may want to contact 
+               <a href='mailto:mp@cfa.harvard.edu'>mp@cfa.harvard.edu</a>
+               before submitting the parameter changes.
+            </p>
+        {% endif %}
+        </div>
+    {% endif%}
+    <!-- parameter table starts here -->
+    <table border=1 class='center' style='border-spacing:5px; border-collapse: separate;'>
+        <!-- <tr>
+            <th class='cent'>Parameter</th>
+            <th class='cent'>Original Value</th>
+            <th class='cent'>Requested</th>
+            <th>&#160;</th>
+            <th class='cent'>Parameter</th>
+            <th class='cent'>Original Value</th>
+            <th class='cent'>Requested</th>
+        </tr> -->
+        {% for category, parameter_dict in ind_dict.items() %}
+        <!--TODO handle rank parameter changes separately-->
+            {% if parameter_dict| length > 0 %}
+        <tr>
+            <td colspan = 3 class="cent">{{ category }}</td>
+        </tr>
+                {% for param, change in parameter_dict.items() %}
+        <tr>
+            <td>{{param}}</td>
+            <td>{{change[0]}}</td>
+            <td>{{change[1]}}</td>
+        </tr>
+                {% endfor %}
+            {% else %}
+            {% endif %}
+        {% endfor %}
+    </table>
+    <!-- remarks and comments need an extra step to display the format correctly -->
+    <hr style='border-top: 1px dashed;'>
+
+    <h3>Remarks</h3>
+    <div style='margin-left: 50px; margin-right:50px;'>
+        {{ remark_section(ind_dict['gen_param'].get('remarks')) }}
+    </div>
+    <hr style='border-top: 1px dashed;'>
+
+    <h3>Comments</h3>
+    <div style='margin-left: 50px; margin-right:50px;'>
+        {{ remark_section(ind_dict['gen_param'].get('comments')) }}
+    </div>
+
+    <hr>
+    <p>
+    If these values are correct, click the Finalize button. Otherwise, use the Previous Page button
+    to go back to the main page. 
+    </p>
+    {{ form.previous_page() }} {{ form.finalize() }}
+</form>
+<div style='padding-bottom:30px;'></div>
+
+{% endblock %}
