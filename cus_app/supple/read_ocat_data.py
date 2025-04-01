@@ -9,6 +9,7 @@ import ska_dbi.sqsh as sqsh
 import astropy.table
 import astropy.io
 import numpy as np
+from datetime import datetime
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 #
 #--- Set sqsh Parameters
@@ -17,6 +18,11 @@ _SERV = 'ocatsqlsrv'
 _USR = 'mtaops_internal_web'
 _AUTHDIR = "/data/mta4/CUS/authorization"
 _DB = 'axafocat'
+#
+# --- NOTE Ocat dates are recorded without a leading zero. This makes datetime formatting difficult so we convert for the fetch.
+# --- While datetime can process these dates, it never prints without a leading zero.
+#
+_OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"
 
 #
 # --- Parameter Lists
@@ -190,6 +196,14 @@ def general_params(obsid):
         p_dict = _convert_astropy_to_native(result[0])
         p_dict['comments'] = p_dict.pop('mp_remarks')
         p_dict['obs_type'] = p_dict.pop('type')
+        if p_dict.get('soe_st_sched_date') is not None:
+            val = p_dict.get('soe_st_sched_date')
+            val = datetime.strptime(val,_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT) #: Ensure leading zero format
+            p_dict['soe_st_sched_date'] = val
+        if p_dict.get('lts_lt_plan') is not None:
+            val = p_dict.get('lts_lt_plan')
+            val = datetime.strptime(val,_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT) #: Ensure leading zero format
+            p_dict['lts_lt_plan'] = val
         return p_dict
     
 def monitor_params(obsid, pre_id, group_id):
@@ -292,6 +306,11 @@ def time_constraint_params(obsid):
     time_fetch = get_value_from_sybase(cmd)
     p_dict = _convert_astropy_to_native(time_fetch, orient = 'list')
     p_dict['time_ordr'] = max(p_dict.pop('ordr'))
+    #
+    # --- Ensure leading zero format
+    #
+    p_dict['tstart'] = [datetime.strptime(val,_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT) for val in p_dict.get('tstart')]
+    p_dict['tstop'] = [datetime.strptime(val,_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT) for val in p_dict.get('tstop')]
     return p_dict
 
 def too_ddt_params(tooid):
