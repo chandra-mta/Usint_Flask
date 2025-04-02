@@ -23,15 +23,20 @@ import cus_app.ocatdatapage.format_ocat_data as fod
 @bp.route("/index/<obsid>", methods=["GET", "POST"])
 def index(obsid=None):
     #
-    # --- Render Ocat Data In A WTForm
+    # --- Fetch all relevant ocat data in it's current state and store in session.
     #
     ocat_data = session.get('ocat_data')
+    warning = session.get('warning')
     if ocat_data is None:
         ocat_data = rod.read_ocat_data(obsid)
         session['ocat_data'] = ocat_data
-    warning = create_warning_line(ocat_data)
+        warning = create_warning_line(ocat_data)
+        session['warning'] = warning
     #: Formats information into form and provides additional form-specific parameters
     form_dict = fod.format_for_form(ocat_data)
+    #
+    # --- Render Ocat Data In A WTForm
+    #
     form = OcatParamForm(request.form, data=form_dict)
     if request.method == "POST" and form.is_submitted(): 
         form = fod.synchronize_values(form) #: Process the changes submitted to the form for how they would update the form and param_dict objects
@@ -93,11 +98,13 @@ def confirm():
     ind_dict = session.get('ind_dict')
     multi_obsid = session.get('multi_obsid',[])
     ocat_data = session.get('ocat_data')
+    print(f"ocatdata: {ocat_data}")
     form_dict = session.get('form_dict')
     or_dict = {} #: TODO create check for whether the obsid is in the or_list so that the parameter changes can provided the user with a warning.
     form = ConfirmForm(request.form)
     if request.method == "POST" and form.is_submitted():
-        pass
+        if form.previous_page:
+            return redirect(url_for('ocatdatapage.index', obsid=ocat_data.get('obsid')))
     return render_template('ocatdatapage/confirm.html',
                            form = form,
                            ind_dict = ind_dict,

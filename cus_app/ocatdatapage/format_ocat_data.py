@@ -384,8 +384,24 @@ def coerce(value):
 
 def format_for_comparison(form):
     """
-    Format the Flask Form into a coerced dictionary
+    Format the Flask Form into a coerced dictionary to compare with ocat_data.
+    Also contains the labels used for the comparison.
     """
+    def _determine_include(field):
+        _DO_INCLUDE = ['ra', 'dec', 'y_amp', 'y_freq', 'z_amp', 'z_freq']
+        _DONT_INCLUDE = []
+        if field.render_kw['readonly']:
+            include = False
+        if field.name.split('-')[-1] in _DO_INCLUDE:
+            include = True
+        elif field.name.split('-')[-1] in _DONT_INCLUDE:
+            include = False
+
+    for subfield in form:
+        if subfield.type == 'FormField':
+            for parameter_field in subfield:
+                pass
+
     form_dict = form.data
     for category, value in form_dict.items():
         if isinstance(value,dict): #: Handling parameter dictionary
