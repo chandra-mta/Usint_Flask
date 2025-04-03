@@ -2,15 +2,16 @@
 **ocatdatapage/forms.py**: Flask WTForm of the Ocat Data Page
 
 :Author: W. Aaron (william.aaron@cfa.harvard.edu)
-:Last Updated: Mar 13, 20.025
+:Last Updated: Mar 13, 2025
 
 """
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField, RadioField
-from wtforms.validators import ValidationError, DataRequired
+from wtforms import SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField, RadioField, DecimalField
+from wtforms.validators import ValidationError, DataRequired, NumberRange
 from datetime import datetime
 from calendar import month_abbr
+import json
 
 
 #
@@ -19,7 +20,6 @@ from calendar import month_abbr
 _CHOICE_NNPY = ((None, 'NA'), ('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'),)
 _CHOICE_NY   = (('N','NO'), ('Y','YES'),)
 _CHOICE_NNY  = ((None, 'NA'), ('N', 'NO'), ('Y', 'YES'),)
-_CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
 _CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),)
 _CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
 _CHOICE_CHIP = [('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
@@ -48,71 +48,54 @@ allow for Jinja Template page generation to input initial data into the Ocat For
 input selections for fields with the validate_<field name> functions. Changing these names will break the form validation unless matched with corresponding
 initial data dictionary keys and field names.
 """
+with open('../static/labels.json') as f:
+    _LABELS = json.load(f)
 
-class GeneralParamForm(FlaskForm):
-    seq_nbr = IntegerField("Sequence Number", render_kw=_NONEDIT)
-    status = StringField("Status", render_kw=_NONEDIT)
-    obsid = IntegerField("Obsid", render_kw=_NONEDIT)
-    proposal_number = IntegerField("Proposal Number", render_kw=_NONEDIT)
-    proposal_title = StringField("Proposal Title", render_kw=_NONEDIT)
-    obs_ao_str = StringField("Obs AO Status", render_kw=_NONEDIT)
+class OcatParamForm(FlaskForm):
+    #
+    # --- General
+    #
+    targname = StringField(_LABELS.get('targname'), validators=[DataRequired()])
 
-    targname = StringField("Target Name", validators=[DataRequired()])
-    si_mode = StringField("SI Mode", render_kw=_NONEDIT)
-    aca_mode = StringField("ACA Mode", render_kw=_NONEDIT)
+    choices = (
+        ("ACIS-I", "ACIS-I", {"onclick":"toggle2Div('acisDiv','block', 'hrcDiv','none')"}),
+        ("ACIS-S", "ACIS-S", {"onclick":"toggle2Div('acisDiv','block', 'hrcDiv','none')"}),
+        ("HRC-I", "HRC-I", {"onclick":"toggle2Div('acisDiv','none', 'hrcDiv','block')"}),
+        ("HRC-S", "HRC-S", {"onclick":"toggle2Div('acisDiv','none', 'hrcDiv','block')"}),
+    )
+    instrument = SelectField(_LABELS.get('instrument'), choices=choices, validators=[DataRequired()])
 
-    choice = ("ACIS-I", "ACIS-S", "HRC-I", "HRC-S")
-    instrument = SelectField("Instrument", choices=[(x, x) for x in choice])
-    choice = (None, "LETG", "HETG")
-    grating = SelectField("Grating", choices=[(x, x) for x in choice])
-    choice = ('GO', 'TOO', 'GTO', 'CAL', 'DDT', 'CAL_ER', 'ARCHIVE', 'CDFS', 'CLP')
-    obs_type = SelectField("Type", choices=[(x, x) for x in choice])
+    choices = [(x, x) for x in (None, "LETG", "HETG")]
+    grating = SelectField(_LABELS.get('grating'), choices=choices)
 
-    pi_name = StringField("PI Name", render_kw=_NONEDIT)
-    observer = StringField("Observer", render_kw=_NONEDIT)
-    approved_exposure_time = StringField("Exposure Time", render_kw=_NONEDIT)
-    rem_exp_time = StringField("Remaining Exposure Time", render_kw=_NONEDIT)
+    choices = [(x, x) for x in ('GO', 'TOO', 'GTO', 'CAL', 'DDT', 'CAL_ER', 'ARCHIVE', 'CDFS', 'CLP')]
+    obs_type = SelectField(_LABELS.get('obs_type'), choices=choices)
 
-    proposal_joint = StringField("Joint Proposal", render_kw=_NONEDIT)
-    proposal_hst = StringField("HST Approved Time", render_kw=_NONEDIT)
-    proposal_noao = StringField("NOAO Approved Time", render_kw=_NONEDIT)
-    proposal_xmm = StringField("XMM Approved Time", render_kw=_NONEDIT)
-    proposal_rxte = StringField("RXTE Approved Time", render_kw=_NONEDIT)
-    proposal_vla = StringField("VLA Approved Time", render_kw=_NONEDIT)
-    proposal_vlba = StringField("VLBA Approved Time", render_kw=_NONEDIT)
+    ra_hms = StringField(_LABELS.get('ra_hms'), default='00:00:00.0000') #: TODO make Javascript dynamically change RA, DEC display
+    dec_dms = StringField(_LABELS.get('dec_dms'), default='+00:00:00.0000')
 
-    soe_st_sched_date = StringField("Scheduled Date", render_kw=_NONEDIT)
-    lts_lt_plan = StringField("LST Date", render_kw=_NONEDIT)
+    y_det_offset = DecimalField(_LABELS.get('y_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
+    z_det_offset = DecimalField(_LABELS.get('z_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
+    trans_offset = DecimalField(_LABELS.get('trans_offset'), validators=[NumberRange(min=-190.5, max=126.621)])
+    focus_offset = DecimalField(_LABELS.get('focus_offset'))
 
-    rass = StringField("RASS", render_kw=_NONEDIT)
-    rosat = StringField("ROSAT", render_kw=_NONEDIT)
-    dss = StringField("DSS", render_kw=_NONEDIT)
+    uninterrupt = SelectField(_LABELS.get('uninterrupt'), choices=_CHOICE_NNPY)
+    extended_src = SelectField(_LABELS.get('extended_src'), choices=_CHOICE_NY)
+    obj_flag = SelectField(_LABELS.get('obj_flag'), choices=[(x, x) for x in ('NO', 'MT', 'SS')])
 
-    ra_hms = StringField("RA (HMS)", default='00:00:00.0000')
-    dec_dms = StringField("Dec (DMS)", default='+00:00:00.0000')
-    planned_roll = StringField("Planned Roll", render_kw=_NONEDIT)
-    ra = FloatField("RA",default = 0.0, render_kw=_NONEDIT)
-    dec = FloatField("Dec",default = 0.0, render_kw=_NONEDIT)
-    soe_roll = StringField("Roll Observed", render_kw=_NONEDIT)
+    choices = [(x, x) for x in ('NONE', 'NEW','ASTEROID', 'COMET', 'EARTH', 'JUPITER', 'MARS','MOON', 'NEPTUNE', 'PLUTO', 'SATURN', 'URANUS', 'VENUS')]
+    object = SelectField(_LABELS.get('object'), choices=choices)
+    photometry_flag = SelectField(_LABELS.get('photometry_flag'), choices=_CHOICE_NY)
+    vmagnitude = DecimalField(_LABELS.get('vmagnitude'), validators=[NumberRange(min=-15, max=20)])
+    est_cnt_rate = DecimalField(_LABELS.get('est_cnt_rate'), validators=[DataRequired(), NumberRange(min=0, max=100000)])
+    forder_cnt_rate = DecimalField(_LABELS.get('forder_cnt_rate'), validators=[NumberRange(min=0, max=100000)]) #: Required if grating is not none, TODO find validator
 
-    y_det_offset = StringField("Offset Y")
-    z_det_offset = StringField("Offset Z")
-    trans_offset = StringField("Z-Sim")
-    focus_offset = StringField("Sim-Focus")
-    raster_scan = StringField("Raster Scan", render_kw=_NONEDIT)
+    remarks = TextAreaField(_LABELS.get('remarks'), default = '')
+    comments = TextAreaField(_LABELS.get('comments'), default = '')
 
-    uninterrupt = SelectField("Uninterrupted Obs", choices=_CHOICE_NNPY)
-    extended_src = SelectField("Extended SRC", choices=_CHOICE_NY)
-    obj_flag = SelectField("Solar System Object", choices=[(x, x) for x in ('NO', 'MT', 'SS')])
-    object = SelectField("Object", choices=[(x, x) for x in (None, 'NEW','ASTEROID', 'COMET', 'EARTH', 'JUPITER', 'MARS','MOON', 'NEPTUNE', 'PLUTO', 'SATURN', 'URANUS', 'VENUS')])
-    photometry_flag = SelectField("Photometry", choices=_CHOICE_NNY)
-    vmagnitude = StringField("V Mag")
-    est_cnt_rate = StringField("Count Rate")
-    forder_cnt_rate = StringField("1st Order Rate")
-
-    remarks = TextAreaField("Remarks", default = '')
-    comments = TextAreaField("Comments", default = '')
-    proposal_number = StringField("Proposal Number", render_kw=_NONEDIT)
+    #
+    # --- Dither
+    #
 
 class DitherParamForm(FlaskForm):
     dither_flag = SelectField("Dither",  choices=_CHOICE_NNY)
