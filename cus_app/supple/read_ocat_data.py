@@ -204,6 +204,9 @@ def general_params(obsid):
             val = p_dict.get('lts_lt_plan')
             val = datetime.strptime(val,_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT) #: Ensure leading zero format
             p_dict['lts_lt_plan'] = val
+        for flag in ['dither_flag', 'window_flag', 'roll_flag', 'spwindow_flag']:
+            if p_dict.get(flag) is None:
+                p_dict[flag] = 'N' #: Ensure div dependent flags in page are nullified correctly.
         return p_dict
     
 def monitor_params(obsid, pre_id, group_id):
