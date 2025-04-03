@@ -13,6 +13,7 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from wtforms.validators import ValidationError
 
 from flask import current_app, render_template, request, session, redirect, url_for
+
 from cus_app.ocatdatapage import bp
 from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
@@ -24,6 +25,8 @@ import cus_app.ocatdatapage.format_ocat_data as fod
 def index(obsid=None):
     #
     # --- Fetch all relevant ocat data in it's current state and store in session.
+    # --- Note that the 4KB limitation on client-side cookies means we use flask_session to
+    # --- integrate server-side cookie directly into the session table of the usint revision SQL database
     #
     ocat_data = session.get('ocat_data')
     warning = session.get('warning')
