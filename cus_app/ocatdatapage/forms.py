@@ -50,6 +50,8 @@ initial data dictionary keys and field names.
 """
 with open('../static/labels.json') as f:
     _LABELS = json.load(f)
+with open('../static/defaults.json') as f:
+    _DEFAULTS = json.load(f)
 
 class OcatParamForm(FlaskForm):
     #
@@ -71,8 +73,8 @@ class OcatParamForm(FlaskForm):
     choices = [(x, x) for x in ('GO', 'TOO', 'GTO', 'CAL', 'DDT', 'CAL_ER', 'ARCHIVE', 'CDFS', 'CLP')]
     obs_type = SelectField(_LABELS.get('obs_type'), choices=choices)
 
-    ra_hms = StringField(_LABELS.get('ra_hms'), default='00:00:00.0000') #: TODO make Javascript dynamically change RA, DEC display
-    dec_dms = StringField(_LABELS.get('dec_dms'), default='+00:00:00.0000')
+    ra_hms = StringField(_LABELS.get('ra_hms'), default=_DEFAULTS.get('ra_hms')) #: TODO make Javascript dynamically change RA, DEC display
+    dec_dms = StringField(_LABELS.get('dec_dms'), default=_DEFAULTS.get('dec_dms'))
 
     y_det_offset = DecimalField(_LABELS.get('y_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
     z_det_offset = DecimalField(_LABELS.get('z_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
@@ -92,27 +94,17 @@ class OcatParamForm(FlaskForm):
 
     remarks = TextAreaField(_LABELS.get('remarks'), default = '')
     comments = TextAreaField(_LABELS.get('comments'), default = '')
-
     #
     # --- Dither
     #
-
-class DitherParamForm(FlaskForm):
-    dither_flag = SelectField("Dither",  choices=_CHOICE_NNY)
-    
-    y_amp_asec = FloatField("Y_Amp (in arcsec)", default = 0.0)
-    y_freq_asec = FloatField("Y_Freq (in arcsec/sec)", default = 0.0)
-    y_phase = FloatField("Y_Phase", default = 0.0)
-    
-    y_amp = FloatField("Y_Amp (in degrees)", default = 0.0, render_kw=_NONEDIT)
-    y_freq = FloatField("Y_Freq (in degrees/sec)", default = 0.0, render_kw=_NONEDIT)
-
-    z_amp_asec = FloatField("Z_Amp (in arcsec)", default = 0.0)
-    z_freq_asec = FloatField("Z_Freq (in arcsec/sec)", default = 0.0)
-    z_phase = FloatField("Z_Phase", default = 0.0)
-    
-    z_amp = FloatField("Z_Amp (in degrees)", default = 0.0, render_kw=_NONEDIT)
-    z_freq = FloatField("Z_Freq (in degrees/sec)", default = 0.0, render_kw=_NONEDIT)
+    choices = [('N', 'NO', {"onclick":"toggleDiv('ditherDiv','none')"}), ('Y', 'YES',{"onclick":"toggleDiv('ditherDiv','block')"} )]
+    dither_flag = SelectField(_LABELS.get('dither_flag'),  choices=choices)
+    y_amp_asec = DecimalField(_LABELS.get('y_amp_asec'))
+    y_freq_asec = DecimalField(_LABELS.get('y_freq_asec'))
+    y_phase = DecimalField(_LABELS.get('y_phase'))
+    z_amp_asec = DecimalField(_LABELS.get('z_amp_asec'))
+    z_freq_asec = DecimalField(_LABELS.get('z_freq_asec'))
+    z_phase = DecimalField(_LABELS.get('z_phase'))
 
 class TimeParamForm(FlaskForm):
     window_flag = HiddenField("Window Flag") #: Hidden as this can change in the form but indirectly.
