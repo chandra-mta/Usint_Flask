@@ -22,6 +22,12 @@ _CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
 _CHOICE_DITHER = [('N', 'NO', {"id": "closeDither"}), ('Y', 'YES',{"id": "openDither"} )]
 _CHOICE_WINDOW = [('N', 'NO', {"id": "closeWindow"}), ('Y', 'YES',{"id": "openWindow"} )]
 _CHOICE_ROLL = [('N', 'NO', {"id": "closeRoll"}), ('Y', 'YES',{"id": "openRoll"} )]
+_CHOICE_INSTRUMENT = (
+        ("ACIS-I", "ACIS-I", {"id":"switchACIS"}),
+        ("ACIS-S", "ACIS-S", {"id":"switchACIS"}),
+        ("HRC-I", "HRC-I", {"id":"switchHRC"}),
+        ("HRC-S", "HRC-S", {"id":"switchHRC"}),
+    )
 
 _CHOICE_NY   = (('N','NO'), ('Y','YES'))
 _CHOICE_NPY = (('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'))
@@ -107,14 +113,7 @@ class OcatParamForm(FlaskForm):
     # --- General
     #
     targname = StringField(_LABELS.get('targname'), validators=[DataRequired()])
-
-    choices = (
-        ("ACIS-I", "ACIS-I", {"onclick":"toggle2Div('acisDiv','block', 'hrcDiv','none')"}),
-        ("ACIS-S", "ACIS-S", {"onclick":"toggle2Div('acisDiv','block', 'hrcDiv','none')"}),
-        ("HRC-I", "HRC-I", {"onclick":"toggle2Div('acisDiv','none', 'hrcDiv','block')"}),
-        ("HRC-S", "HRC-S", {"onclick":"toggle2Div('acisDiv','none', 'hrcDiv','block')"}),
-    )
-    instrument = SelectField(_LABELS.get('instrument'), choices=choices, validators=[DataRequired()])
+    instrument = SelectField(_LABELS.get('instrument'), choices=_CHOICE_INSTRUMENT, validators=[DataRequired()])
 
     choices = [(x, x) for x in (None, "LETG", "HETG")]
     grating = SelectField(_LABELS.get('grating'), choices=choices)
@@ -187,11 +186,12 @@ class OcatParamForm(FlaskForm):
     multitelescope = SelectField(_LABELS.get('multitelescope'), choices=_CHOICE_NPY)
     observatories = StringField(_LABELS.get('observatories'))
     multitelescope_interval = FloatField(_LABELS.get('multitelescope_interval'))
-
-class HRCParamForm(FlaskForm):
-    hrc_timing_mode = SelectField("HRC Timing Mode", choices=_CHOICE_NY)
-    hrc_zero_block = SelectField("Zero Block", choices=_CHOICE_NY)
-    hrc_si_mode = StringField("SI Mode")
+    #
+    # -- HRC
+    #
+    hrc_timing_mode = SelectField(_LABELS.get('hrc_timing_mode'), choices=_CHOICE_NY)
+    hrc_zero_block = SelectField(_LABELS.get('hrc_zero_block'), choices=_CHOICE_NY)
+    hrc_si_mode = StringField(_LABELS.get('hrc_si_mode'))
 
 class ACISParamForm(FlaskForm):
     exp_mode = SelectField("Acis Exposure Mode", choices=((None,"NA"),("TE","TE"),("CC","CC")))
