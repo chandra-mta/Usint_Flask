@@ -19,6 +19,8 @@ import json
 #---- Common Choice of Pulldown Fields
 #
 _CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
+_CHOICE_DITHER = [('N', 'NO', {"id": "closeDither"}), ('Y', 'YES',{"id": "openDither"} )]
+_CHOICE_WINDOW = [('N', 'NO', {"id": "closeWindow"}), ('Y', 'YES',{"id": "openWindow"} )]
 
 _CHOICE_NNPY = ((None, 'NA'), ('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'),)
 _CHOICE_NY   = (('N','NO'), ('Y','YES'),)
@@ -133,8 +135,7 @@ class OcatParamForm(FlaskForm):
     #
     # --- Dither
     #
-    choices = [('N', 'NO', {"onclick":"toggleDiv('ditherDiv','none')"}), ('Y', 'YES',{"onclick":"toggleDiv('ditherDiv','block')"} )]
-    dither_flag = SelectField(_LABELS.get('dither_flag'),  choices=choices)
+    dither_flag = SelectField(_LABELS.get('dither_flag'),  choices=_CHOICE_DITHER)
     y_amp_asec = FloatField(_LABELS.get('y_amp_asec'))
     y_freq_asec = FloatField(_LABELS.get('y_freq_asec'))
     y_phase = FloatField(_LABELS.get('y_phase'))
@@ -144,8 +145,7 @@ class OcatParamForm(FlaskForm):
     #
     # --- Time 
     #
-    choices = [('N', 'NO', {"onclick":"toggleDiv('timeDiv','none')"}), ('Y', 'YES',{"onclick":"toggleDiv('timeDiv','block')"} )]
-    window_flag = SelectField(_LABELS.get('window_flag'),  choices=choices) #: Cast to and from P value depending on window_constraints
+    window_flag = SelectField(_LABELS.get('window_flag'),  choices=_CHOICE_WINDOW) #: Cast to and from P value depending on window_constraints
     time_ranks = FieldList(FormField(TimeRank,label="Time Constraints"))
 
 class RollParamForm(FlaskForm):
