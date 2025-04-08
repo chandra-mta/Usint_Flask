@@ -21,6 +21,7 @@ import json
 _CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
 _CHOICE_DITHER = [('N', 'NO', {"id": "closeDither"}), ('Y', 'YES',{"id": "openDither"} )]
 _CHOICE_WINDOW = [('N', 'NO', {"id": "closeWindow"}), ('Y', 'YES',{"id": "openWindow"} )]
+_CHOICE_ROLL = [('N', 'NO', {"id": "closeRoll"}), ('Y', 'YES',{"id": "openRoll"} )]
 
 _CHOICE_NNPY = ((None, 'NA'), ('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'),)
 _CHOICE_NY   = (('N','NO'), ('Y','YES'),)
@@ -91,6 +92,13 @@ class TimeRank(Form):
     tstop = TimeRankDateTimeField(_LABELS.get('tstop'), format=_DATETIME_FORMATS, default=datetime.now())
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
+class RollRank(Form):
+    roll_constraint = SelectField(_LABELS.get('roll_constraint'),choices=_CHOICE_CP)
+    roll_180 = SelectField(_LABELS.get('roll_180'),choices=_CHOICE_NNY)
+    roll = FloatField(_LABELS.get('roll'), validators=[NumberRange(min=0, max=360)])
+    roll_tolerance = FloatField(_LABELS.get('roll_tolerance'), validators=[NumberRange(min=0, max=360)])
+    remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
+
 class OcatParamForm(FlaskForm):
     #
     # --- General
@@ -146,18 +154,12 @@ class OcatParamForm(FlaskForm):
     # --- Time 
     #
     window_flag = SelectField(_LABELS.get('window_flag'),  choices=_CHOICE_WINDOW) #: Cast to and from P value depending on window_constraints
-    time_ranks = FieldList(FormField(TimeRank,label="Time Constraints"))
-
-class RollParamForm(FlaskForm):
-    roll_flag = HiddenField("Roll Flag") #: Hidden as this can change in the form but indirectly.
-    roll_ordr = HiddenField("Rank") #: Hidden as this can change in the form but indirectly.
-    roll_constraint = FieldList(SelectField("Type of Constraint",choices=_CHOICE_NNPC), label = "Type of Constraint")
-    roll_180 = FieldList(SelectField("Roll 180?",choices=_CHOICE_NNY), label = "Roll 180?")
-    roll = FieldList(StringField("Roll"), label = "Roll")
-    roll_tolerance = FieldList(StringField("Roll Tolerance"), label = "Roll Tolerance")
-
-    add_roll = SubmitField("Add Roll Rank")
-    remove_roll = SubmitField("Remove NA Roll Entry")
+    time_ranks = FieldList(FormField(TimeRank,label=_LABELS.get('time_ranks')))
+    #
+    # --- Roll
+    #
+    roll_flag = SelectField(_LABELS.get('roll_flag'), choices=_CHOICE_ROLL) #: Cast to and from P value depending on roll_constraints
+    roll_ranks = FieldList(FormField(RollRank, label=_LABELS.get('roll_ranks')))
 
 class OtherParamForm(FlaskForm):
     constr_in_remarks = SelectField("Constraint in Remarks?", choices=_CHOICE_NNPY)
