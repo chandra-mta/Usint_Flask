@@ -23,9 +23,12 @@ _CHOICE_DITHER = [('N', 'NO', {"id": "closeDither"}), ('Y', 'YES',{"id": "openDi
 _CHOICE_WINDOW = [('N', 'NO', {"id": "closeWindow"}), ('Y', 'YES',{"id": "openWindow"} )]
 _CHOICE_ROLL = [('N', 'NO', {"id": "closeRoll"}), ('Y', 'YES',{"id": "openRoll"} )]
 
+_CHOICE_NY   = (('N','NO'), ('Y','YES'))
+_CHOICE_NPY = (('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'))
+_CHOICE_NNY  = ((None, 'NA'), ('N', 'NO'), ('Y', 'YES'))
+
 _CHOICE_NNPY = ((None, 'NA'), ('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'),)
-_CHOICE_NY   = (('N','NO'), ('Y','YES'),)
-_CHOICE_NNY  = ((None, 'NA'), ('N', 'NO'), ('Y', 'YES'),)
+
 _CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),)
 _CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
 _CHOICE_CHIP = [('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
@@ -127,7 +130,7 @@ class OcatParamForm(FlaskForm):
     trans_offset = FloatField(_LABELS.get('trans_offset'), validators=[NumberRange(min=-190.5, max=126.621)])
     focus_offset = FloatField(_LABELS.get('focus_offset'))
 
-    uninterrupt = SelectField(_LABELS.get('uninterrupt'), choices=_CHOICE_NNPY)
+    uninterrupt = SelectField(_LABELS.get('uninterrupt'), choices=_CHOICE_NPY)
     extended_src = SelectField(_LABELS.get('extended_src'), choices=_CHOICE_NY)
     obj_flag = SelectField(_LABELS.get('obj_flag'), choices=[(x, x) for x in ('NO', 'MT', 'SS')])
 
@@ -160,30 +163,30 @@ class OcatParamForm(FlaskForm):
     #
     roll_flag = SelectField(_LABELS.get('roll_flag'), choices=_CHOICE_ROLL) #: Cast to and from P value depending on roll_constraints
     roll_ranks = FieldList(FormField(RollRank, label=_LABELS.get('roll_ranks')))
-
-class OtherParamForm(FlaskForm):
-    constr_in_remarks = SelectField("Constraint in Remarks?", choices=_CHOICE_NNPY)
-    pointing_constraint = SelectField("Pointing Update", choices=_CHOICE_NNY)
-
-    phase_constraint_flag = SelectField("Phase Constraint", choices=_CHOICE_NNPC, render_kw=_NONEDIT)
-    phase_epoch = FloatField("Phase Epoch")
-    phase_period = FloatField("Phase Period")
-    phase_start = FloatField("Phase Min")
-    phase_start_margin = FloatField("Phase Min Error")
-    phase_end = FloatField("Phase Max")
-    phase_end_margin = FloatField("Phase Max Error")
-
-    group_id = StringField("Group ID", render_kw=_NONEDIT)
-    monitor_flag = SelectField("Monitoring Observation", choices=_CHOICE_NY)
-    group_obsid = FieldList(IntegerField(render_kw=_NONEDIT), label="Remaining Observations in the Group")
-    monitor_series = FieldList(IntegerField(render_kw=_NONEDIT), label="Remaining Observations in the Monitoring")
-    pre_id = IntegerField("Follows ObsID#")
-    pre_min_lead = FloatField("Follows Obs Min Int")
-    pre_max_lead = FloatField("Follows Obs Max Int")
-
-    multitelescope = SelectField("Coordinated Observation", choices=_CHOICE_NNPY)
-    observatories = StringField("Observatories")
-    multitelescope_interval = StringField("Max Coordination Offset")
+    #
+    # --- Other (Phase)
+    #
+    constr_in_remarks = SelectField(_LABELS.get('constr_in_remarks'), choices=_CHOICE_NPY)
+    pointing_constraint = SelectField(_LABELS.get('pointing_constraint'), choices=_CHOICE_NNY)
+    phase_epoch = FloatField(_LABELS.get('phase_epoch'), validators=[NumberRange(min=46066.0)])
+    phase_period = FloatField(_LABELS.get('phase_period'))
+    phase_start = FloatField(_LABELS.get('phase_start'), validators=[NumberRange(min=0, max=1)])
+    phase_start_margin = FloatField(_LABELS.get('phase_start_margin'), validators=[NumberRange(min=0, max=0.5)])
+    phase_end = FloatField(_LABELS.get('phase_end'), validators=[NumberRange(min=0, max=1)])
+    phase_end_margin = FloatField(_LABELS.get('phase_end_margin'), validators=[NumberRange(min=0, max=0.5)])
+    #
+    # --- Other (Group)
+    #
+    monitor_flag = SelectField(_LABELS.get('monitor_flag'), choices=_CHOICE_NY)
+    pre_id = IntegerField(_LABELS.get('pre_id'))
+    pre_min_lead = FloatField(_LABELS.get('pre_min_lead'), validators=[NumberRange(min=0, max=364)])
+    pre_max_lead = FloatField(_LABELS.get('pre_max_lead'), validators=[NumberRange(min=0.01, max=365)])
+    #
+    # --- Other (Joint)
+    #
+    multitelescope = SelectField(_LABELS.get('multitelescope'), choices=_CHOICE_NPY)
+    observatories = StringField(_LABELS.get('observatories'))
+    multitelescope_interval = FloatField(_LABELS.get('multitelescope_interval'))
 
 class HRCParamForm(FlaskForm):
     hrc_timing_mode = SelectField("HRC Timing Mode", choices=_CHOICE_NY)
