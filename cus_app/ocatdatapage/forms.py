@@ -7,7 +7,7 @@
 """
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import Field, Form, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField, RadioField
+from wtforms import Field, Form, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField, RadioField, DateTimeField
 from wtforms.validators import ValidationError, DataRequired, NumberRange
 from wtforms.widgets import Input
 from datetime import datetime
@@ -36,14 +36,10 @@ _CHOICE_SUBMIT = [("norm", "Normal Change"),
 #
 #--- Time Selectors
 #
-_YEAR_LIST = [str(x + datetime.now().year) for x in range(-3,5)]
-_YEAR_CHOICE = [(None,'NA')] + [(x,x) for x in _YEAR_LIST]
-_MONTH_CHOICE = [(None,'NA')] + [(x,x) for x in month_abbr[1:]]
-_DAY_LIST = [f"{x:02}" for x in range(1,32)]
-_DAY_CHOICE = [(None,'NA')] + [(x,x) for x in _DAY_LIST]
+_OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"
+_USINT_DATETIME_FORMAT = "%b %d %Y %H:%M"
 
-_USINT_DATETIME_FORMAT = "%b-%d-%Y %H:%M"
-_NONEDIT = {'readonly': True}
+_DATETIME_FORMATS = [_USINT_DATETIME_FORMAT, _OCAT_DATETIME_FORMAT, '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']
 
 """
 **CONCEPT MEMO**: All of the variable and function names within the form classes follow specific FlaskForm criteria in order to
@@ -72,22 +68,26 @@ class ButtonField(Field):
         self.onclick = onclick
         super().__init__(label=None, validators=None,**kwargs)
 
-class TimeRank(Form): 
-    window_constraint = SelectField("Window Constraint", choices=_CHOICE_CP)
-    #: TODO test out using DateTime Field instead with ocat time form.
-    tstart_year = SelectField("Year", choices=_YEAR_CHOICE)
-    tstop_year = SelectField("Year", choices=_YEAR_CHOICE)
+class TimeRankDateTimeField(DateTimeField):
+    def process_data(self, value):
+        if isinstance(value, str):
+            d_value = None
+            for format in self.format:
+                try:
+                    # Custom processing: parse the string into a datetime object
+                    d_value = datetime.strptime(value, format)
+                    break
+                except ValueError:
+                    pass
+            self.data = d_value
+        else:
+            super().process_data(value)
 
-    tstart_month = SelectField("Month", choices=_MONTH_CHOICE)
-    tstop_month = SelectField("Month", choices=_MONTH_CHOICE)
-
-    tstart_date = SelectField("Day", choices=_DAY_CHOICE)
-    tstop_date = SelectField("Day", choices=_DAY_CHOICE)
-
-    tstart_time = StringField("Time (24hr)")
-    tstop_time = StringField("Time (24hr)")
-    
-    remove_rank = ButtonField("Remove", render_kw={'class':'removeRow'})
+class TimeRank(Form):
+    window_constraint = SelectField(_LABELS.get('window_constraint'), choices=_CHOICE_CP)
+    tstart = TimeRankDateTimeField(_LABELS.get('tstart'), format=_DATETIME_FORMATS, default=datetime.now())
+    tstop = TimeRankDateTimeField(_LABELS.get('tstop'), format=_DATETIME_FORMATS, default=datetime.now())
+    remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class OcatParamForm(FlaskForm):
     #
