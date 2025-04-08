@@ -28,6 +28,7 @@ _CHOICE_INSTRUMENT = (
         ("HRC-I", "HRC-I", {"id":"switchHRC"}),
         ("HRC-S", "HRC-S", {"id":"switchHRC"}),
     )
+_CHOICE_SUBARRAY = [(None, 'NA', {"id": "closeSubarray"}), ("NONE", "NO", {"id": "closeSubarray"}), ("CUSTOM", "YES", {"id": "openSubarray"})]
 
 _CHOICE_NY   = (('N','NO'), ('Y','YES'))
 _CHOICE_NPY = (('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'))
@@ -37,7 +38,7 @@ _CHOICE_NNPY = ((None, 'NA'), ('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'),)
 
 _CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),)
 _CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
-_CHOICE_CHIP = [('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
+_CHOICE_CHIP = [(None, "NA"),('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
 _CHOICE_WINDOW = [(None,'NA')] + [(x, x) for x in ('I0', 'I1',  'I2', 'I3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5')]
 _CHOICE_SUBMIT = [("norm", "Normal Change"),
                 ("asis","Observation is Approved for flight"),
@@ -187,42 +188,45 @@ class OcatParamForm(FlaskForm):
     observatories = StringField(_LABELS.get('observatories'))
     multitelescope_interval = FloatField(_LABELS.get('multitelescope_interval'))
     #
-    # -- HRC
+    # --- HRC
     #
-    hrc_timing_mode = SelectField(_LABELS.get('hrc_timing_mode'), choices=_CHOICE_NY)
-    hrc_zero_block = SelectField(_LABELS.get('hrc_zero_block'), choices=_CHOICE_NY)
+    hrc_timing_mode = SelectField(_LABELS.get('hrc_timing_mode'), choices=_CHOICE_NNY)
+    hrc_zero_block = SelectField(_LABELS.get('hrc_zero_block'), choices=_CHOICE_NNY)
     hrc_si_mode = StringField(_LABELS.get('hrc_si_mode'))
-
-class ACISParamForm(FlaskForm):
-    exp_mode = SelectField("Acis Exposure Mode", choices=((None,"NA"),("TE","TE"),("CC","CC")))
-    bep_pack = SelectField("Event TM Format", choices = _CHOICE_EVENT)
-    frame_time = StringField("Frame Time")
-    most_efficient = SelectField("Most Efficient", choices = _CHOICE_NNY)
-    dropped_chip_count = StringField("Dropped Chip Count", render_kw=_NONEDIT)
-    ccdi0_on = SelectField("I0", choices=_CHOICE_CHIP)
-    ccdi1_on = SelectField("I1", choices=_CHOICE_CHIP)
-    ccdi2_on = SelectField("I2", choices=_CHOICE_CHIP)
-    ccdi3_on = SelectField("I3", choices=_CHOICE_CHIP)
-    ccds0_on = SelectField("SO", choices=_CHOICE_CHIP)
-    ccds1_on = SelectField("S1", choices=_CHOICE_CHIP)
-    ccds2_on = SelectField("S2", choices=_CHOICE_CHIP)
-    ccds3_on = SelectField("S3", choices=_CHOICE_CHIP)
-    ccds4_on = SelectField("S4", choices=_CHOICE_CHIP)
-    ccds5_on = SelectField("S5", choices=_CHOICE_CHIP)
-    subarray = SelectField("Use Subarray", choices=[("NONE", "NONE"), ("N", "NO"), ("CUSTOM", "YES")])
-    subarray_start_row = StringField("Start")
-    subarray_row_count = StringField("Rows")
-    duty_cycle = SelectField("Duty Cycle", choices=_CHOICE_NNY)
-    secondary_exp_count = StringField("Number")
-    primary_exp_time = StringField("Tprimary")
-    onchip_sum = SelectField("Onchip Summing", choices=_CHOICE_NNY)
-    onchip_row_count = IntegerField("Onchip Rows")
-    onchip_column_count = IntegerField("Onchip Columns")
-    eventfilter = SelectField("Energy Filter", choices=_CHOICE_NNY)
-    eventfilter_lower = StringField("Lowest Energy")
-    eventfilter_higher = StringField("Energy Range")
-    multiple_spectral_lines = SelectField("Multi Spectral Lines", choices=_CHOICE_NNY)
-    spectra_max_count = StringField("Spectra Max Count")
+    #
+    # --- ACIS (Chips)
+    #
+    exp_mode = SelectField(_LABELS.get('exp_mode'), choices=((None,"NA"),("TE","TE"),("CC","CC")))
+    bep_pack = SelectField(_LABELS.get('bep_pack'), choices = _CHOICE_EVENT)
+    frame_time = FloatField(_LABELS.get('frame_time'), validators=[NumberRange(min=0, max=10)])
+    most_efficient = SelectField(_LABELS.get('most_efficient'), choices = _CHOICE_NNY)
+    ccdi0_on = SelectField(_LABELS.get('ccdi0_on'), choices=_CHOICE_CHIP)
+    ccdi1_on = SelectField(_LABELS.get('ccdi1_on'), choices=_CHOICE_CHIP)
+    ccdi2_on = SelectField(_LABELS.get('ccdi2_on'), choices=_CHOICE_CHIP)
+    ccdi3_on = SelectField(_LABELS.get('ccdi3_on'), choices=_CHOICE_CHIP)
+    ccds0_on = SelectField(_LABELS.get('ccds0_on'), choices=_CHOICE_CHIP)
+    ccds1_on = SelectField(_LABELS.get('ccds1_on'), choices=_CHOICE_CHIP)
+    ccds2_on = SelectField(_LABELS.get('ccds2_on'), choices=_CHOICE_CHIP)
+    ccds3_on = SelectField(_LABELS.get('ccds3_on'), choices=_CHOICE_CHIP)
+    ccds4_on = SelectField(_LABELS.get('ccds4_on'), choices=_CHOICE_CHIP)
+    ccds5_on = SelectField(_LABELS.get('ccds5_on'), choices=_CHOICE_CHIP)
+    #
+    # --- ACIS (Subarray)
+    #
+    subarray = SelectField(_LABELS.get('subarray'), choices=_CHOICE_SUBARRAY)
+    subarray_start_row = IntegerField(_LABELS.get('subarray_start_row'), validators=[NumberRange(min=1, max=925)])
+    subarray_row_count = IntegerField(_LABELS.get('subarray_row_count'), validators=[NumberRange(min=101, max=1024)])
+    duty_cycle = SelectField(_LABELS.get('duty_cycle'), choices=_CHOICE_NNY)
+    secondary_exp_count = FloatField(_LABELS.get('secondary_exp_count'), validators=[NumberRange(min=0, max=15)])
+    primary_exp_time = FloatField(_LABELS.get('primary_exp_time'), validators=[NumberRange(min=0, max=10)])
+    onchip_sum = SelectField(_LABELS.get('onchip_sum'), choices=_CHOICE_NNY)
+    onchip_row_count = IntegerField(_LABELS.get('onchip_row_count'), validators=[NumberRange(min=1, max=512)])
+    onchip_column_count = IntegerField(_LABELS.get('onchip_column_count'), validators=[NumberRange(min=1, max=512)])
+    eventfilter = SelectField(_LABELS.get('eventfilter'), choices=_CHOICE_NNY)
+    eventfilter_lower = FloatField(_LABELS.get('eventfilter_lower'), validators=[NumberRange(min=0, max=15)])
+    eventfilter_higher = FloatField(_LABELS.get('eventfilter_higher'), validators=[NumberRange(min=0, max=15)])
+    multiple_spectral_lines = SelectField(_LABELS.get('multiple_spectral_lines'), choices=_CHOICE_NNY)
+    spectra_max_count = FloatField(_LABELS.get('spectra_max_count'), validators=[NumberRange(min=1, max=100000)])
 
 class ACISWinParamForm(FlaskForm):
     spwindow_flag = HiddenField("Window Flag") #: Hidden as this can change in the form but indirectly.
