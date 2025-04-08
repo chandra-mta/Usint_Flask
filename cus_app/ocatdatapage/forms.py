@@ -7,8 +7,9 @@
 """
 from flask import request
 from flask_wtf import FlaskForm
-from wtforms import SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField, RadioField, DecimalField
+from wtforms import Field, Form, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField, RadioField
 from wtforms.validators import ValidationError, DataRequired, NumberRange
+from wtforms.widgets import Input
 from datetime import datetime
 from calendar import month_abbr
 import json
@@ -17,6 +18,8 @@ import json
 #
 #---- Common Choice of Pulldown Fields
 #
+_CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
+
 _CHOICE_NNPY = ((None, 'NA'), ('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'),)
 _CHOICE_NY   = (('N','NO'), ('Y','YES'),)
 _CHOICE_NNY  = ((None, 'NA'), ('N', 'NO'), ('Y', 'YES'),)
@@ -53,6 +56,39 @@ with open('../static/labels.json') as f:
 with open('../static/defaults.json') as f:
     _DEFAULTS = json.load(f)
 
+class ButtonWidget(Input):
+    input_type='button'
+    validation_attrs = ['required', 'disabled']
+    def __call__(self, field, **kwargs):
+        kwargs.setdefault("value", field.label.text)
+        if field.onclick is not None:
+            kwargs.setdefault("onclick", field.onclick)
+        return super().__call__(field, **kwargs)
+
+class ButtonField(Field):
+    widget = ButtonWidget()
+
+    def __init__(self, label=None, validators=None, onclick=None, **kwargs):
+        self.onclick = onclick
+        super().__init__(label=None, validators=None,**kwargs)
+
+class TimeRank(Form): 
+    window_constraint = SelectField("Window Constraint", choices=_CHOICE_CP)
+    #: TODO test out using DateTime Field instead with ocat time form.
+    tstart_year = SelectField("Year", choices=_YEAR_CHOICE)
+    tstop_year = SelectField("Year", choices=_YEAR_CHOICE)
+
+    tstart_month = SelectField("Month", choices=_MONTH_CHOICE)
+    tstop_month = SelectField("Month", choices=_MONTH_CHOICE)
+
+    tstart_date = SelectField("Day", choices=_DAY_CHOICE)
+    tstop_date = SelectField("Day", choices=_DAY_CHOICE)
+
+    tstart_time = StringField("Time (24hr)")
+    tstop_time = StringField("Time (24hr)")
+    
+    remove_rank = ButtonField("Remove", render_kw={'class':'removeRow'})
+
 class OcatParamForm(FlaskForm):
     #
     # --- General
@@ -76,10 +112,10 @@ class OcatParamForm(FlaskForm):
     ra_hms = StringField(_LABELS.get('ra_hms'), default=_DEFAULTS.get('ra_hms')) #: TODO make Javascript dynamically change RA, DEC display
     dec_dms = StringField(_LABELS.get('dec_dms'), default=_DEFAULTS.get('dec_dms'))
 
-    y_det_offset = DecimalField(_LABELS.get('y_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
-    z_det_offset = DecimalField(_LABELS.get('z_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
-    trans_offset = DecimalField(_LABELS.get('trans_offset'), validators=[NumberRange(min=-190.5, max=126.621)])
-    focus_offset = DecimalField(_LABELS.get('focus_offset'))
+    y_det_offset = FloatField(_LABELS.get('y_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
+    z_det_offset = FloatField(_LABELS.get('z_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
+    trans_offset = FloatField(_LABELS.get('trans_offset'), validators=[NumberRange(min=-190.5, max=126.621)])
+    focus_offset = FloatField(_LABELS.get('focus_offset'))
 
     uninterrupt = SelectField(_LABELS.get('uninterrupt'), choices=_CHOICE_NNPY)
     extended_src = SelectField(_LABELS.get('extended_src'), choices=_CHOICE_NY)
@@ -88,9 +124,9 @@ class OcatParamForm(FlaskForm):
     choices = [(x, x) for x in ('NONE', 'NEW','ASTEROID', 'COMET', 'EARTH', 'JUPITER', 'MARS','MOON', 'NEPTUNE', 'PLUTO', 'SATURN', 'URANUS', 'VENUS')]
     object = SelectField(_LABELS.get('object'), choices=choices)
     photometry_flag = SelectField(_LABELS.get('photometry_flag'), choices=_CHOICE_NY)
-    vmagnitude = DecimalField(_LABELS.get('vmagnitude'), validators=[NumberRange(min=-15, max=20)])
-    est_cnt_rate = DecimalField(_LABELS.get('est_cnt_rate'), validators=[DataRequired(), NumberRange(min=0, max=100000)])
-    forder_cnt_rate = DecimalField(_LABELS.get('forder_cnt_rate'), validators=[NumberRange(min=0, max=100000)]) #: Required if grating is not none, TODO find validator
+    vmagnitude = FloatField(_LABELS.get('vmagnitude'), validators=[NumberRange(min=-15, max=20)])
+    est_cnt_rate = FloatField(_LABELS.get('est_cnt_rate'), validators=[DataRequired(), NumberRange(min=0, max=100000)])
+    forder_cnt_rate = FloatField(_LABELS.get('forder_cnt_rate'), validators=[NumberRange(min=0, max=100000)]) #: Required if grating is not none, TODO find validator
 
     remarks = TextAreaField(_LABELS.get('remarks'), default = '')
     comments = TextAreaField(_LABELS.get('comments'), default = '')
@@ -99,32 +135,18 @@ class OcatParamForm(FlaskForm):
     #
     choices = [('N', 'NO', {"onclick":"toggleDiv('ditherDiv','none')"}), ('Y', 'YES',{"onclick":"toggleDiv('ditherDiv','block')"} )]
     dither_flag = SelectField(_LABELS.get('dither_flag'),  choices=choices)
-    y_amp_asec = DecimalField(_LABELS.get('y_amp_asec'))
-    y_freq_asec = DecimalField(_LABELS.get('y_freq_asec'))
-    y_phase = DecimalField(_LABELS.get('y_phase'))
-    z_amp_asec = DecimalField(_LABELS.get('z_amp_asec'))
-    z_freq_asec = DecimalField(_LABELS.get('z_freq_asec'))
-    z_phase = DecimalField(_LABELS.get('z_phase'))
-
-class TimeParamForm(FlaskForm):
-    window_flag = HiddenField("Window Flag") #: Hidden as this can change in the form but indirectly.
-    time_ordr = HiddenField("Rank") #: Hidden as this can change in the form but indirectly.
-    window_constraint = FieldList(SelectField("Window Constraint",choices=_CHOICE_NNPC), label = "Window Constraint")
-
-    tstart_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
-    tstop_year = FieldList(SelectField("Year", choices=_YEAR_CHOICE), label="Year")
-
-    tstart_month = FieldList(SelectField("Month", choices=_MONTH_CHOICE), label="Month")
-    tstop_month = FieldList(SelectField("Month", choices=_MONTH_CHOICE), label="Month")
-
-    tstart_date = FieldList(SelectField("Day", choices=_DAY_CHOICE), label="Day")
-    tstop_date = FieldList(SelectField("Day", choices=_DAY_CHOICE), label="Year")
-    #: TODO include validators for time
-    tstart_time = FieldList(StringField("Time", default= "00:00"),label="Time (24hr)")
-    tstop_time = FieldList(StringField("Time", default= "00:00"),label="Time (24hr)")
-
-    add_time = SubmitField("Add Time Rank")
-    remove_time = SubmitField("Remove NA Time Entry")
+    y_amp_asec = FloatField(_LABELS.get('y_amp_asec'))
+    y_freq_asec = FloatField(_LABELS.get('y_freq_asec'))
+    y_phase = FloatField(_LABELS.get('y_phase'))
+    z_amp_asec = FloatField(_LABELS.get('z_amp_asec'))
+    z_freq_asec = FloatField(_LABELS.get('z_freq_asec'))
+    z_phase = FloatField(_LABELS.get('z_phase'))
+    #
+    # --- Time 
+    #
+    choices = [('N', 'NO', {"onclick":"toggleDiv('timeDiv','none')"}), ('Y', 'YES',{"onclick":"toggleDiv('timeDiv','block')"} )]
+    window_flag = SelectField(_LABELS.get('window_flag'),  choices=choices) #: Cast to and from P value depending on window_constraints
+    time_ranks = FieldList(FormField(TimeRank,label="Time Constraints"))
 
 class RollParamForm(FlaskForm):
     roll_flag = HiddenField("Roll Flag") #: Hidden as this can change in the form but indirectly.
