@@ -5,14 +5,13 @@
 :Last Updated: Mar 13, 2025
 
 """
-from flask import request
 from flask_wtf import FlaskForm
 from wtforms import Field, Form, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField, RadioField, DateTimeField
 from wtforms.validators import ValidationError, DataRequired, NumberRange
 from wtforms.widgets import Input
 from datetime import datetime
-from calendar import month_abbr
 import json
+import os
 
 
 #
@@ -70,9 +69,10 @@ allow for Jinja Template page generation to input initial data into the Ocat For
 input selections for fields with the validate_<field name> functions. Changing these names will break the form validation unless matched with corresponding
 initial data dictionary keys and field names.
 """
-with open('../static/labels.json') as f:
+stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
+with open(os.path.join(stat_dir, 'labels.json')) as f:
     _LABELS = json.load(f)
-with open('../static/defaults.json') as f:
+with open(os.path.join(stat_dir, 'defaults.json')) as f:
     _DEFAULTS = json.load(f)
 
 class ButtonWidget(Input):
@@ -255,7 +255,7 @@ class OcatParamForm(FlaskForm):
     spwindow_flag = SelectField(_LABELS.get('spwindow_flag'), choices=_CHOICE_WINDOW)
     window_ranks = FieldList(FormField(WindowRank, label=_LABELS.get('window_ranks')))
     #
-    # ---
+    # --- Submission
     #
     submit_choice = RadioField(_LABELS.get('submit_choice'), choices=_CHOICE_SUBMIT)
     multiobsid = StringField(_LABELS.get('multiobsid'))

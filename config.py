@@ -14,14 +14,14 @@ class BaseConfig(object):
     # --- SQLAlchemy
     #
     #SQLALCHEMY_DATABASE_URI = "sqlite:////data/mta4/CUS/Data/FakeUsers/app.db"
-    SQLALCHEMY_DATABASE_URI = "sqlite:////usint.db"
+    SQLALCHEMY_DATABASE_URI = "sqlite:///usint.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     #
     # --- Session Settings
     #
     PERMANENT_SESSION_LIFETIME = timedelta(minutes=60)
     SESSION_REFRESH_EACH_REQUEST = True
-    SESSION_TYPE = 'sqlalchemy'
+    SESSION_TYPE = 'sqlalchemy' #: Must set SQLAlchemy instance for session once database connection is instantiated
     #
     # --- Directory Pathing
     #

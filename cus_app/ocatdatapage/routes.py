@@ -36,11 +36,11 @@ def index(obsid=None):
         warning = create_warning_line(ocat_data)
         session['warning'] = warning
     #: Formats information into form and provides additional form-specific parameters
-    form_dict = fod.format_for_form(ocat_data)
+    ###form_dict = fod.format_for_form(ocat_data)
     #
     # --- Render Ocat Data In A WTForm
     #
-    form = OcatParamForm(request.form, data=form_dict)
+    form = OcatParamForm(request.form, data=ocat_data)
     if request.method == "POST" and form.is_submitted(): 
         form = fod.synchronize_values(form) #: Process the changes submitted to the form for how they would update the form and param_dict objects
         #
