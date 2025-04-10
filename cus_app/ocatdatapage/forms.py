@@ -254,46 +254,16 @@ class OcatParamForm(FlaskForm):
     #
     spwindow_flag = SelectField(_LABELS.get('spwindow_flag'), choices=_CHOICE_WINDOW)
     window_ranks = FieldList(FormField(WindowRank, label=_LABELS.get('window_ranks')))
-
-
-class TOOParamForm(FlaskForm):
-    tooid = StringField("TOO ID", render_kw=_NONEDIT)
-    too_trig = StringField("TOO Trigger", render_kw=_NONEDIT)
-    too_type = StringField("TOO Type", render_kw=_NONEDIT)
-    too_start = StringField("TOO Start", render_kw=_NONEDIT)
-    too_stop = StringField("TOO Stop", render_kw=_NONEDIT)
-    too_followup = StringField("# of Follow-up Observations", render_kw=_NONEDIT)
-    too_remarks = StringField("TOO Remarks", render_kw=_NONEDIT)
-
-
-class OcatParamForm(FlaskForm):
-    """
-    Extension of FlaskForm for Ocat Parameter Data Page Form.
-    Includes all parameters with corresponding editable fields.
-    Note that this means non-editable information is rendered directly by flask template and not by form method.
-    """
-    gen_param = FormField(GeneralParamForm)
-    dither_param = FormField(DitherParamForm)
-    time_param = FormField(TimeParamForm)
-    roll_param = FormField(RollParamForm)
-    other_param = FormField(OtherParamForm)
-    hrc_param = FormField(HRCParamForm)
-    acis_param = FormField(ACISParamForm)
-    aciswin_param = FormField(ACISWinParamForm)
-    too_param = FormField(TOOParamForm)
-    
-    open_dither = SubmitField("Open Dither")
-    open_time = SubmitField("Open Time")
-    open_roll = SubmitField("Open Roll")
-    open_aciswin = SubmitField("Open Window")
-    refresh = SubmitField("Refresh")
-    submit_choice = RadioField("Submit Options", choices=_CHOICE_SUBMIT)
-    multiobsid = StringField("Multi-Obsid")
-    submit = SubmitField("Submit")
+    #
+    # ---
+    #
+    submit_choice = RadioField(_LABELS.get('submit_choice'), choices=_CHOICE_SUBMIT)
+    multiobsid = StringField(_LABELS.get('multiobsid'))
+    submit = SubmitField(_LABELS.get('submit'))
 
 class ConfirmForm(FlaskForm):
     """
     Extension of FlaskForm for the parameter change confirmation page.
     """
-    previous_page = SubmitField("Previous Page")
-    finalize = SubmitField("Finalize")
+    previous_page = SubmitField(_LABELS.get('previous_page'))
+    finalize = SubmitField(_LABELS.get('finalize'))
