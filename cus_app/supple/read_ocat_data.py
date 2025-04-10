@@ -7,7 +7,7 @@
 """
 import ska_dbi.sqsh as sqsh
 import astropy.table
-import astropy.io
+import os
 import numpy as np
 from datetime import datetime
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -18,6 +18,7 @@ _SERV = 'ocatsqlsrv'
 _USR = 'mtaops_internal_web'
 _AUTHDIR = "/data/mta4/CUS/authorization"
 _DB = 'axafocat'
+_OBS_SS = "/data/mta4/obs_ss/"
 #
 # --- NOTE Ocat dates are recorded without a leading zero. This makes datetime formatting difficult so we convert for the fetch.
 # --- While datetime can process these dates, it never prints without a leading zero.
@@ -171,6 +172,21 @@ def read_ocat_data(obsid):
     for k,v in p_dict.items():
         if v in _NULL_LIST:
             p_dict[k] = None
+    #
+    # --- Planned Roll if it exists (EDGE CASE)
+    #
+    try:
+        with open(os.path.join(_OBS_SS, 'mp_long_term')) as f:
+            line = f.readline()
+            atemp = line.strip().split(":")
+            if str(obsid) == atemp[0]:
+                roll = sorted([float(atemp[1]), float(atemp[2])])
+                p_dict['planned_roll'] = f"{roll[0]}-{roll[1]}"
+                return
+    except (ValueError, IndexError):
+        pass
+
+    
     return p_dict
 
 def general_params(obsid):
