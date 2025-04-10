@@ -4,11 +4,11 @@
 <!-- -->
 <!-- import html macros -->
 <!-- -->
-{%  from 'ocatdatapage/macros.html' import create_entry, help_popup_page, map_image_opener %}
+{%  from 'ocatdatapage/macros.html' import render_rank, render_field, render_value, help_popup_page, map_image_opener %}
 
 {% set cdo_http  = 'https://icxc.cfa.harvard.edu/cgi-bin/cdo/' %}
 {% set cda_http  = 'https://cda.cfa.harvard.edu/chaser/startViewer.do?menuItem=sequenceSummary&obsid=' %}
-{% set sobsid = form.gen_param.obsid.data | string %}
+{% set sobsid = ocat_data.get('obsid') | string %}
 {% set hlink  = cda_http + sobsid %}
 
 
@@ -50,11 +50,11 @@
 <!-- -->
 <table>
     <tr>
-    <th class='link1'>{{ map_image_opener(form.gen_param.dss, 'magenta') }}</th>
+    <th class='link1'>{{ map_image_opener('dss', 'magenta', _LABELS, orient_maps) }}</th>
     <td>&#160;</td>
-    <th class='link1'>{{ map_image_opener(form.gen_param.rosat, 'orange') }}</th>
+    <th class='link1'>{{ map_image_opener('rosat', 'orange', _LABELS, orient_maps) }}</th>
     <td>&#160;</td>
-    <th class='link1'>{{ map_image_opener(form.gen_param.rass, 'yellow') }}</th>
+    <th class='link1'>{{ map_image_opener('rass', 'yellow', _LABELS, orient_maps) }}</th>
     </tr>
 </table>
 <!-- -->
@@ -68,146 +68,155 @@
 <!------------------------------------------------------------------------------------------------------------------------------->
 <form method="POST">
     {{ form.hidden_tag() }}
+    <!--For Hidden Form Fields In Rank Additions-->
+    <div id="template_time_ranks" style="display: none;">
+        <table>
+            {{ render_rank(-1, form.template_time) }}
+        </table>
+    </div>
+    <div id="template_roll_ranks" style="display: none;">
+        <table>
+            {{ render_rank(-1, form.template_roll) }}
+        </table>
+    </div>
+    <div id="template_window_ranks" style="display: none;">
+        <table>
+            {{ render_rank(-1, form.template_window) }}
+        </table>
+    </div>
     <h2 id="gen_param">General Parameters
         {{ help_popup_page('../static/ocatdatapage/user_help.html#general_parameters', ' (Help)', 55) }}
     </h2>
     <table border=0>
         <tr>
-        <th>{{form.gen_param.seq_nbr.label.text}}: </th>
+        <th>{{_LABELS.get('seq_nbr')}}: </th>
         <td>
             <a href="javascript:WindowOpener('{{ hlink }}','seq_nbr')">
-                {{ form.gen_param.seq_nbr.data }}
+                {{ render_value(ocat_data.get('seq_nbr'), _LABELS.get('seq_nbr')) }}
             </a>
         </td>
-        {{ create_entry(form.gen_param.status) }}
-        {{ create_entry(form.gen_param.obsid) }}
-        {{ create_entry(form.gen_param.proposal_number) }}
+        {{ render_value(ocat_data.get('status'), _LABELS.get('status')) }}
+        {{ render_value(ocat_data.get('obsid'), _LABELS.get('obsid')) }}
+        {{ render_value(ocat_data.get('proposal_number'), _LABELS.get('proposal_number')) }}
         </tr>
     </table>
     <table border=0>
         <tr>
-        {{ create_entry(form.gen_param.proposal_title) }} 
+        {{ render_value(ocat_data.get('proposal_title'), _LABELS.get('proposal_title')) }} 
         </tr>
         <tr>
-        {{ create_entry(form.gen_param.obs_ao_str) }}
-        </tr>
-    </table>
-    <table border=0>
-        <tr>
-        {{ create_entry(form.gen_param.targname, size=20) }}
-        {{ create_entry(form.gen_param.si_mode) }}
-        {{ create_entry(form.gen_param.aca_mode) }}
+        {{ render_value(ocat_data.get('obs_ao_str'), _LABELS.get('obs_ao_str')) }}
         </tr>
     </table>
     <table border=0>
         <tr>
-        {{ create_entry(form.gen_param.instrument) }}
-        {{ create_entry(form.gen_param.grating) }}
-        {{ create_entry(form.gen_param.obs_type) }}
+        {{ render_field(form.targname, size=20) }}
+        {{ render_value(ocat_data.get('si_mode'), _LABELS.get('si_mode')) }}
+        {{ render_value(ocat_data.get('aca_mode'), _LABELS.get('aca_mode')) }}
         </tr>
+    </table>
+    <table border=0>
         <tr>
-        <td colspan="6" style="padding-left:5px">
-        Click {{ form.refresh() }}
-        to unlock ACIS/HRC Parameter options after updating Instrument.
-        </td>
+        {{ render_field(form.instrument) }}
+        {{ render_field(form.grating) }}
+        {{ render_field(form.obs_type) }}
         </tr>
     </table>
     <table vorder=0>
         <tr>
-        {{ create_entry(form.gen_param.pi_name) }}
-        {{ create_entry(form.gen_param.observer) }}
+        {{ render_value(ocat_data.get('pi_name'), _LABELS.get('pi_name')) }}
+        {{ render_value(ocat_data.get('observer'), _LABELS.get('observer')) }}
         </tr>
         <tr>
-        {{ create_entry(form.gen_param.approved_exposure_time) }}<td style='text-align:left;'>(ksec)</td>
-        {{ create_entry(form.gen_param.rem_exp_time) }}<td>(ksec)</td>
+        {{ render_value(ocat_data.get('approved_exposure_time'), _LABELS.get('approved_exposure_time')) }}<td style='text-align:left;'>(ksec)</td>
+        {{ render_value(ocat_data.get('rem_exp_time'), _LABELS.get('rem_exp_time')) }}<td>(ksec)</td>
         </tr>
     </table>
     <table border=0>
         <tr>
-        {{ create_entry(form.gen_param.proposal_joint) }}
+        {{ render_value(ocat_data.get('proposal_joint'), _LABELS.get('proposal_joint')) }}
         </tr>
     </table>
         <div style='margin-left:40px;'>
         <table border=0>
             <tr>
-            {{ create_entry(form.gen_param.proposal_hst) }}
+            {{ render_value(ocat_data.get('proposal_hst'), _LABELS.get('proposal_hst')) }}
             <td>&#160;</td>
-            {{ create_entry(form.gen_param.proposal_noao) }}
+            {{ render_value(ocat_data.get('proposal_noao'), _LABELS.get('proposal_noao')) }}
             </tr>
             <tr>
-            {{ create_entry(form.gen_param.proposal_xmm) }}
+            {{ render_value(ocat_data.get('proposal_xmm'), _LABELS.get('proposal_xmm')) }}
             <td>&#160;</td>
-            {{ create_entry(form.gen_param.proposal_rxte) }}
+            {{ render_value(ocat_data.get('proposal_rxte'), _LABELS.get('proposal_rxte')) }}
             </tr>
             <tr>
-            {{ create_entry(form.gen_param.proposal_vla) }}
+            {{ render_value(ocat_data.get('proposal_vla'), _LABELS.get('proposal_vla')) }}
             <td>&#160;</td>
-            {{ create_entry(form.gen_param.proposal_vlba) }}
+            {{ render_value(ocat_data.get('proposal_vlba'), _LABELS.get('proposal_vlba')) }}
             </tr>
         </table>
         </div>
     <table>
         <tr>
-        {{ create_entry(form.gen_param.soe_st_sched_date) }}
-        {{ create_entry(form.gen_param.lts_lt_plan) }}
+        {{ render_value(ocat_data.get('soe_st_sched_date'), _LABELS.get('soe_st_sched_date')) }}
+        {{ render_value(ocat_data.get('lts_lt_plan'), _LABELS.get('lts_lt_plan')) }}
         </tr>
     </table>
 
     <p style='padding-top:20px'>
     If you'd like to see the current viewing orientation, open: 
-            {{ map_image_opener(form.gen_param.dss, 'blue') }},
-            {{ map_image_opener(form.gen_param.rosat, 'blue') }},
-            {{ map_image_opener(form.gen_param.rass, 'blue') }}
+            {{ map_image_opener('dss', 'blue', _LABELS, orient_maps) }},
+            {{ map_image_opener('rosat', 'blue', _LABELS, orient_maps) }},
+            {{ map_image_opener('rass', 'blue', _LABELS, orient_maps) }}
     (Note: These figures do not always exist.)
     </p>
     <table border=0>
         <tr>
-        {{ create_entry(form.gen_param.ra_hms) }}
-        {{ create_entry(form.gen_param.dec_dms) }}
-        {{ create_entry(form.gen_param.planned_roll) }}
+        {{ render_field(form.ra_hms) }}
+        {{ render_field(form.dec_dms) }}
+        {{ render_value(ocat_data.get('planned_roll'), _LABELS.get('planned_roll')) }}
         </tr>
         <tr>
-        {{ create_entry(form.gen_param.ra) }}
-        {{ create_entry(form.gen_param.dec) }}
-        {{ create_entry(form.gen_param.soe_roll) }}
+        {{ render_value(ocat_data.get('ra'), _LABELS.get('ra')) }}
+        {{ render_value(ocat_data.get('dec'), _LABELS.get('dec')) }}
+        {{ render_value(ocat_data.get('soe_roll'), _LABELS.get('soe_roll')) }}
         </tr>
     </table>
     <p style="padding-top:10px">
     Enter RA and Dec in HMS/DMS format (separated by colons, 
     e.g. 16:22:04.8 -27:43:04.0) then click:
-    {{ form.refresh() }}
     to update the decimal RA/Dec values.
     </p>
     <table border=0>
         <tr>
-        {{ create_entry(form.gen_param.y_det_offset) }}<td>(arcmin)</td>
-        {{ create_entry(form.gen_param.z_det_offset) }}<td>(arcmin)</td>
+        {{ render_field(form.y_det_offset) }}<td>(arcmin)</td>
+        {{ render_field(form.z_det_offset) }}<td>(arcmin)</td>
         </tr>
         <tr>
-        {{ create_entry(form.gen_param.trans_offset) }}<td>(mm, not arcmin!)</td>
-        {{ create_entry(form.gen_param.focus_offset) }}<td>(mm)</td>
+        {{ render_field(form.trans_offset) }}<td>(mm, not arcmin!)</td>
+        {{ render_field(form.focus_offset) }}<td>(mm)</td>
         </tr>
         <tr>
-        {{ create_entry(form.gen_param.raster_scan) }}
+        {{ render_value(ocat_data.get('raster_scan'), _LABELS.get('raster_scan')) }}
         <td cellspan=2> &#160;</td>
         </tr>
     </table>
     <table border=0>
         <tr>
-        {{ create_entry(form.gen_param.uninterrupt) }}
-        {{ create_entry(form.gen_param.extended_src) }}
+        {{ render_field(form.uninterrupt) }}
+        {{ render_field(form.extended_src) }}
         </tr>
         <tr>
-        {{ create_entry(form.gen_param.obj_flag) }}
-        {{ create_entry(form.gen_param.object) }}
+        {{ render_field(form.obj_flag) }}
+        {{ render_field(form.object) }}
         </tr>
         <tr>
-        {{ create_entry(form.gen_param.photometry_flag) }}
-        {{ create_entry(form.gen_param.vmagnitude) }}
+        {{ render_field(form.photometry_flag) }}
+        {{ render_field(form.vmagnitude) }}
         </tr>
         <tr>
-        {{ create_entry(form.gen_param.est_cnt_rate) }}
-        {{ create_entry(form.gen_param.forder_cnt_rate) }}
+        {{ render_field(form.est_cnt_rate) }}
+        {{ render_field(form.forder_cnt_rate) }}
         </tr>
     </table>
     <hr>
@@ -215,200 +224,130 @@
     <h2 id="dither_param">Dither
         {{ help_popup_page('../static/ocatdatapage/user_help.html#dither_flag', ' (Help)', 55) }}
     </h2>
-    {% if form.dither_param.dither_flag.data != 'Y' %}
-        {{form.open_dither()}}<br>
-    {% else %}
-        {{ create_entry(form.dither_param.dither_flag) }}
-            <div style='margin-left:40px;'>
-                <table border=0>
-                    <tr>
-                    {{ create_entry(form.dither_param.y_amp_asec) }}
-                    {{ create_entry(form.dither_param.y_freq_asec) }}
-                    {{ create_entry(form.dither_param.y_phase) }}
-                    </tr>
-                    <tr>
-                    {{ create_entry(form.dither_param.y_amp) }}
-                    {{ create_entry(form.dither_param.y_freq) }}
-                    <td colspan=1>&#160;</td>
-                    </tr>
-                    <tr>
-                    {{ create_entry(form.dither_param.z_amp_asec) }}
-                    {{ create_entry(form.dither_param.z_freq_asec) }}
-                    {{ create_entry(form.dither_param.z_phase) }}
-                    </tr>
-                    <tr>
-                    {{ create_entry(form.dither_param.z_amp) }}
-                    {{ create_entry(form.dither_param.z_freq) }}
-                    <td colspan=1>&#160;</td>
-                    </tr>
-                </table>
-            </div>
-            <p style='padding-top:10px;'>
-            To reflect the changes made in arcsec windows to degree displays or Dither YES/NO/NA confirmation, click: {{ form.refresh() }}
-            </p>
+    {{ render_field(form.dither_flag) }}
+    {% if form.dither_flag.data == 'N' %}
+        <div id="ditherDiv" style="display: none;margin-left:40px;">
+    {% elif form.dither_flag.data == 'Y'%}
+        <div id="ditherDiv" style="display: block;margin-left:40px;">
+    {% endif %}
+            <table border=0>
+                <tr>
+                {{ render_field(form.y_amp_asec) }}
+                {{ render_field(form.y_freq_asec) }}
+                {{ render_field(form.y_phase) }}
+                </tr>
+                <tr>
+                {{ render_value(ocat_data.get('y_amp'), _LABELS.get('y_amp')) }}
+                {{ render_value(ocat_data.get('y_freq'), _LABELS.get('y_freq')) }}
+                <td colspan=1>&#160;</td>
+                </tr>
+                <tr>
+                {{ render_field(form.z_amp_asec) }}
+                {{ render_field(form.z_freq_asec) }}
+                {{ render_field(form.z_phase) }}
+                </tr>
+                <tr>
+                {{ render_value(ocat_data.get('z_amp'), _LABELS.get('z_amp')) }}
+                {{ render_value(ocat_data.get('z_freq'), _LABELS.get('z_freq')) }}
+                <td colspan=1>&#160;</td>
+                </tr>
+            </table>
+        </div>
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
-    {% endif %}
     <h2 id="time_param">Time Constraints
         {{ help_popup_page('../static/ocatdatapage/user_help.html#time_constraints', ' (Help)', 55) }}
     </h2>
     <p>{{ help_popup_page('../static/ocatdatapage/ranked_entries.html', 'How To Change The Same Parameter Values In Multiple ObsIDs: Ranked Entries for Constraints')}}</p>
-    {{ form.time_param.window_flag() }}
-    {{ form.time_param.time_ordr() }}
-    {% if form.time_param.window_flag.data not in ('P', 'Y') %}
-        {{form.open_time()}}<br>
-    {% else %}
-        <p>
-        If you want to add ranks, press "Add Time Rank." 
-        If you want to remove a rank, set "Window Constraint" to "NA", 
-        then press "Remove NA Time Entry."<br>
-        <b>Rank:</b>
-        {{ form.time_param.add_time() }}
-        {{ form.time_param.remove_time() }}
-        </p>
-        <div style="margin-left:40px">
-        <table border = 0>
+    {{ form.window_flag() }}
+    {% if form.window_flag.data == 'N' %}
+        <div id="timeDiv" style="display: none;margin-left:40px;">
+    {% elif form.window_flag.data == 'Y'%}
+        <div id="timeDiv" style="display: block;margin-left:40px;">
+    {% endif %}
+        <table id="time_ranks">
             <thead>
-                <tr>
-                <th style='padding-left:5px;'>{{ form.time_param.time_ordr.label.text }}</th>
-                <th style='padding-left:5px;'>{{ form.time_param.window_constraint.label.text }}</th>
-                <th style='padding-left:5px;'></th>
-                <th style='padding-left:5px;'>{{ form.time_param.tstart_month.label.text }}</th>
-                <th style='padding-left:5px;'>{{ form.time_param.tstart_date.label.text }}</th>
-                <th style='padding-left:5px;'>{{ form.time_param.tstart_year.label.text }}</th>
-                <th style='padding-left:5px;'>{{ form.time_param.tstart_time.label.text }}</th>
-                </tr>
+                <th style='padding-left:5px;'>Rank</th>
+                {% for field in form.template_time %}
+                    {% if field.type != 'ButtonField' %}
+                        <td style='padding-left:5px;'>{{field.label.text}}</td>
+                    {% else %}
+                        <td style='padding-left:5px;'></td>
+                    {% endif %}
+                {% endfor %}
             </thead>
-        <tbody>
-        {% set time_ordr = form.time_param.time_ordr.data | int %}
-        {% for k in range(time_ordr) %}
-            <tr>
-                <th style='padding-left:5px;'>{{ k+1 }}</th>
-                <td>{{ form.time_param.window_constraint[k]() }}</td>
-                <th style='padding-left:5px;'>Start</th>
-                <td>{{form.time_param.tstart_month[k]()}}</td>
-                <td>{{form.time_param.tstart_date[k]()}}</td>
-                <td>{{form.time_param.tstart_year[k]()}}</td>
-                <td>{{form.time_param.tstart_time[k](size=5)}}</td>
-            </tr>
-            <tr>
-                <td colspan=6></td>
-                <td>
-                    {% for error in form.time_param.tstart_time[k].errors %}
-                        <span style="color: red;">{{ error }}</span><br>
-                    {% endfor %}
-                </td>
-            </tr>
-            <tr>
-                <td colspan=2></td>
-                <th style='padding-left:5px;'>Stop</th>
-                <td>{{form.time_param.tstop_month[k]()}}</td>
-                <td>{{form.time_param.tstop_date[k]()}}</td>
-                <td>{{form.time_param.tstop_year[k]()}}</td>
-                <td>{{form.time_param.tstop_time[k](size=5)}}</td>
-            </tr>
-            <tr>
-                <td colspan=6></td>
-                <td>
-                    {% for error in form.time_param.tstop_time[k].errors %}
-                        <span style="color: red;">{{ error }}</span><br>
-                    {% endfor %}
-                </td>
-            </tr>
-        {% endfor %}
-        </tbody>
+            <tbody>
+            {% for i, time_rank in form.time_ranks | enumerate %}
+                {{ render_rank(i,time_rank) }}
+            {% endfor%}
+            <button type="button" id="addTime">Add Time</button>
+            </tbody>
         </table>
         </div>
-    {% endif %}
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
     <h2 id="roll_param">Roll Constraints
         {{ help_popup_page('../static/ocatdatapage/user_help.html#roll_constraints', ' (Help)', 55) }}
     </h2>
     <p>{{ help_popup_page('../static/ocatdatapage/ranked_entries.html', 'How To Change The Same Parameter Values In Multiple ObsIDs: Ranked Entries for Constraints')}}</p>
-
-    {{ form.roll_param.roll_flag() }}
-    {{ form.roll_param.roll_ordr() }}
-    {% if form.roll_param.roll_flag.data != 'Y' %}
-        {{form.open_roll()}}<br>
-    {% else %}
-        <p>
-        If you want to add ranks, press "Add Roll Rank." 
-        If you want to remove a rank, set "Rank" to "NA", 
-        then press "Remove NA Roll Entry."
-        </p>
-        <p>
-        <b>Rank: </b>
-        {{ form.roll_param.add_roll() }}
-        {{ form.roll_param.remove_roll() }}
-        </p>
-        <div style='margin-left:40px;'>
-            <table border = 0>
-                <thead>
-                    <tr>
-                        <th style='padding-left:5px;'>{{ form.roll_param.roll_ordr.label.text }}</th>
-                        <th style='padding-left:5px;'>{{ form.roll_param.roll_constraint.label.text }}</th>
-                        <th style='padding-left:5px;'>{{ form.roll_param.roll_180.label.text }}</th>
-                        <th style='padding-left:5px;'>{{ form.roll_param.roll.label.text }}</th>
-                        <th style='padding-left:5px;'>{{ form.roll_param.roll_tolerance.label.text }}</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% set roll_ordr = form.roll_param.roll_ordr.data | int %}
-                    {% for k in range(roll_ordr) %}
-                        <tr>
-                            <th style='padding-left:5px;'>{{ k+1 }}</th>
-                            <td>{{ form.roll_param.roll_constraint[k]() }}</td>
-                            <td>{{ form.roll_param.roll_180[k]() }}</td>
-                            <td>{{ form.roll_param.roll[k](size=10) }}</td>
-                            <td>{{ form.roll_param.roll_tolerance[k](size=10) }}</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
+    {{ form.roll_flag() }}
+    {% if form.roll_flag.data == 'N' %}
+        <div id="rollDiv" style="display: none;margin-left:40px;">
+    {% elif form.roll_flag.data == 'Y'%}
+        <div id="rollDiv" style="display: block;margin-left:40px;">
     {% endif %}
+        <table id="roll_ranks">
+            <thead>
+                <th style='padding-left:5px;'>Rank</th>
+                {% for field in form.template_roll %}
+                    {% if field.type != 'ButtonField' %}
+                        <td style='padding-left:5px;'>{{field.label.text}}</td>
+                    {% else %}
+                        <td style='padding-left:5px;'></td>
+                    {% endif %}
+                {% endfor %}
+            </thead>
+            <tbody>
+            {% for i, roll_rank in form.roll_ranks | enumerate %}
+                {{ render_rank(i,roll_rank) }}
+            {% endfor%}
+            <button type="button" id="addRoll">Add Roll</button>
+            </tbody>
+        </table>
+        </div>
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
     <h2 id="other_param">Other Constraints
     {{ help_popup_page('../static/ocatdatapage/user_help.html#other_constraints', ' (Help)', 55) }}
     </h2>
     <table border=0>
-        <tr>{{ create_entry(form.other_param.constr_in_remarks) }}</tr>
-        <tr>{{ create_entry(form.other_param.pointing_constraint) }}</tr>
-        {% if form.other_param.phase_constraint_flag.data in ['Y', 'P'] %}
+        <tr>{{ render_field(form.constr_in_remarks) }}</tr>
+        <tr>{{ render_field(form.pointing_constraint) }}</tr>
+        <tr>{{ render_value(ocat_data.get('phase_constraint_flag'), _LABELS.get('phase_constraint_flag')) }}</tr>
+        {% if ocat_data.get('phase_constraint_flag') in ['Y', 'P'] %}
             <tr>
-            {{ create_entry(form.other_param.phase_constraint_flag) }}
-            <table bordr =0>
-                <tr>
-                    {{ create_entry(form.other_param.phase_epoch) }}
-                    {{ create_entry(form.other_param.phase_period) }}
-                </tr>
-                <tr>
-                    {{ create_entry(form.other_param.phase_start) }}
-                    {{ create_entry(form.other_param.phase_start_margin) }}
-                </tr>
-                <tr>
-                    {{ create_entry(form.other_param.phase_end) }}
-                    {{ create_entry(form.other_param.phase_end_margin) }}
-                </tr>
-            </table>
+                {{ render_field(form.phase_epoch) }}
+                {{ render_field(form.phase_period) }}
             </tr>
-    </table>
-    <table bordr=0>
-        {% else %}
-            <tr>{{ create_entry(form.other_param.phase_constraint_flag) }}</tr>
+            <tr>
+                {{ render_field(form.phase_start) }}
+                {{ render_field(form.phase_start_margin) }}
+            </tr>
+            <tr>
+                {{ render_field(form.phase_end) }}
+                {{ render_field(form.phase_end_margin) }}
+            </tr>
         {% endif %}            
         <tr>
-            {{ create_entry(form.other_param.group_id) }}
-            {{ create_entry(form.other_param.monitor_flag) }}
+            {{ render_value(ocat_data.get('group_id'), _LABELS.get('group_id')) }}
+            {{ render_field(form.monitor_flag) }}
         </tr>
         <tr>
-        {% if 'group_id' in form.data['other_param'].keys() %}
+        {% if ocat_data.get('group_id') != None %}
             <th>Remaining Observations in the Group: </th>
             <td colspan=3>
-                {% if form.other_param.group_obsid.data|length > 0 %}
-                    {% for ent in form.other_param.group_obsid.data %}
+                {% if ocat_data.get('group_obsid')|length > 0 %}
+                    {% for ent in ocat_data.get('group_obsid') %}
                         <span style='padding-left:5px;'></span>
                         <a href='../ocatdatapage/{{ ent }} '>{{ ent }}</a> 
                     {% endfor %}
@@ -416,11 +355,11 @@
                     <i style='padding-left:10px;'>NA</i>
                 {% endif %}
             </td>
-        {% elif form.other_param.monitor_flag.data == 'Y' %}
+        {% elif form.monitor_flag.data == 'Y' %}
             <th>Remaining Observation in the Monitoring: </th>
             <td colspan=3>
-                {% if form.other_param.monitor_series.data|length > 0 %}
-                    {% for ent in form.other_param.monitor_series.data %}
+                {% if ocat_data.get('monitor_series')|length > 0 %}
+                    {% for ent in ocat_data.get('monitor_series') %}
                         <span style='padding-left:5px;'></span>
                         <a href='../ocatdatapage/{{ ent }} '>{{ ent }}</a> 
                     {% endfor %}
@@ -433,19 +372,19 @@
         {% endif %}
         </tr>
         <tr>
-            {{ create_entry(form.other_param.pre_id) }}
-            {{ create_entry(form.other_param.pre_min_lead) }}
+            {{ render_field(form.pre_id) }}
+            {{ render_field(form.pre_min_lead) }}
         </tr>
         <tr>
             <td colspan=2>&#160;</td>
-            {{ create_entry(form.other_param.pre_max_lead) }}
+            {{ render_field(form.pre_max_lead) }}
         </tr>
         <tr>
-            {{ create_entry(form.other_param.multitelescope) }}
-            {{ create_entry(form.other_param.observatories) }}
+            {{ render_field(form.multitelescope) }}
+            {{ render_field(form.observatories) }}
         </tr>
         <tr>
-            {{ create_entry(form.other_param.multitelescope_interval) }}
+            {{ render_field(form.multitelescope_interval) }}
             <td colspan=2>&#160;</td>
         </tr>
         </table>
@@ -454,16 +393,16 @@
         <h2 id="hrc_param">HRC Parameters
             {{ help_popup_page('../static/ocatdatapage/user_help.html#hrc_parameters', ' (Help)', 55) }}
         </h2>
-        {% if form.gen_param.instrument.data not in ['HRC-I', 'HRC-S'] %}
+        {% if form.instrument.data not in ['HRC-I', 'HRC-S'] %}
             <h3>
-                ObsID {{ form.gen_param.obsid.data }} is not an HRC observation. Instrument {{ form.gen_param.instrument.data }} is selected.
+                ObsID {{ ocat_data.get('obsid') }} is not an HRC observation. Instrument {{ form.instrument.data }} is selected.
             </h3>
         {% else %}
             <table border=0>
                 <tr>    
-                {{ create_entry(form.hrc_param.hrc_timing_mode) }}
-                {{ create_entry(form.hrc_param.hrc_zero_block) }}
-                {{ create_entry(form.hrc_param.hrc_si_mode) }}
+                {{ render_field(form.hrc_timing_mode) }}
+                {{ render_field(form.hrc_zero_block) }}
+                {{ render_field(form.hrc_si_mode) }}
                 </tr>
             </table>
         {% endif %}
@@ -472,87 +411,87 @@
         <h2 id="acis_param">ACIS Parameters
             {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_parameters', ' (Help)', 55) }}
         </h2>
-        {% if form.gen_param.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
+        {% if form.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
             <h3>
-                ObsID {{ form.gen_param.obsid.data }} is not an ACIS observation. Instrument {{ form.gen_param.instrument.data }} is selected.
+                ObsID {{ ocat_data.get('obsid') }} is not an ACIS observation. Instrument {{ form.instrument.data }} is selected.
             </h3>
         {% else %}
             <table>
                 <tr>
-                {{ create_entry(form.acis_param.exp_mode) }}
-                {{ create_entry(form.acis_param.bep_pack) }}
-                {{ create_entry(form.acis_param.frame_time) }}
+                {{ render_field(form.exp_mode) }}
+                {{ render_field(form.bep_pack) }}
+                {{ render_field(form.frame_time) }}
                 </tr>
                 <tr>
                 <td colspan=4>&#160;</td>
-                {{ create_entry(form.acis_param.most_efficient) }}
+                {{ render_field(form.most_efficient) }}
                 </tr>
             </table>
             <table>
                 <tr>
-                {{ create_entry(form.acis_param.dropped_chip_count) }}
+                {{ render_field(form.dropped_chip_count) }}
                 <tr>
             </table>
         
             <table>
                 <tr>
                 <td colspan=4>&#160;</td>
-                {{ create_entry(form.acis_param.ccdi0_on) }}
-                {{ create_entry(form.acis_param.ccdi1_on) }}
+                {{ render_field(form.ccdi0_on) }}
+                {{ render_field(form.ccdi1_on) }}
                 <td colspan=4>&#160;</td>
                 </tr>
                 <tr>
                 <td colspan=4>&#160;</td>
-                {{ create_entry(form.acis_param.ccdi2_on) }}
-                {{ create_entry(form.acis_param.ccdi3_on) }}
+                {{ render_field(form.ccdi2_on) }}
+                {{ render_field(form.ccdi3_on) }}
                 <td colspan=4>&#160;</td>
                 </tr>
                 <tr>
-                {{ create_entry(form.acis_param.ccds0_on) }}
-                {{ create_entry(form.acis_param.ccds1_on) }}
-                {{ create_entry(form.acis_param.ccds2_on) }}
-                {{ create_entry(form.acis_param.ccds3_on) }}
-                {{ create_entry(form.acis_param.ccds4_on) }}
-                {{ create_entry(form.acis_param.ccds5_on) }}
+                {{ render_field(form.ccds0_on) }}
+                {{ render_field(form.ccds1_on) }}
+                {{ render_field(form.ccds2_on) }}
+                {{ render_field(form.ccds3_on) }}
+                {{ render_field(form.ccds4_on) }}
+                {{ render_field(form.ccds5_on) }}
                 </tr>
             </table>
             <div style='padding-top:20px;'></div>
             <table>
                 <tr>
-                {{ create_entry(form.acis_param.subarray) }}
+                {{ render_field(form.subarray) }}
                 <td colspan=4>
                 <b>If you select YES, please fill the next two entries.</b>
                 </td>
                 </tr>
                 <tr>
-                {{ create_entry(form.acis_param.subarray_start_row) }}
-                {{ create_entry(form.acis_param.subarray_row_count) }}
+                {{ render_field(form.subarray_start_row) }}
+                {{ render_field(form.subarray_row_count) }}
                 <td>&#160;</td>
                 </tr>
                 <tr>
-                {{ create_entry(form.acis_param.duty_cycle) }}
+                {{ render_field(form.duty_cycle) }}
                 <td colspan=4>
                 <b>If you select YES, please fill the next two entries.</b>
                 </td>
                 </tr>
                 <tr>
-                {{ create_entry(form.acis_param.secondary_exp_count) }}
-                {{ create_entry(form.acis_param.primary_exp_time) }}
+                {{ render_field(form.secondary_exp_count) }}
+                {{ render_field(form.primary_exp_time) }}
                 <td>&#160;</td>
                 </tr>
                 <tr>
-                {{ create_entry(form.acis_param.onchip_sum) }}
-                {{ create_entry(form.acis_param.onchip_row_count) }}
-                {{ create_entry(form.acis_param.onchip_column_count) }}
+                {{ render_field(form.onchip_sum) }}
+                {{ render_field(form.onchip_row_count) }}
+                {{ render_field(form.onchip_column_count) }}
                 </tr>
                 <tr>
-                {{ create_entry(form.acis_param.eventfilter) }}
-                {{ create_entry(form.acis_param.eventfilter_lower) }}
-                {{ create_entry(form.acis_param.eventfilter_higher) }}
+                {{ render_field(form.eventfilter) }}
+                {{ render_field(form.eventfilter_lower) }}
+                {{ render_field(form.eventfilter_higher) }}
                 </tr>
                 <tr>
-                {{ create_entry(form.acis_param.multiple_spectral_lines) }}
-                {{ create_entry(form.acis_param.spectra_max_count) }}
+                {{ render_field(form.multiple_spectral_lines) }}
+                {{ render_field(form.spectra_max_count) }}
                 </tr>
             </table>
         {% endif %}
@@ -561,81 +500,64 @@
         <h2 id="aciswin_param">ACIS Window Constraints
         {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_window', ' (Help)', 55) }}
         </h2>
-        {{ form.aciswin_param.spwindow_flag() }}
-        {{ form.aciswin_param.aciswin_no() }}
-        {% if form.gen_param.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
+        {% if form.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
             <h3>
-                ObsID {{ form.gen_param.obsid.data }} is not an ACIS Observation. Instrument {{ form.gen_param.instrument.data }} is selected.
+                ObsID {{ ocat_data.get('obsid')}} is not an ACIS Observation. Instrument {{ form.instrument.data }} is selected.
             </h3>
-    
-        {% elif form.aciswin_param.spwindow_flag.data != 'Y' %}
-            {{form.open_aciswin()}}<br>
         {% else %}
-            <p>
-            If you want to add ranks, press "Add Window Rank." 
-            If you want to remove a row, set <i>Chip</i> to "NA", then press "Remove NA Window Rank." 
-            </p>
-            {{ form.aciswin_param.add_window() }}
-            {{ form.aciswin_param.remove_window() }}
-            <p style='padding-top:20px; padding-bottom:10px;margin-left:20px; margin-right:20px;'>
-            <b>Note</b>: By default, the sample rate is 0 and the window specified is an 
-            <b>EXCLUSION</b> area. 
-            To set an INCLUSION area, in ithe first window, set the sample rate to 1, and choose 
-            a desired inclusion area.
-            In the second window, set the sample rate to 0 and the window area to 1024 x 1024.
-            For the case with the sample rate > 1, please refer to:
-            {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_window', 'Help') }}.
-            </p>
+            {{ form.spwindow_flag() }}
             
-                <table border = 0>
+            {% if form.spwindow_flag.data == 'N' %}
+                <div id="windowDiv" style="display: none;margin-left:40px;">
+            {% elif form.spwindow_flag.data == 'Y'%}
+                <div id="windowDiv" style="display: block;margin-left:40px;">
+            {% endif %}
+                <p style='padding-top:20px; padding-bottom:10px;margin-left:20px; margin-right:20px;'>
+                <b>Note</b>: By default, the sample rate is 0 and the window specified is an 
+                <b>EXCLUSION</b> area. 
+                To set an INCLUSION area, in ithe first window, set the sample rate to 1, and choose 
+                a desired inclusion area.
+                In the second window, set the sample rate to 0 and the window area to 1024 x 1024.
+                For the case with the sample rate > 1, please refer to:
+                {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_window', 'Help') }}.
+                </p>
+                <table id="window_ranks">
                     <thead>
-                        <tr>
-                            <th style='padding-left:5px;'>{{ form.aciswin_param.aciswin_no.label.text }}</th>
-                            <th style='padding-left:5px;'>{{ form.aciswin_param.chip.label.text }}</th>
-                            <th style='padding-left:5px;'>{{ form.aciswin_param.start_row.label.text }}</th>
-                            <th style='padding-left:5px;'>{{ form.aciswin_param.start_column.label.text }}</th>
-                            <th style='padding-left:5px;'>{{ form.aciswin_param.height.label.text }}</th>
-                            <th style='padding-left:5px;'>{{ form.aciswin_param.width.label.text }}</th>
-                            <th style='padding-left:5px;'>{{ form.aciswin_param.lower_threshold.label.text }}</th>
-                            <th style='padding-left:5px;'>{{ form.aciswin_param.pha_range.label.text }}</th>
-                            <th style='padding-left:5px;'>{{ form.aciswin_param.sample.label.text }}</th>
-                        </tr>
+                        <th style='padding-left:5px;'>Rank</th>
+                        {% for field in form.template_window %}
+                            {% if field.type != 'ButtonField' %}
+                                <td style='padding-left:5px;'>{{field.label.text}}</td>
+                            {% else %}
+                                <td style='padding-left:5px;'></td>
+                            {% endif %}
+                        {% endfor %}
                     </thead>
                     <tbody>
-                        {% set aciswin_no = form.aciswin_param.aciswin_no.data | int %}
-                        {% for k in range(aciswin_no) %}
-                            <tr>
-                                <th style='padding-left:5px;'>{{ k+1 }}</th>
-                                <td>{{ form.aciswin_param.chip[k]() }}</td>
-                                <td>{{ form.aciswin_param.start_row[k](size=10) }}</td>
-                                <td>{{ form.aciswin_param.start_column[k](size=10) }}</td>
-                                <td>{{ form.aciswin_param.height[k](size=10) }}</td>
-                                <td>{{ form.aciswin_param.width[k](size=10) }}</td>
-                                <td>{{ form.aciswin_param.lower_threshold[k](size=10) }}</td>
-                                <td>{{ form.aciswin_param.pha_range[k](size=10) }}</td>
-                                <td>{{ form.aciswin_param.sample[k](size=10) }}</td>
-                            </tr>
-                        {% endfor %}
+                    {% for i, window_rank in form.window_ranks | enumerate %}
+                        {{ render_rank(i,window_rank) }}
+                    {% endfor%}
+                    <button type="button" id="addWindow">Add Window</button>
                     </tbody>
                 </table>
+                </div>
         {% endif %}
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
         <h2 id="too_param">TOO Parameters
         {{ help_popup_page('../static/ocatdatapage/user_help.html#too_parameters', ' (Help)', 55) }}
         </h2>
-        {% if form.too_param.tooid.data == None %}
-            <h3>ObsID: {{ form.gen_param.obsid.data }} is not a DDT/TOO observation.</h3>
+        {% if ocat_data.get('tooid') == None %}
+            <h3>ObsID: {{ ocat_data.get('obsid')}} is not a DDT/TOO observation.</h3>
         {% else %}
             <table>
                 <tr>
-                {{ create_entry(form.too_param.tooid) }}
+                {{ render_value(ocat_data.get('tooid'), _LABELS.get('tooid')) }}
                 </tr>
                 <tr>
-                {{ create_entry(form.too_param.too_trig) }}
+                {{ render_value(ocat_data.get('too_trig'), _LABELS.get('too_trig')) }}
                 </tr>
                 <tr>
-                {{ create_entry(form.too_param.too_type) }}
+                {{ render_value(ocat_data.get('too_type'), _LABELS.get('too_type')) }}
                 </tr>
                 <tr>
             </table>
@@ -644,16 +566,16 @@
                 Exact response window (days):
                 <span style='padding-right:30px;'></span>
                 </th>
-                {{ create_entry(form.too_param.too_start) }}
-                {{ create_entry(form.too_param.too_stop) }}
+                {{ render_value(ocat_data.get('too_start'), _LABELS.get('too_start')) }}
+                {{ render_value(ocat_data.get('too_stop'), _LABELS.get('too_stop')) }}
                 </tr>
             </table>
             <table>
                 <tr>
-                {{ create_entry(form.too_param.too_followup) }}
+                {{ render_value(ocat_data.get('too_followup'), _LABELS.get('too_followup')) }}
                 </tr>
                 <tr>
-                {{ create_entry(form.too_param.too_remarks) }}
+                {{ render_value(ocat_data.get('too_remarks'), _LABELS.get('too_remarks')) }}
                 </tr>
             </table>
         {% endif %}
@@ -671,9 +593,9 @@
         </p>
         <table>
             <tr>
-            <th>{{ form.gen_param.remarks.label.text }}:</th>
+            <th>{{ form.remarks.label.text }}:</th>
             <td>
-                {{ form.gen_param.remarks(rows=10, cols=60) }}
+                {{ form.remarks(rows=10, cols=60) }}
             </td>
             </tr>
         </table>
@@ -689,16 +611,16 @@
         
         <table>
             <tr>
-            <th>{{ form.gen_param.comments.label.text }}:</th>
+            <th>{{ form.comments.label.text }}:</th>
             <td>
-                {{ form.gen_param.comments(rows=10, cols=60) }}
+                {{ form.comments(rows=10, cols=60) }}
             </td>
             </tr>
         </table>
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
         <h2>Options</h2>
-        {% if form.gen_param.status.data in ['unobserved', 'scheduled', 'untriggered'] %}
+        {% if ocat_data.get('status') in ['unobserved', 'scheduled', 'untriggered'] %}
         <table>
             <tr>
             <th>Normal Change</th>
@@ -745,13 +667,13 @@
 
         <p style='padding-bottom:20px;'>
             <strong style='font-size:130%;'>
-            {% if form.gen_param.status.data in ['observed', 'archived', 'triggered'] %}
+            {% if ocat_data.get('status') in ['observed', 'archived', 'triggered'] %}
                 This observation was already
             {% else %}
                 This observation was 
             {% endif %}
 
-            <span style='color:red;'>{{ form.gen_param.status.data.upper() }}</span>
+            <span style='color:red;'>{{ ocat_data.get('status').upper() }}</span>
             and you cannot update its parameter values anymore.
             </strong>
         </p>
@@ -763,7 +685,7 @@
         <span style="font-size:110%;">Link to:</span><br>
         <a href="javascript:void(0);" onclick="openTab('../express', 'Express');">Express Approval</a>
         <br>
-        <a href="{{ cdo_http }}review_report/disp_report.cgi?{{ form.gen_param.proposal_number.data }}">Peer Review Report And Proposal</a>
+        <a href="{{ cdo_http }}review_report/disp_report.cgi?{{ ocat_data.get('proposal_number') }}">Peer Review Report And Proposal</a>
         <br>
         <a href="{{ hlink }}">
         ChaSeR Sequence Summary (with Roll/Pitch/Visibility, etc.)</a>

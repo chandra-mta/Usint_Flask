@@ -35,6 +35,7 @@ def generate_additionals(ocat_data):
         val = ocat_data.get(key)
         if val is not None:
             additional[f'{key}_asec'] = val * 3600
+    return additional
 
 def convert_ra_dec_format(dra, ddec, oformat):
     """

@@ -16,9 +16,9 @@ bootstrap = Bootstrap()
 db = SQLAlchemy()
 sess = Session()
 
-
 def create_app(_configuration_name):
     app = Flask(__name__)
+    app.jinja_env.filters['enumerate'] = enumerate
     app.config.from_object(_CONFIG_DICT[_configuration_name])
     app.config['SESSION_SQLALCHEMY'] = db #: Must set the SQLAlchemy database for session data after construction
     bootstrap.init_app(app)

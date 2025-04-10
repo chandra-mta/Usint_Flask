@@ -8,6 +8,7 @@
 
 import os
 import re
+import json
 from datetime import datetime
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from wtforms.validators import ValidationError
@@ -18,6 +19,11 @@ from cus_app.ocatdatapage import bp
 from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
 import cus_app.ocatdatapage.format_ocat_data as fod
+
+
+stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
+with open(os.path.join(stat_dir, 'labels.json')) as f:
+    _LABELS = json.load(f)
 
 @bp.route("/", methods=["GET", "POST"])
 @bp.route("/<obsid>", methods=["GET", "POST"])
@@ -97,7 +103,12 @@ def index(obsid=None):
         elif form.submit.data:
             prepare_confirmation_page(form, ocat_data)
             return redirect(url_for('ocatdatapage.confirm'))
-    return render_template("ocatdatapage/index.html", form=form, warning=warning)
+    return render_template("ocatdatapage/index.html", 
+                           form=form, 
+                           warning=warning,
+                           ocat_data=ocat_data,
+                           orient_maps=orient_maps,
+                           _LABELS=_LABELS)
 
 
 @bp.route('/confirm', methods=['GET', 'POST'])

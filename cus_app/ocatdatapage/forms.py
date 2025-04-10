@@ -6,7 +6,7 @@
 
 """
 from flask_wtf import FlaskForm
-from wtforms import Field, Form, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, HiddenField, TextAreaField, RadioField, DateTimeField
+from wtforms import Field, Form, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, TextAreaField, RadioField, DateTimeField
 from wtforms.validators import ValidationError, DataRequired, NumberRange
 from wtforms.widgets import Input
 from datetime import datetime
@@ -260,6 +260,13 @@ class OcatParamForm(FlaskForm):
     submit_choice = RadioField(_LABELS.get('submit_choice'), choices=_CHOICE_SUBMIT)
     multiobsid = StringField(_LABELS.get('multiobsid'))
     submit = SubmitField(_LABELS.get('submit'))
+    #
+    # --- Templates for generating new ranks. Ignore all form data from these.
+    # --- Hidden behind div which never appears to the user.
+    #
+    template_time = FormField(TimeRank)
+    template_roll = FormField(RollRank)
+    template_window = FormField(WindowRank)
 
 class ConfirmForm(FlaskForm):
     """
