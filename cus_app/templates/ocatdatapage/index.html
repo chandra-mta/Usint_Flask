@@ -695,3 +695,8 @@
         </p>
 </form>
 {% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='usint.js') }}"></script>
+{% endblock%}
