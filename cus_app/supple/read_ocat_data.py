@@ -207,6 +207,9 @@ def general_params(obsid):
         for flag in ['dither_flag', 'window_flag', 'roll_flag', 'spwindow_flag']:
             if p_dict.get(flag) is None:
                 p_dict[flag] = 'N' #: Ensure div dependent flags in page are nullified correctly.
+        ret = p_dict.get('rem_exp_time')
+        if isinstance(ret,(int,float)) and ret < 0:
+            p_dict['rem_exp_time'] = 0.0
         return p_dict
     
 def monitor_params(obsid, pre_id, group_id):

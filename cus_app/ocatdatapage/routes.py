@@ -30,17 +30,21 @@ def index(obsid=None):
     #
     ocat_data = session.get('ocat_data')
     warning = session.get('warning')
+    orient_maps = session.get('orient_maps')
     if ocat_data is None:
+        #: First Fetch
         ocat_data = rod.read_ocat_data(obsid)
         session['ocat_data'] = ocat_data
         warning = create_warning_line(ocat_data)
         session['warning'] = warning
-    #: Formats information into form and provides additional form-specific parameters
-    ###form_dict = fod.format_for_form(ocat_data)
+        orient_maps = create_orient_maps(ocat_data)
+        session['orient_maps'] = orient_maps
+    form_dict = fod.generate_additionals(ocat_data)
+    form_dict.update(ocat_data)
     #
     # --- Render Ocat Data In A WTForm
     #
-    form = OcatParamForm(request.form, data=ocat_data)
+    form = OcatParamForm(request.form, data=form_dict)
     if request.method == "POST" and form.is_submitted(): 
         form = fod.synchronize_values(form) #: Process the changes submitted to the form for how they would update the form and param_dict objects
         #
@@ -122,6 +126,40 @@ def finalize():
     #: Then display the page informing the user that their revision went through.
     #: Needed so that we can complete a revision action and keep the cache clear (particularly of ocat data) for the next obsid revision
     pass
+
+def create_orient_maps(ocat_data):
+    #
+    #--- Viewing Orientation Maps
+    #
+    link_part = f"https://cxc.harvard.edu/targets/{ocat_data.get('seq_nbr')}/{ocat_data.get('seq_nbr')}.{ocat_data.get('obsid')}."
+
+    rass = "NoImage"
+    rosat = "NoImage"
+    dss = "NoImage"
+    if os.path.isdir(f"/data/targets/{str(ocat_data.get('seq_nbr'))}"):
+        gif_check = ''.join([each for each in os.listdir(f"/data/targets/{str(ocat_data.get('seq_nbr'))}") if each.endswith('.gif')])
+        if 'soe.rass.gif' in gif_check:
+            rass  = f"{link_part}soe.rass.gif"
+        elif 'rass.gif' in gif_check:
+            rass  = f"{link_part}rass.gif"
+
+        if 'soe.pspc.gif' in gif_check:
+            rosat  = f"{link_part}soe.pspc.gif"
+        elif 'pspc.gif' in gif_check:
+            rosat  = f"{link_part}pspc.gif"
+
+        if 'soe.dss.gif' in gif_check:
+            dss   = f"{link_part}soe.dss.gif"
+        elif 'dss.gif' in gif_check:
+            dss   = f"{link_part}dss.gif"
+    
+    orient_maps = {
+        'rass': rass,
+        'rosat': rosat,
+        'dss': dss
+    }
+    return orient_maps
+
 
 def prepare_confirmation_page(form, ocat_data):
 
