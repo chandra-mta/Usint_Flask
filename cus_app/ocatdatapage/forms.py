@@ -19,16 +19,27 @@ import json
 #---- Common Choice of Pulldown Fields
 #
 _CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
-_CHOICE_DITHER = [('N', 'NO', {"id": "closeDither"}), ('Y', 'YES',{"id": "openDither"} )]
-_CHOICE_WINDOW = [('N', 'NO', {"id": "closeWindow"}), ('Y', 'YES',{"id": "openWindow"} )]
-_CHOICE_ROLL = [('N', 'NO', {"id": "closeRoll"}), ('Y', 'YES',{"id": "openRoll"} )]
+
 _CHOICE_INSTRUMENT = (
         ("ACIS-I", "ACIS-I", {"id":"switchACIS"}),
         ("ACIS-S", "ACIS-S", {"id":"switchACIS"}),
         ("HRC-I", "HRC-I", {"id":"switchHRC"}),
         ("HRC-S", "HRC-S", {"id":"switchHRC"}),
     )
+
+_CHOICE_DITHER = [('N', 'NO', {"id": "closeDither"}), ('Y', 'YES',{"id": "openDither"} )]
+
+_CHOICE_TIME = [('N', 'NO', {"id": "closeTime"}), ('Y', 'YES',{"id": "openTime"} )]
+
+_CHOICE_ROLL = [('N', 'NO', {"id": "closeRoll"}), ('Y', 'YES',{"id": "openRoll"} )]
+
+_CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
 _CHOICE_SUBARRAY = [(None, 'NA', {"id": "closeSubarray"}), ("NONE", "NO", {"id": "closeSubarray"}), ("CUSTOM", "YES", {"id": "openSubarray"})]
+
+_CHOICE_WINDOW = [('N', 'NO', {"id": "closeWindow"}), ('Y', 'YES',{"id": "openWindow"} )]
+_CHOICE_CHIP = [(None, "NA"),('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
+_CHOICE_WINDOW_CHIP = [(None,'NA')] + [(x, x) for x in ('I0', 'I1',  'I2', 'I3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5')]
+
 
 _CHOICE_NY   = (('N','NO'), ('Y','YES'))
 _CHOICE_NPY = (('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'))
@@ -37,9 +48,8 @@ _CHOICE_NNY  = ((None, 'NA'), ('N', 'NO'), ('Y', 'YES'))
 _CHOICE_NNPY = ((None, 'NA'), ('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'),)
 
 _CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),)
-_CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
-_CHOICE_CHIP = [(None, "NA"),('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
-_CHOICE_WINDOW = [(None,'NA')] + [(x, x) for x in ('I0', 'I1',  'I2', 'I3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5')]
+
+
 _CHOICE_SUBMIT = [("norm", "Normal Change"),
                 ("asis","Observation is Approved for flight"),
                 ("remove","ObsID no longer ready to go"),
@@ -109,6 +119,18 @@ class RollRank(Form):
     roll_tolerance = FloatField(_LABELS.get('roll_tolerance'), validators=[NumberRange(min=0, max=360)])
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
+class WindowRank(Form):
+    chip = SelectField(_LABELS.get('chip'),choices=_CHOICE_WINDOW)
+    start_row = IntegerField(_LABELS.get('start_row'), validators=[NumberRange(min=1,max=1024)])
+    start_column = IntegerField(_LABELS.get('start_column'), validators=[NumberRange(min=1,max=1024)])
+    width = IntegerField(_LABELS.get('width'), validators=[NumberRange(min=1,max=1024)])
+    height = IntegerField(_LABELS.get('height'), validators=[NumberRange(min=1,max=1024)])
+
+    lower_threshold = FloatField(_LABELS.get('lower_threshold'), validators=[NumberRange(min=0,max=15)])
+    pha_range = FloatField(_LABELS.get('pha_range'), validators=[NumberRange(min=0,max=15)])
+    sample = IntegerField(_LABELS.get('sample'), validators=[NumberRange(min=0,max=255)])
+    remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
+
 class OcatParamForm(FlaskForm):
     #
     # --- General
@@ -156,7 +178,7 @@ class OcatParamForm(FlaskForm):
     #
     # --- Time 
     #
-    window_flag = SelectField(_LABELS.get('window_flag'),  choices=_CHOICE_WINDOW) #: Cast to and from P value depending on window_constraints
+    window_flag = SelectField(_LABELS.get('window_flag'),  choices=_CHOICE_TIME) #: Cast to and from P value depending on window_constraints
     time_ranks = FieldList(FormField(TimeRank,label=_LABELS.get('time_ranks')))
     #
     # --- Roll
@@ -227,21 +249,12 @@ class OcatParamForm(FlaskForm):
     eventfilter_higher = FloatField(_LABELS.get('eventfilter_higher'), validators=[NumberRange(min=0, max=15)])
     multiple_spectral_lines = SelectField(_LABELS.get('multiple_spectral_lines'), choices=_CHOICE_NNY)
     spectra_max_count = FloatField(_LABELS.get('spectra_max_count'), validators=[NumberRange(min=1, max=100000)])
+    #
+    # --- ACIS Window
+    #
+    spwindow_flag = SelectField(_LABELS.get('spwindow_flag'), choices=_CHOICE_WINDOW)
+    window_ranks = FieldList(FormField(WindowRank, label=_LABELS.get('window_ranks')))
 
-class ACISWinParamForm(FlaskForm):
-    spwindow_flag = HiddenField("Window Flag") #: Hidden as this can change in the form but indirectly.
-    aciswin_no = HiddenField("Rank") #: Hidden as this can change in the form but indirectly.
-    chip = FieldList(SelectField("Chip",choices=_CHOICE_WINDOW), label = "Chip")
-    start_row = FieldList(StringField("Start Row"), label = "Start Row")
-    start_column = FieldList(StringField("Start Column"), label = "Start Column")
-    height = FieldList(StringField("Height"), label = "Height")
-    width = FieldList(StringField("Width"), label = "Width")
-    lower_threshold = FieldList(StringField("Lowest Energy"), label = "Lowest Energy")
-    pha_range = FieldList(StringField("Energy Range"), label = "Energy Range")
-    sample = FieldList(StringField("Sample Rate"), label = "Sample Rate")
-
-    add_window = SubmitField("Add Window Rank")
-    remove_window = SubmitField("Remove NA Window Entry")
 
 class TOOParamForm(FlaskForm):
     tooid = StringField("TOO ID", render_kw=_NONEDIT)
