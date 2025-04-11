@@ -92,28 +92,28 @@ class TimeRankDateTimeField(DateTimeField):
             super().process_data(value)
 
 class TimeRank(Form):
-    window_constraint = SelectField(_LABELS.get('window_constraint'), choices=_CHOICE_CP)
+    window_constraint = SelectField(_LABELS.get('window_constraint'), choices=_CHOICE_CP, default='Y')
     tstart = TimeRankDateTimeField(_LABELS.get('tstart'), format=_DATETIME_FORMATS, default=datetime.now())
     tstop = TimeRankDateTimeField(_LABELS.get('tstop'), format=_DATETIME_FORMATS, default=datetime.now())
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class RollRank(Form):
-    roll_constraint = SelectField(_LABELS.get('roll_constraint'),choices=_CHOICE_CP)
-    roll_180 = SelectField(_LABELS.get('roll_180'),choices=_CHOICE_NNY)
-    roll = FloatField(_LABELS.get('roll'), validators=[NumberRange(min=0, max=360)])
-    roll_tolerance = FloatField(_LABELS.get('roll_tolerance'), validators=[NumberRange(min=0, max=360)])
+    roll_constraint = SelectField(_LABELS.get('roll_constraint'),choices=_CHOICE_CP, default='Y')
+    roll_180 = SelectField(_LABELS.get('roll_180'),choices=_CHOICE_NNY, default = 'N')
+    roll = FloatField(_LABELS.get('roll'), validators=[NumberRange(min=0, max=360)], default = 0.0)
+    roll_tolerance = FloatField(_LABELS.get('roll_tolerance'), validators=[NumberRange(min=0, max=360)], default = 0.0)
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class WindowRank(Form):
-    chip = SelectField(_LABELS.get('chip'),choices=_CHOICE_WINDOW_CHIP)
-    start_row = IntegerField(_LABELS.get('start_row'), validators=[NumberRange(min=1,max=1024)])
-    start_column = IntegerField(_LABELS.get('start_column'), validators=[NumberRange(min=1,max=1024)])
-    width = IntegerField(_LABELS.get('width'), validators=[NumberRange(min=1,max=1024)])
-    height = IntegerField(_LABELS.get('height'), validators=[NumberRange(min=1,max=1024)])
+    chip = SelectField(_LABELS.get('chip'),choices=_CHOICE_WINDOW_CHIP, default='I0')
+    start_row = IntegerField(_LABELS.get('start_row'), validators=[NumberRange(min=1,max=1024)], default = 1)
+    start_column = IntegerField(_LABELS.get('start_column'), validators=[NumberRange(min=1,max=1024)], default = 1)
+    width = IntegerField(_LABELS.get('width'), validators=[NumberRange(min=1,max=1024)], default = 1023)
+    height = IntegerField(_LABELS.get('height'), validators=[NumberRange(min=1,max=1024)], default = 1023)
 
-    lower_threshold = FloatField(_LABELS.get('lower_threshold'), validators=[NumberRange(min=0,max=15)])
-    pha_range = FloatField(_LABELS.get('pha_range'), validators=[NumberRange(min=0,max=15)])
-    sample = IntegerField(_LABELS.get('sample'), validators=[NumberRange(min=0,max=255)])
+    lower_threshold = FloatField(_LABELS.get('lower_threshold'), validators=[NumberRange(min=0,max=15)], default= 0.08)
+    pha_range = FloatField(_LABELS.get('pha_range'), validators=[NumberRange(min=0,max=15)], default = 13.0)
+    sample = IntegerField(_LABELS.get('sample'), validators=[NumberRange(min=0,max=255)], default = 0)
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class OcatParamForm(FlaskForm):
