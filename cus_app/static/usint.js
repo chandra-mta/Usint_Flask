@@ -20,11 +20,25 @@ jQuery(document).ready(function(){
     jQuery("#closeRoll").click(function(){
         jQuery("#rollDiv").slideUp('fast');
     });
+    
     jQuery("#openWindow").click(function(){
+        console.log(jQuery(this));
+        console.log(jQuery('#windowDiv'));
         jQuery("#windowDiv").slideDown('fast');
     });
     jQuery("#closeWindow").click(function(){
+        console.log(jQuery(this));
+        console.log(jQuery('#windowDiv'));
         jQuery("#windowDiv").slideUp('fast');
+    });
+
+    jQuery("#openACIS").click(function(){
+        jQuery(".ACISDiv").slideDown('fast');
+        jQuery(".HRCDiv").slideUp('fast');
+    });
+    jQuery("#openHRC").click(function(){
+        jQuery(".HRCDiv").slideDown('fast');
+        jQuery(".ACISDiv").slideUp('fast');
     });
 
     jQuery("#addTime").click(function(){

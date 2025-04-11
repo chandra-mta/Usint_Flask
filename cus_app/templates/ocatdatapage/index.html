@@ -393,11 +393,20 @@
         <h2 id="hrc_param">HRC Parameters
             {{ help_popup_page('../static/ocatdatapage/user_help.html#hrc_parameters', ' (Help)', 55) }}
         </h2>
-        {% if form.instrument.data not in ['HRC-I', 'HRC-S'] %}
-            <h3>
-                ObsID {{ ocat_data.get('obsid') }} is not an HRC observation. Instrument {{ form.instrument.data }} is selected.
-            </h3>
+        {% if form.instrument.data in ['HRC-I', 'HRC-S'] %}
+            <div class="ACISDiv" style="display: none;">
         {% else %}
+            <div class="ACISDiv" style="display: block;">
+        {% endif %}
+                <h3>
+                    ObsID {{ ocat_data.get('obsid') }} is not an HRC observation. Instrument {{ form.instrument.data }} is selected.
+                </h3>
+            </div>
+        {% if form.instrument.data in ['HRC-I', 'HRC-S'] %}
+            <div class="HRCDiv" style="display: block;">
+        {% else %}
+            <div class="HRCDiv" style="display: none;">
+        {% endif %}
             <table border=0>
                 <tr>    
                 {{ render_field(form.hrc_timing_mode) }}
@@ -405,17 +414,26 @@
                 {{ render_field(form.hrc_si_mode) }}
                 </tr>
             </table>
-        {% endif %}
+            </div>
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
         <h2 id="acis_param">ACIS Parameters
             {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_parameters', ' (Help)', 55) }}
         </h2>
-        {% if form.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
-            <h3>
-                ObsID {{ ocat_data.get('obsid') }} is not an ACIS observation. Instrument {{ form.instrument.data }} is selected.
-            </h3>
+        {% if form.instrument.data in ['ACIS-I', 'ACIS-S'] %}
+            <div class="HRCDiv" style="display: none;">
         {% else %}
+            <div class="HRCDiv" style="display: block;">
+        {% endif %}
+                <h3>
+                    ObsID {{ ocat_data.get('obsid') }} is not an ACIS observation. Instrument {{ form.instrument.data }} is selected.
+                </h3>
+            </div>
+        {% if form.instrument.data in ['ACIS-I', 'ACIS-S'] %}
+            <div class="ACISDiv" style="display: block;">
+        {% else %}
+            <div class="ACISDiv" style="display: none;">
+        {% endif %}
             <table>
                 <tr>
                 {{ render_field(form.exp_mode) }}
@@ -429,7 +447,7 @@
             </table>
             <table>
                 <tr>
-                {{ render_field(form.dropped_chip_count) }}
+                {{ render_value(ocat_data.get('dropped_chip_count'), _LABELS.get('dropped_chip_count')) }}
                 <tr>
             </table>
         
@@ -455,7 +473,6 @@
                 {{ render_field(form.ccds5_on) }}
                 </tr>
             </table>
-            <div style='padding-top:20px;'></div>
             <table>
                 <tr>
                 {{ render_field(form.subarray) }}
@@ -494,17 +511,26 @@
                 {{ render_field(form.spectra_max_count) }}
                 </tr>
             </table>
-        {% endif %}
+            </div>
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
         <h2 id="aciswin_param">ACIS Window Constraints
         {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_window', ' (Help)', 55) }}
         </h2>
-        {% if form.instrument.data not in ['ACIS-I', 'ACIS-S'] %}
-            <h3>
-                ObsID {{ ocat_data.get('obsid')}} is not an ACIS Observation. Instrument {{ form.instrument.data }} is selected.
-            </h3>
+        {% if form.instrument.data in ['ACIS-I', 'ACIS-S'] %}
+            <div class="HRCDiv" style="display: none;">
         {% else %}
+            <div class="HRCDiv" style="display: block;">
+        {% endif %}
+                <h3>
+                    ObsID {{ ocat_data.get('obsid') }} is not an ACIS observation. Instrument {{ form.instrument.data }} is selected.
+                </h3>
+            </div>
+        {% if form.instrument.data in ['ACIS-I', 'ACIS-S'] %}
+            <div class="ACISDiv" style="display: block;">
+        {% else %}
+            <div class="ACISDiv" style="display: none;">
+        {% endif %}
             {{ form.spwindow_flag() }}
             
             {% if form.spwindow_flag.data == 'N' %}
@@ -540,7 +566,7 @@
                     </tbody>
                 </table>
                 </div>
-        {% endif %}
+            </div>
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
         <h2 id="too_param">TOO Parameters
