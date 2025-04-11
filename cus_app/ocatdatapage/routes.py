@@ -34,15 +34,11 @@ def index(obsid=None):
     # --- Note that the 4KB limitation on client-side cookies means we use flask_session to
     # --- integrate server-side cookie directly into the session table of the usint revision SQL database
     #
-    ocat_data, warning, orient_maps, form_specific_additions = fetch_session_data(obsid)
-    #
-    # --- With the session data related to this specific obsid, we then process whether to 
-    # --- generate a new form from the default data or from a passed form.
-    #
+    ocat_data, warning, orient_maps, ocat_form_dict = fetch_session_data(obsid)
     #
     # --- Render Ocat Data In A WTForm
     #
-    form = OcatParamForm(request.form, data= (form_specific_additions | ocat_data) )
+    form = OcatParamForm(request.form, data = ocat_form_dict)
     if request.method == "POST" and form.is_submitted(): 
         form = fod.synchronize_values(form) #: Process the changes submitted to the form for how they would update the form and param_dict objects
         #
@@ -149,8 +145,13 @@ def fetch_session_data(obsid):
         session[f'orient_maps_{obsid}'] = orient_maps
         form_specific_additions = fod.generate_additions(ocat_data)
         session[f'form_specific_additions_{obsid}'] = form_specific_additions
-    
-    return ocat_data, warning, orient_maps, form_specific_additions
+    #
+    # --- With the session data related to this specific obsid, we then process whether to 
+    # --- generate a new form from the default data or from a previously passed form we are editing again.
+    #
+    ocat_form_dict = session.get(f'ocat_form_dict_{obsid}',(form_specific_additions | ocat_data))
+
+    return ocat_data, warning, orient_maps, ocat_form_dict
 
 
 def prepare_confirmation_page(form, ocat_data):
