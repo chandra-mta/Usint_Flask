@@ -7,7 +7,7 @@
 """
 from flask_wtf import FlaskForm
 from wtforms import Field, Form, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, TextAreaField, RadioField, DateTimeField
-from wtforms.validators import ValidationError, DataRequired, NumberRange
+from wtforms.validators import DataRequired, NumberRange, Optional
 from wtforms.widgets import Input
 from datetime import datetime
 import json
@@ -100,20 +100,20 @@ class TimeRank(Form):
 class RollRank(Form):
     roll_constraint = SelectField(_LABELS.get('roll_constraint'),choices=_CHOICE_CP, default='Y')
     roll_180 = SelectField(_LABELS.get('roll_180'),choices=_CHOICE_NNY, default = 'N')
-    roll = FloatField(_LABELS.get('roll'), validators=[NumberRange(min=0, max=360)], default = 0.0)
-    roll_tolerance = FloatField(_LABELS.get('roll_tolerance'), validators=[NumberRange(min=0, max=360)], default = 0.0)
+    roll = FloatField(_LABELS.get('roll'), validators=[Optional(),NumberRange(min=0, max=360)], default = 0.0)
+    roll_tolerance = FloatField(_LABELS.get('roll_tolerance'), validators=[Optional(),NumberRange(min=0, max=360)], default = 0.0)
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class WindowRank(Form):
     chip = SelectField(_LABELS.get('chip'),choices=_CHOICE_WINDOW_CHIP, default='I0')
-    start_row = IntegerField(_LABELS.get('start_row'), validators=[NumberRange(min=1,max=1024)], default = 1)
-    start_column = IntegerField(_LABELS.get('start_column'), validators=[NumberRange(min=1,max=1024)], default = 1)
-    width = IntegerField(_LABELS.get('width'), validators=[NumberRange(min=1,max=1024)], default = 1023)
-    height = IntegerField(_LABELS.get('height'), validators=[NumberRange(min=1,max=1024)], default = 1023)
+    start_row = IntegerField(_LABELS.get('start_row'), validators=[Optional(),NumberRange(min=1,max=1024)], default = 1)
+    start_column = IntegerField(_LABELS.get('start_column'), validators=[Optional(),NumberRange(min=1,max=1024)], default = 1)
+    width = IntegerField(_LABELS.get('width'), validators=[Optional(),NumberRange(min=1,max=1024)], default = 1023)
+    height = IntegerField(_LABELS.get('height'), validators=[Optional(),NumberRange(min=1,max=1024)], default = 1023)
 
-    lower_threshold = FloatField(_LABELS.get('lower_threshold'), validators=[NumberRange(min=0,max=15)], default= 0.08)
-    pha_range = FloatField(_LABELS.get('pha_range'), validators=[NumberRange(min=0,max=15)], default = 13.0)
-    sample = IntegerField(_LABELS.get('sample'), validators=[NumberRange(min=0,max=255)], default = 0)
+    lower_threshold = FloatField(_LABELS.get('lower_threshold'), validators=[Optional(),NumberRange(min=0,max=15)], default= 0.08)
+    pha_range = FloatField(_LABELS.get('pha_range'), validators=[Optional(),NumberRange(min=0,max=15)], default = 13.0)
+    sample = IntegerField(_LABELS.get('sample'), validators=[Optional(),NumberRange(min=0,max=255)], default = 0)
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class OcatParamForm(FlaskForm):
@@ -132,9 +132,9 @@ class OcatParamForm(FlaskForm):
     ra_hms = StringField(_LABELS.get('ra_hms'), default=_DEFAULTS.get('ra_hms')) #: TODO make Javascript dynamically change RA, DEC display
     dec_dms = StringField(_LABELS.get('dec_dms'), default=_DEFAULTS.get('dec_dms'))
 
-    y_det_offset = FloatField(_LABELS.get('y_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
-    z_det_offset = FloatField(_LABELS.get('z_det_offset'), validators=[NumberRange(min=-120.0, max=120.0)])
-    trans_offset = FloatField(_LABELS.get('trans_offset'), validators=[NumberRange(min=-190.5, max=126.621)])
+    y_det_offset = FloatField(_LABELS.get('y_det_offset'), validators=[Optional(),NumberRange(min=-120.0, max=120.0)])
+    z_det_offset = FloatField(_LABELS.get('z_det_offset'), validators=[Optional(),NumberRange(min=-120.0, max=120.0)])
+    trans_offset = FloatField(_LABELS.get('trans_offset'), validators=[Optional(),NumberRange(min=-190.5, max=126.621)])
     focus_offset = FloatField(_LABELS.get('focus_offset'))
 
     uninterrupt = SelectField(_LABELS.get('uninterrupt'), choices=_CHOICE_NPY)
@@ -144,9 +144,9 @@ class OcatParamForm(FlaskForm):
     choices = [(x, x) for x in ('NONE', 'NEW','ASTEROID', 'COMET', 'EARTH', 'JUPITER', 'MARS','MOON', 'NEPTUNE', 'PLUTO', 'SATURN', 'URANUS', 'VENUS')]
     object = SelectField(_LABELS.get('object'), choices=choices)
     photometry_flag = SelectField(_LABELS.get('photometry_flag'), choices=_CHOICE_NY)
-    vmagnitude = FloatField(_LABELS.get('vmagnitude'), validators=[NumberRange(min=-15, max=20)])
-    est_cnt_rate = FloatField(_LABELS.get('est_cnt_rate'), validators=[DataRequired(), NumberRange(min=0, max=100000)])
-    forder_cnt_rate = FloatField(_LABELS.get('forder_cnt_rate'), validators=[NumberRange(min=0, max=100000)]) #: Required if grating is not none, TODO find validator
+    vmagnitude = FloatField(_LABELS.get('vmagnitude'), validators=[Optional(),NumberRange(min=-15, max=20)])
+    est_cnt_rate = FloatField(_LABELS.get('est_cnt_rate'), validators=[DataRequired(), Optional(),NumberRange(min=0, max=100000)])
+    forder_cnt_rate = FloatField(_LABELS.get('forder_cnt_rate'), validators=[Optional(),NumberRange(min=0, max=100000)]) #: Required if grating is not none, TODO find validator
 
     remarks = TextAreaField(_LABELS.get('remarks'), default = '')
     comments = TextAreaField(_LABELS.get('comments'), default = '')
@@ -175,19 +175,19 @@ class OcatParamForm(FlaskForm):
     #
     constr_in_remarks = SelectField(_LABELS.get('constr_in_remarks'), choices=_CHOICE_NPY)
     pointing_constraint = SelectField(_LABELS.get('pointing_constraint'), choices=_CHOICE_NNY)
-    phase_epoch = FloatField(_LABELS.get('phase_epoch'), validators=[NumberRange(min=46066.0)])
+    phase_epoch = FloatField(_LABELS.get('phase_epoch'), validators=[Optional(),NumberRange(min=46066.0)])
     phase_period = FloatField(_LABELS.get('phase_period'))
-    phase_start = FloatField(_LABELS.get('phase_start'), validators=[NumberRange(min=0, max=1)])
-    phase_start_margin = FloatField(_LABELS.get('phase_start_margin'), validators=[NumberRange(min=0, max=0.5)])
-    phase_end = FloatField(_LABELS.get('phase_end'), validators=[NumberRange(min=0, max=1)])
-    phase_end_margin = FloatField(_LABELS.get('phase_end_margin'), validators=[NumberRange(min=0, max=0.5)])
+    phase_start = FloatField(_LABELS.get('phase_start'), validators=[Optional(),NumberRange(min=0, max=1)])
+    phase_start_margin = FloatField(_LABELS.get('phase_start_margin'), validators=[Optional(),NumberRange(min=0, max=0.5)])
+    phase_end = FloatField(_LABELS.get('phase_end'), validators=[Optional(),NumberRange(min=0, max=1)])
+    phase_end_margin = FloatField(_LABELS.get('phase_end_margin'), validators=[Optional(),NumberRange(min=0, max=0.5)])
     #
     # --- Other (Group)
     #
     monitor_flag = SelectField(_LABELS.get('monitor_flag'), choices=_CHOICE_NY)
     pre_id = IntegerField(_LABELS.get('pre_id'))
-    pre_min_lead = FloatField(_LABELS.get('pre_min_lead'), validators=[NumberRange(min=0, max=364)])
-    pre_max_lead = FloatField(_LABELS.get('pre_max_lead'), validators=[NumberRange(min=0.01, max=365)])
+    pre_min_lead = FloatField(_LABELS.get('pre_min_lead'), validators=[Optional(),NumberRange(min=0, max=364)])
+    pre_max_lead = FloatField(_LABELS.get('pre_max_lead'), validators=[Optional(),NumberRange(min=0.01, max=365)])
     #
     # --- Other (Joint)
     #
@@ -205,7 +205,7 @@ class OcatParamForm(FlaskForm):
     #
     exp_mode = SelectField(_LABELS.get('exp_mode'), choices=((None,"NA"),("TE","TE"),("CC","CC")))
     bep_pack = SelectField(_LABELS.get('bep_pack'), choices = _CHOICE_EVENT)
-    frame_time = FloatField(_LABELS.get('frame_time'), validators=[NumberRange(min=0, max=10)])
+    frame_time = FloatField(_LABELS.get('frame_time'), validators=[Optional(),NumberRange(min=0, max=10)])
     most_efficient = SelectField(_LABELS.get('most_efficient'), choices = _CHOICE_NNY)
     ccdi0_on = SelectField(_LABELS.get('ccdi0_on'), choices=_CHOICE_CHIP)
     ccdi1_on = SelectField(_LABELS.get('ccdi1_on'), choices=_CHOICE_CHIP)
@@ -221,19 +221,19 @@ class OcatParamForm(FlaskForm):
     # --- ACIS (Subarray)
     #
     subarray = SelectField(_LABELS.get('subarray'), choices=_CHOICE_NNY)
-    subarray_start_row = IntegerField(_LABELS.get('subarray_start_row'), validators=[NumberRange(min=1, max=925)])
-    subarray_row_count = IntegerField(_LABELS.get('subarray_row_count'), validators=[NumberRange(min=101, max=1024)])
+    subarray_start_row = IntegerField(_LABELS.get('subarray_start_row'), validators=[Optional(),NumberRange(min=1, max=925)])
+    subarray_row_count = IntegerField(_LABELS.get('subarray_row_count'), validators=[Optional(),NumberRange(min=101, max=1024)])
     duty_cycle = SelectField(_LABELS.get('duty_cycle'), choices=_CHOICE_NNY)
-    secondary_exp_count = FloatField(_LABELS.get('secondary_exp_count'), validators=[NumberRange(min=0, max=15)])
-    primary_exp_time = FloatField(_LABELS.get('primary_exp_time'), validators=[NumberRange(min=0, max=10)])
+    secondary_exp_count = FloatField(_LABELS.get('secondary_exp_count'), validators=[Optional(),NumberRange(min=0, max=15)])
+    primary_exp_time = FloatField(_LABELS.get('primary_exp_time'), validators=[Optional(),NumberRange(min=0, max=10)])
     onchip_sum = SelectField(_LABELS.get('onchip_sum'), choices=_CHOICE_NNY)
-    onchip_row_count = IntegerField(_LABELS.get('onchip_row_count'), validators=[NumberRange(min=1, max=512)])
-    onchip_column_count = IntegerField(_LABELS.get('onchip_column_count'), validators=[NumberRange(min=1, max=512)])
+    onchip_row_count = IntegerField(_LABELS.get('onchip_row_count'), validators=[Optional(),NumberRange(min=1, max=512)])
+    onchip_column_count = IntegerField(_LABELS.get('onchip_column_count'), validators=[Optional(),NumberRange(min=1, max=512)])
     eventfilter = SelectField(_LABELS.get('eventfilter'), choices=_CHOICE_NNY)
-    eventfilter_lower = FloatField(_LABELS.get('eventfilter_lower'), validators=[NumberRange(min=0, max=15)])
-    eventfilter_higher = FloatField(_LABELS.get('eventfilter_higher'), validators=[NumberRange(min=0, max=15)])
+    eventfilter_lower = FloatField(_LABELS.get('eventfilter_lower'), validators=[Optional(),NumberRange(min=0, max=15)])
+    eventfilter_higher = FloatField(_LABELS.get('eventfilter_higher'), validators=[Optional(),NumberRange(min=0, max=15)])
     multiple_spectral_lines = SelectField(_LABELS.get('multiple_spectral_lines'), choices=_CHOICE_NNY)
-    spectra_max_count = FloatField(_LABELS.get('spectra_max_count'), validators=[NumberRange(min=1, max=100000)])
+    spectra_max_count = FloatField(_LABELS.get('spectra_max_count'), validators=[Optional(),NumberRange(min=1, max=100000)])
     #
     # --- ACIS Window
     #
