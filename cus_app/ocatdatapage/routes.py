@@ -134,7 +134,7 @@ def fetch_session_data(obsid):
     ocat_data = session.get(f'ocat_data_{obsid}')
     warning = session.get(f'warning_{obsid}')
     orient_maps = session.get(f'orient_maps_{obsid}')
-    form_specific_additions = session.get(f'form_specific_additions_{obsid}')
+    form_override = session.get(f'form_override_{obsid}')
     if ocat_data is None:
         #: First Fetch
         ocat_data = rod.read_ocat_data(obsid)
@@ -143,13 +143,13 @@ def fetch_session_data(obsid):
         session[f'warning_{obsid}'] = warning
         orient_maps = fod.create_orient_maps(ocat_data)
         session[f'orient_maps_{obsid}'] = orient_maps
-        form_specific_additions = fod.generate_additions(ocat_data)
-        session[f'form_specific_additions_{obsid}'] = form_specific_additions
+        form_override = fod.generate_override(ocat_data)
+        session[f'form_override_{obsid}'] = form_override
     #
     # --- With the session data related to this specific obsid, we then process whether to 
     # --- generate a new form from the default data or from a previously passed form we are editing again.
     #
-    ocat_form_dict = session.get(f'ocat_form_dict_{obsid}',(form_specific_additions | ocat_data))
+    ocat_form_dict = session.get(f'ocat_form_dict_{obsid}',(ocat_data | form_override))
 
     return ocat_data, warning, orient_maps, ocat_form_dict
 

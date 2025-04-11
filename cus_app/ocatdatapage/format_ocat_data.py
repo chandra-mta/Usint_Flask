@@ -142,13 +142,13 @@ def create_orient_maps(ocat_data):
     }
     return orient_maps
 
-def generate_additions(ocat_data):
+def generate_override(ocat_data):
     """Convert certain ocat data parameters to new values for form editing
 
     :param ocat_data: Ocat Data keyed by parameter directly (Represents only what's in the ocat in original form)
     :type ocat_data: dict(str, value)
     """
-    additional = {}
+    override = {}
     #
     #--- RA, Dec
     #
@@ -156,16 +156,24 @@ def generate_additions(ocat_data):
     dec = ocat_data.get('dec')
     if ra is not None and dec is not None:
         ra_hms, dec_dms = convert_ra_dec_format(ra, dec, 'hmsdms')
-        additional['ra_hms'] = ra_hms
-        additional['dec_dms'] = dec_dms
+        override['ra_hms'] = ra_hms
+        override['dec_dms'] = dec_dms
     #
     # --- Dither
     #
     for key in ('y_amp', 'y_freq', 'z_amp', 'z_freq'):
         val = ocat_data.get(key)
         if val is not None:
-            additional[f'{key}_asec'] = val * 3600
-    return additional
+            override[f'{key}_asec'] = val * 3600
+    #
+    # --- Rank Flags
+    #
+    for flag in ('window_flag', 'roll_flag', 'spwindow_flag'):
+        if ocat_data.get(flag) == 'P':
+            override[flag] = 'Y'
+        elif ocat_data.get(flag) in _NULL_LIST:
+            override[flag] = 'N'
+    return override
 
 def convert_ra_dec_format(dra, ddec, oformat):
     """
