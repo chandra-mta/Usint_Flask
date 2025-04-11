@@ -46,8 +46,8 @@ _ACIS_PARAM_LIST = ['exp_mode', 'ccdi0_on', 'ccdi1_on', 'ccdi2_on', 'ccdi3_on', 
         'eventfilter', 'eventfilter_lower', 'eventfilter_higher', 'most_efficient', \
         'dropped_chip_count', 'multiple_spectral_lines', 'spectra_max_count']
 
-_ACISWIN_PARAM_LIST = ['ordr', 'aciswin_id', 'start_row', 'start_column', 'width', 'height',\
-              'lower_threshold', 'pha_range', 'sample', 'chip', 'include_flag']
+_ACISWIN_PARAM_LIST = ['chip', 'start_row', 'start_column', 'width', 'height',\
+              'lower_threshold', 'pha_range', 'sample']
 
 _NULL_LIST = ['NA', 'N/A', 'none','None', 'NONE', 'null', 'Null', 'NULL', ''] #: List of database null string values we intend to be python native None
 
@@ -315,25 +315,24 @@ def find_monitoring_series(obsid):
 def roll_params(obsid):
     """extract roll related parameter data
     """
-    cmd = f"select ordr,roll_constraint,roll_180,roll,roll_tolerance from rollreq where obsid={obsid} order by ordr"
+    cmd = f"select roll_constraint,roll_180,roll,roll_tolerance from rollreq where obsid={obsid} order by ordr"
     roll_fetch = get_value_from_sybase(cmd)
-    p_dict = _convert_astropy_to_native(roll_fetch, orient = 'list')
-    p_dict['roll_ordr'] = max(p_dict.pop('ordr'))
-    return p_dict
+    records = _convert_astropy_to_native(roll_fetch, orient = 'records')
+    return {'roll_ranks':records}
 
 def time_constraint_params(obsid):
     """extract time constraint related parameter data
     """
-    cmd = f"select ordr,window_constraint,tstart,tstop from timereq where obsid={obsid} order by ordr"
+    cmd = f"select window_constraint,tstart,tstop from timereq where obsid={obsid} order by ordr"
     time_fetch = get_value_from_sybase(cmd)
-    p_dict = _convert_astropy_to_native(time_fetch, orient = 'list')
-    p_dict['time_ordr'] = max(p_dict.pop('ordr'))
+    records = _convert_astropy_to_native(time_fetch, orient = 'records')
     #
     # --- Ensure leading zero format
     #
-    p_dict['tstart'] = [datetime.strptime(val,_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT) for val in p_dict.get('tstart')]
-    p_dict['tstop'] = [datetime.strptime(val,_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT) for val in p_dict.get('tstop')]
-    return p_dict
+    for i in range(len(records)):
+        records[i]['tstart'] = datetime.strptime(records[i]['tstart'],_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT)
+        records[i]['tstop'] = datetime.strptime(records[i]['tstop'],_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT)
+    return {'time_ranks': records}
 
 def too_ddt_params(tooid):
     """extract time constraint related parameter data
@@ -369,10 +368,8 @@ def aciswin_params(obsid):
     """
     cmd = f"select {','.join(_ACISWIN_PARAM_LIST)} from aciswin where obsid={obsid} order by ordr"
     aciswin_fetch = get_value_from_sybase(cmd)
-    p_dict = _convert_astropy_to_native(aciswin_fetch, orient = 'list')
-    p_dict['aciswin_no'] = max(p_dict.pop('ordr'))
-    return p_dict
-
+    records = _convert_astropy_to_native(aciswin_fetch, orient = 'records')
+    return {'window_ranks': records}
 def phase_params(obsid):
     """extract phase related parameter data
     """
