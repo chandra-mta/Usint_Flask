@@ -20,10 +20,10 @@ import os
 _CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
 
 _CHOICE_INSTRUMENT = (
-        ("ACIS-I", "ACIS-I", {"id":"switchACIS"}),
-        ("ACIS-S", "ACIS-S", {"id":"switchACIS"}),
-        ("HRC-I", "HRC-I", {"id":"switchHRC"}),
-        ("HRC-S", "HRC-S", {"id":"switchHRC"}),
+        ("ACIS-I", "ACIS-I", {"id":"openACIS"}),
+        ("ACIS-S", "ACIS-S", {"id":"openACIS"}),
+        ("HRC-I", "HRC-I", {"id":"openHRC"}),
+        ("HRC-S", "HRC-S", {"id":"openHRC"}),
     )
 
 _CHOICE_DITHER = [('N', 'NO', {"id": "closeDither"}), ('Y', 'YES',{"id": "openDither"} )]
@@ -257,7 +257,7 @@ class OcatParamForm(FlaskForm):
     #
     # --- Submission
     #
-    submit_choice = RadioField(_LABELS.get('submit_choice'), choices=_CHOICE_SUBMIT)
+    submit_choice = RadioField(_LABELS.get('submit_choice'), choices=_CHOICE_SUBMIT, validators=[DataRequired()])
     multiobsid = StringField(_LABELS.get('multiobsid'))
     submit = SubmitField(_LABELS.get('submit'))
     #

@@ -34,23 +34,15 @@ def index(obsid=None):
     # --- Note that the 4KB limitation on client-side cookies means we use flask_session to
     # --- integrate server-side cookie directly into the session table of the usint revision SQL database
     #
-    ocat_data = session.get('ocat_data')
-    warning = session.get('warning')
-    orient_maps = session.get('orient_maps')
-    if ocat_data is None:
-        #: First Fetch
-        ocat_data = rod.read_ocat_data(obsid)
-        session['ocat_data'] = ocat_data
-        warning = create_warning_line(ocat_data)
-        session['warning'] = warning
-        orient_maps = create_orient_maps(ocat_data)
-        session['orient_maps'] = orient_maps
-    form_dict = fod.generate_additionals(ocat_data)
-    form_dict.update(ocat_data)
+    ocat_data, warning, orient_maps, form_specific_additions = fetch_session_data(obsid)
+    #
+    # --- With the session data related to this specific obsid, we then process whether to 
+    # --- generate a new form from the default data or from a passed form.
+    #
     #
     # --- Render Ocat Data In A WTForm
     #
-    form = OcatParamForm(request.form, data=form_dict)
+    form = OcatParamForm(request.form, data= (form_specific_additions | ocat_data) )
     if request.method == "POST" and form.is_submitted(): 
         form = fod.synchronize_values(form) #: Process the changes submitted to the form for how they would update the form and param_dict objects
         #
@@ -112,7 +104,7 @@ def index(obsid=None):
 
 
 @bp.route('/confirm', methods=['GET', 'POST'])
-def confirm():
+def confirm(obsid):
     ind_dict = session.get('ind_dict')
     multi_obsid = session.get('multi_obsid',[])
     ocat_data = session.get('ocat_data')
@@ -132,44 +124,33 @@ def confirm():
                            or_dict = or_dict)
 
 @bp.route('/finalize', methods=['GET', 'POST'])
-def finalize():
+def finalize(obsid):
     #: TODO make sure that the finalized submission will run the functions to submit the SQLAlchemy commit and then clear the session data
     #: Then display the page informing the user that their revision went through.
     #: Needed so that we can complete a revision action and keep the cache clear (particularly of ocat data) for the next obsid revision
     pass
 
-def create_orient_maps(ocat_data):
-    #
-    #--- Viewing Orientation Maps
-    #
-    link_part = f"https://cxc.harvard.edu/targets/{ocat_data.get('seq_nbr')}/{ocat_data.get('seq_nbr')}.{ocat_data.get('obsid')}."
-
-    rass = "NoImage"
-    rosat = "NoImage"
-    dss = "NoImage"
-    if os.path.isdir(f"/data/targets/{str(ocat_data.get('seq_nbr'))}"):
-        gif_check = ''.join([each for each in os.listdir(f"/data/targets/{str(ocat_data.get('seq_nbr'))}") if each.endswith('.gif')])
-        if 'soe.rass.gif' in gif_check:
-            rass  = f"{link_part}soe.rass.gif"
-        elif 'rass.gif' in gif_check:
-            rass  = f"{link_part}rass.gif"
-
-        if 'soe.pspc.gif' in gif_check:
-            rosat  = f"{link_part}soe.pspc.gif"
-        elif 'pspc.gif' in gif_check:
-            rosat  = f"{link_part}pspc.gif"
-
-        if 'soe.dss.gif' in gif_check:
-            dss   = f"{link_part}soe.dss.gif"
-        elif 'dss.gif' in gif_check:
-            dss   = f"{link_part}dss.gif"
+def fetch_session_data(obsid):
+    """
+    Possible to get confused midway through a rendering of a form object or storing obsid data
+    when working with multiple obsids in a session. This will format them to a specific set related to the input obsid
+    """
+    ocat_data = session.get(f'ocat_data_{obsid}')
+    warning = session.get(f'warning_{obsid}')
+    orient_maps = session.get(f'orient_maps_{obsid}')
+    form_specific_additions = session.get(f'form_specific_additions_{obsid}')
+    if ocat_data is None:
+        #: First Fetch
+        ocat_data = rod.read_ocat_data(obsid)
+        session[f'ocat_data_{obsid}'] = ocat_data
+        warning = fod.create_warning_line(ocat_data)
+        session[f'warning_{obsid}'] = warning
+        orient_maps = fod.create_orient_maps(ocat_data)
+        session[f'orient_maps_{obsid}'] = orient_maps
+        form_specific_additions = fod.generate_additions(ocat_data)
+        session[f'form_specific_additions_{obsid}'] = form_specific_additions
     
-    orient_maps = {
-        'rass': rass,
-        'rosat': rosat,
-        'dss': dss
-    }
-    return orient_maps
+    return ocat_data, warning, orient_maps, form_specific_additions
 
 
 def prepare_confirmation_page(form, ocat_data):
@@ -292,99 +273,3 @@ def create_obsid_list(list_string, obsid):
     #: Remove duplicates, sort, and exclude the main obsid
     obsids_list = sorted(set(obsids_list) - {obsid})
     return obsids_list
-
-
-def create_warning_line(ocat_data):
-    """
-    Check the observation status and create warning
-
-    :param ocat_data: Ocat Data
-    :type ocat_data: dict
-    :return: Line detailing warning information
-    :rtype: str
-    """
-    line = ""
-    #
-    # --- observation status; if not unobserved or schedule, a warning is flashed
-    #
-    if ocat_data.get("status") in ["unobserved", "scheduled", "untriggered"]:
-        pass
-    elif ocat_data.get("status") in ["observed", "archived", "triggered"]:
-        line = f"This observation was already {ocat_data.get('status').upper()}."
-        return line
-    else:
-        line = f"This observation was {ocat_data.get('status').upper()}."
-        return line
-    #
-    # --- check lts/scheduled observation date
-    #
-    lts_chk = False
-    obs_date = ocat_data.get("soe_st_sched_date")
-    if obs_date is None:
-        obs_date = ocat_data.get("lts_lt_plan")
-        lts_chk = True
-
-    if obs_date is not None:
-        time_diff = (
-            datetime.strptime(obs_date, fod._OCAT_DATETIME_FORMAT) - datetime.now()
-        ).total_seconds()
-        inday = int(time_diff/86400)
-        if inday < 0:
-            inday = 0
-    else:
-        time_diff = 1e8
-        inday = 1e3
-    #
-    # --- check whether this observation is on OR list
-    #
-    ifile = os.path.join(current_app.config["OBS_SS"], "scheduled_obs_list")
-    with open(ifile) as f:
-        mp_list = [line.strip().split() for line in f.readlines()]
-    mp_chk = False
-    for ent in mp_list:
-        if ent[0] == ocat_data.get('obsid'):
-            mp_chk = True
-            break
-    #
-    # --- for the case that lts date is passed but not observed yet
-    #
-    if lts_chk and time_diff < 0:
-        line = "The scheduled (LTS) date of this observation was already passed."
-
-    elif not lts_chk and inday == 0:
-        line = "This observation is scheduled for today."
-    #
-    # --- less than 10 days to scheduled date
-    #
-    elif time_diff < 864000:
-        #
-        # --- if the observation is on OR list
-        #
-        if mp_chk:
-            if ocat_data.get("status") == "scheduled":
-                line = f"{inday} days left to the scheduled date. You must get a permission from MP to modify entries (Scheduled on: {obs_date}.)"
-            else:
-                line = f"This observation is currently under review in an active OR list. You must get a permission from MP to modify entries (LTS Date: {obs_date}.)"
-        #
-        # --- if the observation is not on the OR list yet
-        #
-        else:
-            if lts_chk and ocat_data.get("status") == "unobserved":
-                line = f"{inday}  (LTS) days left, but the observation is not scheduled yet. You may want to check whether this is still a possible observation date with MP."
-            else:
-                if ocat_data["status"][-1] in [
-                    "unobserved",
-                    "scheduled",
-                    "untriggered",
-                ]:
-                    line = f"This observation is scheduled on {obs_date}."
-    #
-    # --- if the observation is on OR list, but more than 10 days away
-    #
-    elif mp_chk:
-        line = "This observation is currently under review in an active OR list. You must get a permission from MP to modify entries"
-        if lts_chk:
-            line += f" (LTS Date: {obs_date}.)"
-        else:
-            line += f" (Scheduled on: {obs_date}.)"
-    return line
