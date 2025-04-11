@@ -2,43 +2,57 @@
 jQuery.noConflict();
 jQuery(document).ready(function(){
     // jQuery goes here;
-    jQuery("#openDither").click(function(){
-        jQuery("#ditherDiv").slideDown('fast');
+    jQuery("#dither_flag").change(function(){
+        if (jQuery(this).val() == 'Y'){
+            jQuery("#ditherDiv").slideDown('fast');
+        } else {
+            jQuery("#ditherDiv").slideUp('fast');
+        };
     });
-    jQuery("#closeDither").click(function(){
-        jQuery("#ditherDiv").slideUp('fast');
+    jQuery("#window_flag").change(function(){
+        if (jQuery(this).val() == 'Y'){
+            jQuery("#timeDiv").slideDown('fast');
+        } else {
+            jQuery("#timeDiv").slideUp('fast');
+        };
     });
-    jQuery("#openTime").click(function(){
-        jQuery("#timeDiv").slideDown('fast');
+    jQuery("#roll_flag").change(function(){
+        if (jQuery(this).val() == 'Y'){
+            jQuery("#rollDiv").slideDown('fast');
+        } else {
+            jQuery("#rollDiv").slideUp('fast');
+        };
     });
-    jQuery("#closeTime").click(function(){
-        jQuery("#timeDiv").slideUp('fast');
+    jQuery("#subarray").change(function(){
+        if (jQuery(this).val() == 'Y'){
+            jQuery("#subarrayTr").show('fast');
+        } else {
+            jQuery("#subarrayTr").hide('fast');
+        };
     });
-    jQuery("#openRoll").click(function(){
-        jQuery("#rollDiv").slideDown('fast');
+    jQuery("#duty_cycle").change(function(){
+        if (jQuery(this).val() == 'Y'){
+            jQuery("#dutyTr").show('fast');
+        } else {
+            jQuery("#dutyTr").hide('fast');
+        };
     });
-    jQuery("#closeRoll").click(function(){
-        jQuery("#rollDiv").slideUp('fast');
-    });
-    
-    jQuery("#openWindow").click(function(){
-        console.log(jQuery(this));
-        console.log(jQuery('#windowDiv'));
-        jQuery("#windowDiv").slideDown('fast');
-    });
-    jQuery("#closeWindow").click(function(){
-        console.log(jQuery(this));
-        console.log(jQuery('#windowDiv'));
-        jQuery("#windowDiv").slideUp('fast');
+    jQuery("#spwindow_flag").change(function(){
+        if (jQuery(this).val() == 'Y'){
+            jQuery("#windowDiv").slideDown('fast');
+        } else {
+            jQuery("#windowDiv").slideUp('fast');
+        };
     });
 
-    jQuery("#openACIS").click(function(){
-        jQuery(".ACISDiv").slideDown('fast');
-        jQuery(".HRCDiv").slideUp('fast');
-    });
-    jQuery("#openHRC").click(function(){
-        jQuery(".HRCDiv").slideDown('fast');
-        jQuery(".ACISDiv").slideUp('fast');
+    jQuery("#instrument").change(function(){
+        if (['ACIS-I', 'ACIS-S'].includes(jQuery(this).val())) {
+            jQuery(".ACISDiv").slideDown('fast');
+            jQuery(".HRCDiv").slideUp('fast'); 
+        } else if (['HRC-I', 'HRC-S'].includes(jQuery(this).val())) {
+            jQuery(".HRCDiv").slideDown('fast');
+            jQuery(".ACISDiv").slideUp('fast');
+        };
     });
 
     jQuery("#addTime").click(function(){

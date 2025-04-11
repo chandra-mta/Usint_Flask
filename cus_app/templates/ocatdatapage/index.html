@@ -477,25 +477,33 @@
                 <tr>
                 {{ render_field(form.subarray) }}
                 <td colspan=4>
-                <b>If you select YES, please fill the next two entries.</b>
+                <b>If you select YES, please fill the lowered entries.</b>
                 </td>
                 </tr>
-                <tr>
-                {{ render_field(form.subarray_start_row) }}
-                {{ render_field(form.subarray_row_count) }}
-                <td>&#160;</td>
-                </tr>
+                {% if form.subarray.data == 'Y' %}
+                    <tr id="subarrayTr"style="display: block;">
+                {% else %}
+                    <tr id="subarrayTr"style="display: none;">
+                {% endif %}
+                    {{ render_field(form.subarray_start_row) }}
+                    {{ render_field(form.subarray_row_count) }}
+                    <td>&#160;</td>
+                    </tr>
                 <tr>
                 {{ render_field(form.duty_cycle) }}
                 <td colspan=4>
-                <b>If you select YES, please fill the next two entries.</b>
+                <b>If you select YES, please fill the lowered entries.</b>
                 </td>
                 </tr>
-                <tr>
-                {{ render_field(form.secondary_exp_count) }}
-                {{ render_field(form.primary_exp_time) }}
-                <td>&#160;</td>
-                </tr>
+                {% if form.duty_cycle.data == 'Y' %}
+                    <tr id="dutyTr"style="display: block;">
+                {% else %}
+                    <tr id="dutyTr"style="display: none;">
+                {% endif %}
+                    {{ render_field(form.secondary_exp_count) }}
+                    {{ render_field(form.primary_exp_time) }}
+                    <td>&#160;</td>
+                    </tr>
                 <tr>
                 {{ render_field(form.onchip_sum) }}
                 {{ render_field(form.onchip_row_count) }}

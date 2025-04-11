@@ -18,24 +18,9 @@ import os
 #---- Common Choice of Pulldown Fields
 #
 _CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
-
-_CHOICE_INSTRUMENT = (
-        ("ACIS-I", "ACIS-I", {"id":"openACIS"}),
-        ("ACIS-S", "ACIS-S", {"id":"openACIS"}),
-        ("HRC-I", "HRC-I", {"id":"openHRC"}),
-        ("HRC-S", "HRC-S", {"id":"openHRC"}),
-    )
-
-_CHOICE_DITHER = [('N', 'NO', {"id": "closeDither"}), ('Y', 'YES',{"id": "openDither"} )]
-
-_CHOICE_TIME = [('N', 'NO', {"id": "closeTime"}), ('Y', 'YES',{"id": "openTime"} )]
-
-_CHOICE_ROLL = [('N', 'NO', {"id": "closeRoll"}), ('Y', 'YES',{"id": "openRoll"} )]
+_CHOICE_INSTRUMENT = [(x,x) for x in ('ACIS-I', 'ACIS-S', 'HRC-I', 'HRC-S')]
 
 _CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
-_CHOICE_SUBARRAY = [(None, 'NA', {"id": "closeSubarray"}), ("NONE", "NO", {"id": "closeSubarray"}), ("CUSTOM", "YES", {"id": "openSubarray"})]
-
-_CHOICE_WINDOW = [('N', 'NO', {"id": "closeWindow"}), ('Y', 'YES',{"id": "openWindow"} )]
 _CHOICE_CHIP = [(None, "NA"),('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
 _CHOICE_WINDOW_CHIP = [(None,'NA')] + [(x, x) for x in ('I0', 'I1',  'I2', 'I3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5')]
 
@@ -120,7 +105,7 @@ class RollRank(Form):
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class WindowRank(Form):
-    chip = SelectField(_LABELS.get('chip'),choices=_CHOICE_WINDOW)
+    chip = SelectField(_LABELS.get('chip'),choices=_CHOICE_WINDOW_CHIP)
     start_row = IntegerField(_LABELS.get('start_row'), validators=[NumberRange(min=1,max=1024)])
     start_column = IntegerField(_LABELS.get('start_column'), validators=[NumberRange(min=1,max=1024)])
     width = IntegerField(_LABELS.get('width'), validators=[NumberRange(min=1,max=1024)])
@@ -168,7 +153,7 @@ class OcatParamForm(FlaskForm):
     #
     # --- Dither
     #
-    dither_flag = SelectField(_LABELS.get('dither_flag'),  choices=_CHOICE_DITHER)
+    dither_flag = SelectField(_LABELS.get('dither_flag'),  choices=_CHOICE_NY)
     y_amp_asec = FloatField(_LABELS.get('y_amp_asec'))
     y_freq_asec = FloatField(_LABELS.get('y_freq_asec'))
     y_phase = FloatField(_LABELS.get('y_phase'))
@@ -178,12 +163,12 @@ class OcatParamForm(FlaskForm):
     #
     # --- Time 
     #
-    window_flag = SelectField(_LABELS.get('window_flag'),  choices=_CHOICE_TIME) #: Cast to and from P value depending on window_constraints
+    window_flag = SelectField(_LABELS.get('window_flag'),  choices=_CHOICE_NY) #: Cast to and from P value depending on window_constraints
     time_ranks = FieldList(FormField(TimeRank,label=_LABELS.get('time_ranks')))
     #
     # --- Roll
     #
-    roll_flag = SelectField(_LABELS.get('roll_flag'), choices=_CHOICE_ROLL) #: Cast to and from P value depending on roll_constraints
+    roll_flag = SelectField(_LABELS.get('roll_flag'), choices=_CHOICE_NY) #: Cast to and from P value depending on roll_constraints
     roll_ranks = FieldList(FormField(RollRank, label=_LABELS.get('roll_ranks')))
     #
     # --- Other (Phase)
@@ -235,7 +220,7 @@ class OcatParamForm(FlaskForm):
     #
     # --- ACIS (Subarray)
     #
-    subarray = SelectField(_LABELS.get('subarray'), choices=_CHOICE_SUBARRAY)
+    subarray = SelectField(_LABELS.get('subarray'), choices=_CHOICE_NNY)
     subarray_start_row = IntegerField(_LABELS.get('subarray_start_row'), validators=[NumberRange(min=1, max=925)])
     subarray_row_count = IntegerField(_LABELS.get('subarray_row_count'), validators=[NumberRange(min=101, max=1024)])
     duty_cycle = SelectField(_LABELS.get('duty_cycle'), choices=_CHOICE_NNY)
@@ -252,7 +237,7 @@ class OcatParamForm(FlaskForm):
     #
     # --- ACIS Window
     #
-    spwindow_flag = SelectField(_LABELS.get('spwindow_flag'), choices=_CHOICE_WINDOW)
+    spwindow_flag = SelectField(_LABELS.get('spwindow_flag'), choices=_CHOICE_NY)
     window_ranks = FieldList(FormField(WindowRank, label=_LABELS.get('window_ranks')))
     #
     # --- Submission
