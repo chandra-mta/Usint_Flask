@@ -92,7 +92,7 @@
         <th>{{_LABELS.get('seq_nbr')}}: </th>
         <td>
             <a href="javascript:WindowOpener('{{ hlink }}','seq_nbr')">
-                {{ render_value(ocat_data.get('seq_nbr'), _LABELS.get('seq_nbr')) }}
+                {{ocat_data.get('seq_nbr')}}
             </a>
         </td>
         {{ render_value(ocat_data.get('status'), _LABELS.get('status')) }}
@@ -265,6 +265,10 @@
     {% elif form.window_flag.data == 'Y'%}
         <div id="timeDiv" style="display: block;margin-left:40px;">
     {% endif %}
+        <p>
+        If you want to add ranks, press "Add Time". 
+        If you want to remove a rank, click the adjacent "Remove Rank" button.
+        </p>
         <table id="time_ranks">
             <thead>
                 <th style='padding-left:5px;'>Rank</th>
@@ -280,9 +284,9 @@
             {% for i, time_rank in form.time_ranks | enumerate %}
                 {{ render_rank(i,time_rank) }}
             {% endfor%}
-            <button type="button" id="addTime">Add Time</button>
             </tbody>
         </table>
+        <button type="button" id="addTime">Add Time</button>
         </div>
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
@@ -296,6 +300,10 @@
     {% elif form.roll_flag.data == 'Y'%}
         <div id="rollDiv" style="display: block;margin-left:40px;">
     {% endif %}
+        <p>
+        If you want to add ranks, press "Add Roll". 
+        If you want to remove a rank, click the adjacent "Remove Rank" button.
+        </p>
         <table id="roll_ranks">
             <thead>
                 <th style='padding-left:5px;'>Rank</th>
@@ -311,9 +319,9 @@
             {% for i, roll_rank in form.roll_ranks | enumerate %}
                 {{ render_rank(i,roll_rank) }}
             {% endfor%}
-            <button type="button" id="addRoll">Add Roll</button>
             </tbody>
         </table>
+        <button type="button" id="addRoll">Add Roll</button>
         </div>
     <hr>
     <!------------------------------------------------------------------------------------------------------------------------------->
@@ -546,14 +554,18 @@
             {% elif form.spwindow_flag.data == 'Y'%}
                 <div id="windowDiv" style="display: block;margin-left:40px;">
             {% endif %}
-                <p style='padding-top:20px; padding-bottom:10px;margin-left:20px; margin-right:20px;'>
+                <p>
                 <b>Note</b>: By default, the sample rate is 0 and the window specified is an 
                 <b>EXCLUSION</b> area. 
-                To set an INCLUSION area, in ithe first window, set the sample rate to 1, and choose 
+                To set an INCLUSION area, in the first window, set the sample rate to 1, and choose 
                 a desired inclusion area.
                 In the second window, set the sample rate to 0 and the window area to 1024 x 1024.
                 For the case with the sample rate > 1, please refer to:
                 {{ help_popup_page('../static/ocatdatapage/user_help.html#acis_window', 'Help') }}.
+                </p>
+                <p>
+                If you want to add ranks, press "Add Window". 
+                If you want to remove a rank, click the adjacent "Remove Rank" button.
                 </p>
                 <table id="window_ranks">
                     <thead>
@@ -570,9 +582,9 @@
                     {% for i, window_rank in form.window_ranks | enumerate %}
                         {{ render_rank(i,window_rank) }}
                     {% endfor%}
-                    <button type="button" id="addWindow">Add Window</button>
                     </tbody>
                 </table>
+                <button type="button" id="addWindow">Add Window</button>
                 </div>
             </div>
         <hr>

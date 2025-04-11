@@ -39,58 +39,11 @@ def index(obsid=None):
     # --- Render Ocat Data In A WTForm
     #
     form = OcatParamForm(request.form, data = ocat_form_dict)
-    if request.method == "POST" and form.is_submitted(): 
-        form = fod.synchronize_values(form) #: Process the changes submitted to the form for how they would update the form and param_dict objects
-        #
-        #--- Processing Dither Submissions
-        #
-        if form.open_dither.data:
-            #: Refresh the page with the dither entries as initialized by **format_for_form()**
-            form.dither_param.dither_flag.data = "Y"
-        #
-        #--- Processing Time Submissions
-        #
-        elif form.open_time.data:
-            #: Refresh the page with time entries as initialized by **format_for_form()**
-            form.time_param.window_flag.data = "Y"
-            form = fod.add_time_rank(form)
-        elif form.time_param.add_time.data:
-            form = fod.add_time_rank(form)
-        elif form.time_param.remove_time.data:
-            form = fod.remove_time_rank(form)
-        #
-        #--- Processing Roll Submissions
-        #
-        elif form.open_roll.data:
-            #: Refresh the page with roll entries as initialized by **format_for_form()**
-            form.roll_param.roll_flag.data = "Y"
-            form = fod.add_roll_rank(form)
-        elif form.roll_param.add_roll.data:
-            form = fod.add_roll_rank(form)
-        elif form.roll_param.remove_roll.data:
-            form = fod.remove_roll_rank(form)
-        #
-        #--- processing Acis Window Submissions
-        #
-        elif form.open_aciswin.data:
-            #: Refresh the page with aciswin entires as initialized by **format_for_form()**
-            form.aciswin_param.spwindow_flag.data = "Y"
-            form = fod.add_window_rank(form)
-        elif form.aciswin_param.add_window.data:
-            form = fod.add_window_rank(form)
-        elif form.aciswin_param.remove_window.data:
-            form = fod.remove_window_rank(form)
-        #
-        #--- General Refresh
-        #
-        elif form.refresh.data:
-            pass #: Only POSTed in order to synchronize values.
-        #
-        #--- Submission
-        #
-        elif form.submit.data:
-            prepare_confirmation_page(form, ocat_data)
-            return redirect(url_for('ocatdatapage.confirm'))
+    if form.validate_on_submit():
+    #if request.method == "POST" and form.is_submitted(): 
+        #: Form submitted, send form data to session and go to confirmation page
+
+        return redirect(url_for('ocatdatapage.confirm', obsid = obsid))
     return render_template("ocatdatapage/index.html", 
                            form=form, 
                            warning=warning,
