@@ -1,7 +1,4 @@
-##
-##--- macro for ocat data page
-##
-
+<!-- Ocatdatapage Page Macros-->
 {% macro render_rank(i, field) %}
     <tr id="{{ field.id }}">
         <th style='padding-left:5px;'>{{i}}</th>
@@ -51,11 +48,24 @@
     {% endif %}
 {% endmacro %}
 
-{% macro remark_section(remark_change) %}
+<!-- Confirmation Page Macros-->
+{% macro compare_param_values(param, ocat_form_dict, change_dict, _LABELS) %}
+    {% if param in change_dict.keys() %}
+        <th><span  style='color:red;'>{{ _LABELS.get(param)  }}</span></th>
+        <td><span  style='color:red;'>{{ change_dict.get(param)[0] }}</span></td>
+        <td><span  style='color:red;'>{{ change_dict.get(param)[0] }}</span></td>
+    {% else %}
+        <th>{{ _LABELS.get(param) }} </th>
+        <td>{{ ocat_form_dict.get(param) }}</td>
+        <td>No Change</td>
+    {% endif %}
+{% endmacro %}
+
+{% macro remark_section(original, remark_change) %}
     {% if remark_change != None %}
         <h4 style='text-decoration: underline;'>Original</h4>
             <p>
-                {% if remark_change[0] != None %}
+                {% if remark_change[0] == None %}
                     <span style='padding-left:50px;font-style:italic'>NA</span>
                 {% else %}
                     <p style='padding-left:20px;'>{{remark_change[0].replace('\n','<br>')}}</p>
@@ -64,11 +74,21 @@
         <hr style='border-top:1px dotted;'>
         <h4 style='text-decoration: underline;'>New</h4>
             <p>
-                {% if remark_change[1] != None %}
+                {% if remark_change[1] == None %}
                     <span style='padding-left:50px;color:red;font-style:italic'>NA</span>
                 {% else %}
                     <p style='padding-left:20px;color:red;'>{{remark_change[1].replace('\n','<br>')}}</p>
                 {% endif %}
+            </p>
+    {% elif original != None %}
+        <h4 style='text-decoration: underline;'>Original</h4>
+            <p>
+                <span style='padding-left:50px;font-style:italic;'>{{original}}</span>
+            </p>
+        <hr style='border-top:1px dotted;'>
+        <h4 style='text-decoration: underline;'>New</h4>
+            <p>
+                <span style='padding-left:50px;font-style:italic;'>{{original}}</span>
             </p>
     {% else %}
         <h4 style='text-decoration: underline;'>Original</h4>

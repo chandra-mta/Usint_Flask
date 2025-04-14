@@ -121,7 +121,7 @@ class OcatParamForm(FlaskForm):
     # --- General
     #
     targname = StringField(_LABELS.get('targname'), validators=[DataRequired()])
-    instrument = SelectField(_LABELS.get('instrument'), choices=_CHOICE_INSTRUMENT, validators=[DataRequired()])
+    instrument = SelectField(_LABELS.get('instrument'), choices=_CHOICE_INSTRUMENT)
 
     choices = [(x, x) for x in (None, "LETG", "HETG")]
     grating = SelectField(_LABELS.get('grating'), choices=choices)
@@ -135,7 +135,7 @@ class OcatParamForm(FlaskForm):
     y_det_offset = FloatField(_LABELS.get('y_det_offset'), validators=[Optional(),NumberRange(min=-120.0, max=120.0)])
     z_det_offset = FloatField(_LABELS.get('z_det_offset'), validators=[Optional(),NumberRange(min=-120.0, max=120.0)])
     trans_offset = FloatField(_LABELS.get('trans_offset'), validators=[Optional(),NumberRange(min=-190.5, max=126.621)])
-    focus_offset = FloatField(_LABELS.get('focus_offset'))
+    focus_offset = FloatField(_LABELS.get('focus_offset'), validators=[Optional()])
 
     uninterrupt = SelectField(_LABELS.get('uninterrupt'), choices=_CHOICE_NPY)
     extended_src = SelectField(_LABELS.get('extended_src'), choices=_CHOICE_NY)
@@ -145,21 +145,21 @@ class OcatParamForm(FlaskForm):
     object = SelectField(_LABELS.get('object'), choices=choices)
     photometry_flag = SelectField(_LABELS.get('photometry_flag'), choices=_CHOICE_NY)
     vmagnitude = FloatField(_LABELS.get('vmagnitude'), validators=[Optional(),NumberRange(min=-15, max=20)])
-    est_cnt_rate = FloatField(_LABELS.get('est_cnt_rate'), validators=[DataRequired(), Optional(),NumberRange(min=0, max=100000)])
+    est_cnt_rate = FloatField(_LABELS.get('est_cnt_rate'), validators=[Optional(),NumberRange(min=0, max=100000)])
     forder_cnt_rate = FloatField(_LABELS.get('forder_cnt_rate'), validators=[Optional(),NumberRange(min=0, max=100000)]) #: Required if grating is not none, TODO find validator
 
-    remarks = TextAreaField(_LABELS.get('remarks'), default = '')
-    comments = TextAreaField(_LABELS.get('comments'), default = '')
+    remarks = TextAreaField(_LABELS.get('remarks'), validators=[Optional()])
+    comments = TextAreaField(_LABELS.get('comments'), validators=[Optional()])
     #
     # --- Dither
     #
     dither_flag = SelectField(_LABELS.get('dither_flag'),  choices=_CHOICE_NY)
-    y_amp_asec = FloatField(_LABELS.get('y_amp_asec'))
-    y_freq_asec = FloatField(_LABELS.get('y_freq_asec'))
-    y_phase = FloatField(_LABELS.get('y_phase'))
-    z_amp_asec = FloatField(_LABELS.get('z_amp_asec'))
-    z_freq_asec = FloatField(_LABELS.get('z_freq_asec'))
-    z_phase = FloatField(_LABELS.get('z_phase'))
+    y_amp_asec = FloatField(_LABELS.get('y_amp_asec'), validators=[Optional()])
+    y_freq_asec = FloatField(_LABELS.get('y_freq_asec'), validators=[Optional()])
+    y_phase = FloatField(_LABELS.get('y_phase'), validators=[Optional()])
+    z_amp_asec = FloatField(_LABELS.get('z_amp_asec'), validators=[Optional()])
+    z_freq_asec = FloatField(_LABELS.get('z_freq_asec'), validators=[Optional()])
+    z_phase = FloatField(_LABELS.get('z_phase'), validators=[Optional()])
     #
     # --- Time 
     #
@@ -176,7 +176,7 @@ class OcatParamForm(FlaskForm):
     constr_in_remarks = SelectField(_LABELS.get('constr_in_remarks'), choices=_CHOICE_NPY)
     pointing_constraint = SelectField(_LABELS.get('pointing_constraint'), choices=_CHOICE_NNY)
     phase_epoch = FloatField(_LABELS.get('phase_epoch'), validators=[Optional(),NumberRange(min=46066.0)])
-    phase_period = FloatField(_LABELS.get('phase_period'))
+    phase_period = FloatField(_LABELS.get('phase_period'), validators=[Optional()])
     phase_start = FloatField(_LABELS.get('phase_start'), validators=[Optional(),NumberRange(min=0, max=1)])
     phase_start_margin = FloatField(_LABELS.get('phase_start_margin'), validators=[Optional(),NumberRange(min=0, max=0.5)])
     phase_end = FloatField(_LABELS.get('phase_end'), validators=[Optional(),NumberRange(min=0, max=1)])
@@ -185,21 +185,21 @@ class OcatParamForm(FlaskForm):
     # --- Other (Group)
     #
     monitor_flag = SelectField(_LABELS.get('monitor_flag'), choices=_CHOICE_NY)
-    pre_id = IntegerField(_LABELS.get('pre_id'))
+    pre_id = IntegerField(_LABELS.get('pre_id'), validators=[Optional()])
     pre_min_lead = FloatField(_LABELS.get('pre_min_lead'), validators=[Optional(),NumberRange(min=0, max=364)])
     pre_max_lead = FloatField(_LABELS.get('pre_max_lead'), validators=[Optional(),NumberRange(min=0.01, max=365)])
     #
     # --- Other (Joint)
     #
     multitelescope = SelectField(_LABELS.get('multitelescope'), choices=_CHOICE_NPY)
-    observatories = StringField(_LABELS.get('observatories'))
-    multitelescope_interval = FloatField(_LABELS.get('multitelescope_interval'))
+    observatories = StringField(_LABELS.get('observatories'), validators=[Optional()])
+    multitelescope_interval = FloatField(_LABELS.get('multitelescope_interval'), validators=[Optional()])
     #
     # --- HRC
     #
     hrc_timing_mode = SelectField(_LABELS.get('hrc_timing_mode'), choices=_CHOICE_NNY)
     hrc_zero_block = SelectField(_LABELS.get('hrc_zero_block'), choices=_CHOICE_NNY)
-    hrc_si_mode = StringField(_LABELS.get('hrc_si_mode'))
+    hrc_si_mode = StringField(_LABELS.get('hrc_si_mode'), validators=[Optional()])
     #
     # --- ACIS (Chips)
     #
@@ -243,7 +243,7 @@ class OcatParamForm(FlaskForm):
     # --- Submission
     #
     submit_choice = RadioField(_LABELS.get('submit_choice'), choices=_CHOICE_SUBMIT, validators=[DataRequired()])
-    multiobsid = StringField(_LABELS.get('multiobsid'))
+    multiobsid = StringField(_LABELS.get('multiobsid'), validators=[Optional()])
     submit = SubmitField(_LABELS.get('submit'))
     #
     # --- Templates for generating new ranks. Ignore all form data from these.

@@ -271,8 +271,8 @@ def determine_changes(ocat_form_dict, ocat_data):
         if org != new:
             change_dict[flag] = [org, new]
             change_dict[rank_list] = [ocat_data.get(rank_list), ocat_form_dict.get(rank_list)]
-        else:
-            #: Individual ranks possible changes
+        elif not (org == 'N' and new == 'N'):
+            #: Individual ranks possibly changed in instance where the selected ranks are
             change_dict = determine_changed_rank(change_dict, rank_list, ocat_data.get(rank_list), ocat_form_dict.get(rank_list))
     return change_dict
 

@@ -13,7 +13,7 @@ from datetime import datetime
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from wtforms.validators import ValidationError
 
-from flask import current_app, render_template, request, session, redirect, url_for
+from flask import current_app, render_template, request, flash, session, redirect, url_for
 
 from cus_app.ocatdatapage import bp
 from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
@@ -39,12 +39,16 @@ def index(obsid=None):
     # --- Render Ocat Data In A WTForm
     #
     form = OcatParamForm(request.form, data = ocat_form_dict)
-    if form.validate_on_submit():
-    #if request.method == "POST" and form.is_submitted(): 
-        #: Form submitted, send form data to session and go to confirmation page
-        ocat_form_dict = fod.format_POST(form.data)
-        session[f'ocat_form_dict_{obsid}'] = ocat_form_dict
-        return redirect(url_for('ocatdatapage.confirm', obsid = obsid))
+    if request.method == "POST" and form.is_submitted(): 
+        if not form.validate():
+            #: Form submitted but failed its validation, therefore refresh but display warning message
+            for field_name, error_messages in form.errors.items():
+                flash(f"Error in {_LABELS.get(field_name)}: {error_messages}")
+        else:
+            #: Form submitted, send form data to session and go to confirmation page
+            ocat_form_dict = fod.format_POST(form.data)
+            session[f'ocat_form_dict_{obsid}'] = ocat_form_dict
+            return redirect(url_for('ocatdatapage.confirm', obsid=obsid))
     return render_template("ocatdatapage/index.html", 
                            form=form, 
                            warning=warning,
@@ -53,8 +57,8 @@ def index(obsid=None):
                            _LABELS=_LABELS)
 
 
-@bp.route('/confirm', methods=['GET', 'POST'])
-def confirm(obsid):
+@bp.route("/confirm/<obsid>", methods=["GET", "POST"])
+def confirm(obsid=None):
     #
     # --- Process the selected radio option for the desired change
     #
@@ -70,6 +74,7 @@ def confirm(obsid):
         elif form.finalize:
             #: Got back and edit
             return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
+    print(change_dict)#: TODO remove
     return render_template('ocatdatapage/confirm.html',
                            form = form,
                            obsid = obsid,
@@ -82,7 +87,7 @@ def confirm(obsid):
                            )
 
 @bp.route('/finalize', methods=['GET', 'POST'])
-def finalize(obsid):
+def finalize(obsid=None):
     #: TODO make sure that the finalized submission will run the functions to submit the SQLAlchemy commit and then clear the session data
     #: Then display the page informing the user that their revision went through.
     #: Needed so that we can complete a revision action and keep the cache clear (particularly of ocat data) for the next obsid revision
@@ -130,6 +135,8 @@ def create_obsid_list(list_string, obsid):
     """
     Create a list of obsids from form input for a parameter display page.
     """
+    if list_string is None or list_string.strip() == '':
+        return []
     #: Split the input string into elements
     raw_elements = [x for x in re.split(r'\s+|,|:|;', list_string) if x != '']
     

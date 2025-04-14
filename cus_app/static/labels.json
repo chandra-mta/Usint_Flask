@@ -28,7 +28,7 @@
     "rosat": "ROSAT",
     "dss": "DSS",
     "ra_hms": "RA (HMS)",
-    "dec_dms": "Ded (DMS)",
+    "dec_dms": "Dec (DMS)",
     "planned_roll": "Planned Roll",
     "ra": "RA",
     "dec": "Dec",
