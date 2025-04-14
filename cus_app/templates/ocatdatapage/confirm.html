@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% from 'ocatdatapage/macros.html' import remark_section  %}
+{% from 'ocatdatapage/macros.html' import compare_param_values, remark_section  %}
 
 {% block title %}Ocat Data Page{% endblock %}
 {% block main_title %}Ocat Data Page{% endblock %}
@@ -17,12 +17,13 @@
 {% endwith %}
 
 {% set ns = namespace(multi_count=0, multi_orcnt=0, param_count=0) %}
+{% set skip_param = ('time_ranks', 'roll_ranks', 'window_ranks', 'multiobsid', 'template_time', 'template_roll', 'template_window', 'csrf_token', 'submit', 'submit_choice', 'remarks', 'comments')%}
 
 <form method="POST">
 <!-- TODO asis, remove, clone case. Either here or separate confirmation page?-->
     {{ form.previous_page() }} {{ form.finalize() }}
     <div style='padding-bottom:20px;'></div>
-    <h3>You have submitted the following value updates on Obsid {{ocat_data.get('obsid') }}.</h3>
+    <h3>You have submitted the following value updates on Obsid {{ obsid }}.</h3>
     <!--if multiple obsids are submitted, display the obsids-->
     {% if multi_obsid|length > 0 %}
         <div style='margin-left: 40px;padding-bottom:30px;'>
@@ -40,7 +41,7 @@
                     <span style='padding-left:5px;'>
                 &#8729;
                 <a href="javascript:WindowOpener(' {{ slink }} ')"><b>
-                {% if or_dict.get(sobsid) %}
+                {% if or_dict.get(obsid) %}
                     <span style='color:red;'>
                         {{ sobsid }}
                         {% set ns.multi_orcnt = ns.multi_orcnt + 1 %}
@@ -69,7 +70,7 @@
     {% endif%}
     <!-- parameter table starts here -->
     <table border=1 class='center' style='border-spacing:5px; border-collapse: separate;'>
-        <!-- <tr>
+        <tr>
             <th class='cent'>Parameter</th>
             <th class='cent'>Original Value</th>
             <th class='cent'>Requested</th>
@@ -77,21 +78,19 @@
             <th class='cent'>Parameter</th>
             <th class='cent'>Original Value</th>
             <th class='cent'>Requested</th>
-        </tr> -->
-        {% for category, parameter_dict in ind_dict.items() %}
-        <!--TODO handle rank parameter changes separately-->
-            {% if parameter_dict| length > 0 %}
-        <tr>
-            <td colspan = 3 class="cent">{{ category }}</td>
         </tr>
-                {% for param, change in parameter_dict.items() %}
-        <tr>
-            <td>{{param}}</td>
-            <td>{{change[0]}}</td>
-            <td>{{change[1]}}</td>
-        </tr>
-                {% endfor %}
-            {% else %}
+        {% for param in ocat_form_dict.keys() %}
+            {% if param not in skip_param%}
+                {% set ns.param_count = ns.param_count + 1 %}
+                {% if ns.param_count % 2 == 1 %}
+                    <tr>
+                {% endif %}
+                    {{compare_param_values(param, ocat_form_dict, change_dict, _LABELS)}}
+                {% if ns.param_count % 2 == 0 %}
+                    </tr>
+                {% else %}
+                    <td> &#160;</td>
+                {% endif %}
             {% endif %}
         {% endfor %}
     </table>
@@ -100,13 +99,13 @@
 
     <h3>Remarks</h3>
     <div style='margin-left: 50px; margin-right:50px;'>
-        {{ remark_section(ind_dict['gen_param'].get('remarks')) }}
+        {{ remark_section(ocat_form_dict.get('remarks'), change_dict.get('remarks')) }}
     </div>
     <hr style='border-top: 1px dashed;'>
 
     <h3>Comments</h3>
     <div style='margin-left: 50px; margin-right:50px;'>
-        {{ remark_section(ind_dict['gen_param'].get('comments')) }}
+        {{ remark_section(ocat_form_dict.get('comments'), change_dict.get('comments')) }}
     </div>
 
     <hr>

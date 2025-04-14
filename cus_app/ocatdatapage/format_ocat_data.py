@@ -9,10 +9,32 @@ from astropy.coordinates import Angle
 from datetime import datetime
 import os
 from flask import current_app
+from cus_app.supple.read_ocat_data import _NULL_LIST
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
 _COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
-_NULL_LIST = (None, 'None', '', [])
+
+_SKIP_CHANGE_CHECK = [
+    'multiobsid',
+    'csrf_token',
+    'template_time',
+    'template_roll',
+    'template_window',
+    'submit_choice',
+    'submit',
+    'window_flag',
+    'time_ranks',
+    'roll_flag',
+    'roll_ranks',
+    'spwindow_flag',
+    'window_ranks'
+]
+
+_FLAG_2_RANK = {
+    'window_flag': 'time_ranks',
+    'roll_flag': 'roll_ranks',
+    'spwindow_flag': 'window_ranks',
+}
 
 def create_warning_line(ocat_data):
     """
@@ -142,13 +164,13 @@ def create_orient_maps(ocat_data):
     }
     return orient_maps
 
-def generate_override(ocat_data):
+def generate_additional(ocat_data):
     """Convert certain ocat data parameters to new values for form editing
 
     :param ocat_data: Ocat Data keyed by parameter directly (Represents only what's in the ocat in original form)
     :type ocat_data: dict(str, value)
     """
-    override = {}
+    additional = {}
     #
     #--- RA, Dec
     #
@@ -156,24 +178,16 @@ def generate_override(ocat_data):
     dec = ocat_data.get('dec')
     if ra is not None and dec is not None:
         ra_hms, dec_dms = convert_ra_dec_format(ra, dec, 'hmsdms')
-        override['ra_hms'] = ra_hms
-        override['dec_dms'] = dec_dms
+        additional['ra_hms'] = ra_hms
+        additional['dec_dms'] = dec_dms
     #
     # --- Dither
     #
     for key in ('y_amp', 'y_freq', 'z_amp', 'z_freq'):
         val = ocat_data.get(key)
         if val is not None:
-            override[f'{key}_asec'] = val * 3600
-    #
-    # --- Rank Flags
-    #
-    for flag in ('window_flag', 'roll_flag', 'spwindow_flag'):
-        if ocat_data.get(flag) == 'P':
-            override[flag] = 'Y'
-        elif ocat_data.get(flag) in _NULL_LIST:
-            override[flag] = 'N'
-    return override
+            additional[f'{key}_asec'] = val * 3600
+    return additional
 
 def convert_ra_dec_format(dra, ddec, oformat):
     """
@@ -210,7 +224,97 @@ def convert_ra_dec_format(dra, ddec, oformat):
     
     return tra,tdec
 
+def format_POST(ocat_form_dict):
+    """
+    Minor changes to listed form data after POST request and preparing ocat_form_dict
+    """
+    def _coerce_none(val):
+        if val in _NULL_LIST:
+            return None
+        return val
+    
+    for k,v in ocat_form_dict.items():
+        ocat_form_dict[k] = _coerce_none(v)
 
+    if ocat_form_dict.get('window_flag') == 'Y':
+        #: Check if needs to be preference instead
+        check_time = set()
+        for rank in ocat_form_dict.get('time_ranks'):
+            check_time.add(rank.get('window_constraint'))
+        if check_time == set('P'):
+            ocat_form_dict['window_flag'] = 'P'
+
+    if ocat_form_dict.get('roll_flag') == 'Y':
+        #: Check if needs to be preference instead
+        check_roll = set()
+        for rank in ocat_form_dict.get('roll_ranks'):
+            check_roll.add(rank.get('roll_constraint'))
+        if check_roll == set('P'):
+            ocat_form_dict['window_flag'] = 'P'
+    return ocat_form_dict
+
+def determine_changes(ocat_form_dict, ocat_data):
+    """Iterate over select keys in the ocat_form_dict to identify revised parameters
+    """
+    #: Regular Changes
+    change_dict = {}
+    for key, new in ocat_form_dict.items():
+        if key in _SKIP_CHANGE_CHECK:
+            continue
+        else:
+            org = ocat_data.get(key)
+            if not equal_values(org,new):
+                    change_dict[key] = [org, new]
+    #
+    # --- Rank Changes (Handled Separately)
+    # --- If flag changes, list that specifically and all ranks as changed
+    #
+    for flag in _FLAG_2_RANK.keys():
+        new = ocat_form_dict.get(flag)
+        org = ocat_data.get(flag)
+        rank_list = _FLAG_2_RANK.get(flag)
+        if org != new:
+            change_dict[flag] = [org, new]
+            change_dict[rank_list] = [ocat_data.get(rank_list), ocat_form_dict.get(rank_list)]
+        elif not (org == 'N' and new == 'N'):
+            #: Individual ranks possibly changed in instance where the selected ranks are
+            change_dict = determine_changed_rank(change_dict, rank_list, ocat_data.get(rank_list), ocat_form_dict.get(rank_list))
+    return change_dict
+
+
+def determine_changed_rank(change_dict, rank_list, org, new):
+    """
+    Changes amongst individual ranks
+    """
+    change_list = []
+    #: TODO check different sizes
+    #: DOD, if same size, individual differences
+    #: Special case when comparing time
+    for org_rank, new_rank in zip(org, new):
+        for key in new_rank.keys():
+            pass
+    return change_dict
+
+
+def equal_values(org,new):
+    """
+    Compare values within reason for a revision.
+    """
+    if isinstance(org,(int,float)) and isinstance(new,(int,float)):
+        return round(org,4) == round(new,4)
+    elif isinstance(org,str) and isinstance(new,str):
+        return org.replace(" ","") == new.replace(" ","")
+    elif isinstance(org,list) and isinstance(new,list):
+        return str(org) == str(new)
+    elif isinstance(org,datetime) and isinstance(new,datetime):
+        diff = (new - org).total_seconds()
+        return diff > 60
+    else:
+        return org == new
+
+#
+# --- Old function in case of usefulness
+#
 def coerce(value):
     def _coerce_single(value):
         if isinstance(value,(int,float)):

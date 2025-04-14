@@ -49,7 +49,7 @@ _ACIS_PARAM_LIST = ['exp_mode', 'ccdi0_on', 'ccdi1_on', 'ccdi2_on', 'ccdi3_on', 
 _ACISWIN_PARAM_LIST = ['chip', 'start_row', 'start_column', 'width', 'height',\
               'lower_threshold', 'pha_range', 'sample']
 
-_NULL_LIST = ['NA', 'N/A', 'none','None', 'NONE', 'null', 'Null', 'NULL', ''] #: List of database null string values we intend to be python native None
+_NULL_LIST = (None,'NA', 'N/A', 'none','None', 'NONE', 'null', 'Null', 'NULL', '') #: List of database null string values we intend to be python native None
 
 def get_value_from_sybase(cmd):
     conn = sqsh.Sqsh(dbi='sybase', server=_SERV, database = _DB, user = _USR, authdir = _AUTHDIR)
@@ -432,3 +432,22 @@ def prop_params(ocat_propid):
         p_dict['observer'] = p_dict.get('pi_name')
         
     return p_dict
+
+def check_obsid_in_or_list(obsids_list):
+    """
+    check whether obsids in obsids_list are in active OR list
+
+    :param obsid_list: a list of obsids
+    :type obsid_list: list
+    :return or_dict: map of obsid to boolean if in the OR list
+    :rtype: dict(bool)
+    """
+    or_dict = {}
+    with open(os.path.join(_OBS_SS, 'scheduled_obs_list')) as f:
+        or_list = [int(line.strip().split()[0]) for line in f.readlines()]
+    for obsid in obsids_list:
+        if obsid in or_list:
+            or_dict[obsid] = True
+        else:
+            or_dict[obsid] = False
+    return or_dict
