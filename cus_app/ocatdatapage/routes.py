@@ -66,7 +66,7 @@ def confirm(obsid=None):
     ocat_data, warning, orient_maps, ocat_form_dict = fetch_session_data(obsid)
     change_dict = fod.determine_changes(ocat_form_dict, ocat_data)
     multi_obsid = create_obsid_list(ocat_form_dict.get('multiobsid'), obsid)
-    or_dict = {} #: TODO generate
+    or_dict = rod.check_obsid_in_or_list([int(obsid)] + multi_obsid)
     if request.method == "POST" and form.is_submitted(): #: no validators
         if form.previous_page:
             #: Got back and edit
@@ -79,10 +79,10 @@ def confirm(obsid=None):
                            form = form,
                            obsid = obsid,
                            multi_obsid = multi_obsid,
+                           or_dict = or_dict,
                            ocat_form_dict = ocat_form_dict,
                            ocat_data = ocat_data,
                            change_dict = change_dict,
-                           or_dict = or_dict,
                            _LABELS = _LABELS,
                            )
 
@@ -135,6 +135,7 @@ def create_obsid_list(list_string, obsid):
     """
     Create a list of obsids from form input for a parameter display page.
     """
+    obsid = int(obsid)
     if list_string is None or list_string.strip() == '':
         return []
     #: Split the input string into elements
