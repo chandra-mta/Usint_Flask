@@ -17,6 +17,7 @@
 {% endwith %}
 
 {% set ns = namespace(multi_count=0, multi_orcnt=0, param_count=0) %}
+{% set skip_param = ('time_ranks', 'roll_ranks', 'window_ranks', 'multiobsid', 'template_time', 'template_roll', 'template_window', 'csrf_token', 'submit', 'submit_choice', 'remarks', 'comments')%}
 
 <form method="POST">
 <!-- TODO asis, remove, clone case. Either here or separate confirmation page?-->
@@ -79,11 +80,17 @@
             <th class='cent'>Requested</th>
         </tr>
         {% for param in ocat_form_dict.keys() %}
-            {% if param not in ('time_ranks', 'roll_ranks', 'window_ranks', 'multiobsid', 'template_time', 'template_roll', 'template_window', 'csrf_token', 'submit', 'submit_choice') %}
-                <!-- Render a single column for now -->
-                <tr>
+            {% if param not in skip_param%}
+                {% set ns.param_count = ns.param_count + 1 %}
+                {% if ns.param_count % 2 == 1 %}
+                    <tr>
+                {% endif %}
                     {{compare_param_values(param, ocat_form_dict, change_dict, _LABELS)}}
-                </tr>
+                {% if ns.param_count % 2 == 0 %}
+                    </tr>
+                {% else %}
+                    <td> &#160;</td>
+                {% endif %}
             {% endif %}
         {% endfor %}
     </table>
