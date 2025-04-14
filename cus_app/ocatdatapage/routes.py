@@ -42,7 +42,8 @@ def index(obsid=None):
     if form.validate_on_submit():
     #if request.method == "POST" and form.is_submitted(): 
         #: Form submitted, send form data to session and go to confirmation page
-
+        ocat_form_dict = fod.format_POST(form.data)
+        session[f'ocat_form_dict_{obsid}'] = ocat_form_dict
         return redirect(url_for('ocatdatapage.confirm', obsid = obsid))
     return render_template("ocatdatapage/index.html", 
                            form=form, 
@@ -54,23 +55,31 @@ def index(obsid=None):
 
 @bp.route('/confirm', methods=['GET', 'POST'])
 def confirm(obsid):
-    ind_dict = session.get('ind_dict')
-    multi_obsid = session.get('multi_obsid',[])
-    ocat_data = session.get('ocat_data')
-    print(f"ocatdata: {ocat_data}")
-    form_dict = session.get('form_dict')
-    or_dict = {} #: TODO create check for whether the obsid is in the or_list so that the parameter changes can provided the user with a warning.
+    #
+    # --- Process the selected radio option for the desired change
+    #
     form = ConfirmForm(request.form)
-    if request.method == "POST" and form.is_submitted():
+    ocat_data, warning, orient_maps, ocat_form_dict = fetch_session_data(obsid)
+    change_dict = fod.determine_changes(ocat_form_dict, ocat_data)
+    multi_obsid = create_obsid_list(ocat_form_dict.get('multiobsid'), obsid)
+    or_dict = {} #: TODO generate
+    if request.method == "POST" and form.is_submitted(): #: no validators
         if form.previous_page:
-            return redirect(url_for('ocatdatapage.index', obsid=ocat_data.get('obsid')))
+            #: Got back and edit
+            return redirect(url_for('ocatdatapage.index', obsid=obsid))
+        elif form.finalize:
+            #: Got back and edit
+            return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
     return render_template('ocatdatapage/confirm.html',
                            form = form,
-                           ind_dict = ind_dict,
+                           obsid = obsid,
                            multi_obsid = multi_obsid,
+                           ocat_form_dict = ocat_form_dict,
                            ocat_data = ocat_data,
-                           form_dict = form_dict,
-                           or_dict = or_dict)
+                           change_dict = change_dict,
+                           or_dict = or_dict,
+                           _LABELS = _LABELS,
+                           )
 
 @bp.route('/finalize', methods=['GET', 'POST'])
 def finalize(obsid):
@@ -87,25 +96,63 @@ def fetch_session_data(obsid):
     ocat_data = session.get(f'ocat_data_{obsid}')
     warning = session.get(f'warning_{obsid}')
     orient_maps = session.get(f'orient_maps_{obsid}')
-    form_override = session.get(f'form_override_{obsid}')
+    flag_override = session.get(f"flag_override_{obsid}")
     if ocat_data is None:
         #: First Fetch
         ocat_data = rod.read_ocat_data(obsid)
+        #: Generate form specific copies of ocat data. Added to ocat data to later change comparison.
+        form_additions = fod.generate_additional(ocat_data)
+        ocat_data.update(form_additions)
         session[f'ocat_data_{obsid}'] = ocat_data
         warning = fod.create_warning_line(ocat_data)
         session[f'warning_{obsid}'] = warning
         orient_maps = fod.create_orient_maps(ocat_data)
         session[f'orient_maps_{obsid}'] = orient_maps
-        form_override = fod.generate_override(ocat_data)
-        session[f'form_override_{obsid}'] = form_override
+        #
+        # --- Create minor overrides for the form display of certain flags
+        #
+        flag_override = {}
+        for flag in ('window_flag', 'roll_flag', 'spwindow_flag'):
+            if ocat_data.get(flag) == 'P':
+                flag_override[flag] = 'Y'
+            elif ocat_data.get(flag) is None:
+                flag_override[flag] = 'N'
+        session[f'flag_override_{obsid}'] = flag_override
     #
     # --- With the session data related to this specific obsid, we then process whether to 
     # --- generate a new form from the default data or from a previously passed form we are editing again.
     #
-    ocat_form_dict = session.get(f'ocat_form_dict_{obsid}',(ocat_data | form_override))
+    ocat_form_dict = session.get(f'ocat_form_dict_{obsid}', (ocat_data | flag_override))
 
     return ocat_data, warning, orient_maps, ocat_form_dict
 
+def create_obsid_list(list_string, obsid):
+    """
+    Create a list of obsids from form input for a parameter display page.
+    """
+    #: Split the input string into elements
+    raw_elements = [x for x in re.split(r'\s+|,|:|;', list_string) if x != '']
+    
+    #: Combine into string replaceable format for dash parsing
+    combined = ','.join(raw_elements)
+    combined = combined.replace(',-,','-').replace('-,','-').replace(',-','-')
+    
+    #: Process Ranges
+    obsids_list = []
+    for element in combined.split(','):
+        if element.isdigit():
+            obsids_list.append(int(element))
+        else:
+            start, end = element.split('-')
+            obsids_list.extend(list(range(int(start), int(end) + 1)))
+    
+    #: Remove duplicates, sort, and exclude the main obsid
+    obsids_list = sorted(set(obsids_list) - {obsid})
+    return obsids_list
+
+#
+# --- Old functions kept in case of use
+#
 
 def prepare_confirmation_page(form, ocat_data):
 
@@ -169,21 +216,6 @@ def indicate_changes(form_dict, ocat_data):
 #
 #--- Helper Functions
 #
-def equal_values(org,new):
-    """
-    Compare values within reason for a revision.
-    """
-    if isinstance(org,(int,float)) and isinstance(new,(int,float)):
-        return round(org,4) == round(new,4)
-    elif isinstance(org,str) and isinstance(new,str):
-        return org.replace(" ","") == new.replace(" ","")
-    elif isinstance(org,list) and isinstance(new,list):
-        return str(org) == str(new)
-    elif isinstance(org,datetime) and isinstance(new,datetime):
-        diff = (new - org).total_seconds()
-        return diff > 60
-    else:
-        return org == new
 
 def combine_times(time_param):
     """
@@ -203,27 +235,3 @@ def combine_times(time_param):
         tstart.append(datetime.strptime(start_string, fod._COMBINE_DATETIME_FORMAT))
         tstop.append(datetime.strptime(stop_string, fod._COMBINE_DATETIME_FORMAT))
     return tstart, tstop
-
-def create_obsid_list(list_string, obsid):
-    """
-    Create a list of obsids from form input for a parameter display page.
-    """
-    #: Split the input string into elements
-    raw_elements = [x for x in re.split(r'\s+|,|:|;', list_string) if x != '']
-    
-    #: Combine into string replaceable format for dash parsing
-    combined = ','.join(raw_elements)
-    combined = combined.replace(',-,','-').replace('-,','-').replace(',-','-')
-    
-    #: Process Ranges
-    obsids_list = []
-    for element in combined.split(','):
-        if element.isdigit():
-            obsids_list.append(int(element))
-        else:
-            start, end = element.split('-')
-            obsids_list.extend(list(range(int(start), int(end) + 1)))
-    
-    #: Remove duplicates, sort, and exclude the main obsid
-    obsids_list = sorted(set(obsids_list) - {obsid})
-    return obsids_list
