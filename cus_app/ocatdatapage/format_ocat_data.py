@@ -9,10 +9,32 @@ from astropy.coordinates import Angle
 from datetime import datetime
 import os
 from flask import current_app
+from cus_app.supple.read_ocat_data import _NULL_LIST
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
 _COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
-_NULL_LIST = (None, 'None', '', [])
+
+_SKIP_CHANGE_CHECK = [
+    'multiobsid',
+    'csrf_token',
+    'template_time',
+    'template_roll',
+    'template_window',
+    'submit_choice',
+    'submit',
+    'window_flag',
+    'time_ranks',
+    'roll_flag',
+    'roll_ranks',
+    'spwindow_flag',
+    'window_ranks'
+]
+
+_FLAG_2_RANK = {
+    'window_flag': 'time_ranks',
+    'roll_flag': 'roll_ranks',
+    'spwindow_flag': 'window_ranks',
+}
 
 def create_warning_line(ocat_data):
     """
@@ -206,6 +228,14 @@ def format_POST(ocat_form_dict):
     """
     Minor changes to listed form data after POST request and preparing ocat_form_dict
     """
+    def _coerce_none(val):
+        if val in _NULL_LIST:
+            return None
+        return val
+    
+    for k,v in ocat_form_dict.items():
+        ocat_form_dict[k] = _coerce_none(v)
+
     if ocat_form_dict.get('window_flag') == 'Y':
         #: Check if needs to be preference instead
         check_time = set()
@@ -222,31 +252,6 @@ def format_POST(ocat_form_dict):
         if check_roll == set('P'):
             ocat_form_dict['window_flag'] = 'P'
     return ocat_form_dict
-
-
-#: TODO move this global to top
-
-_SKIP_CHANGE_CHECK = [
-    'multiobsid',
-    'csrf_token',
-    'template_time',
-    'template_roll',
-    'template_window',
-    'submit_choice',
-    'submit',
-    'window_flag',
-    'time_ranks',
-    'roll_flag',
-    'roll_ranks',
-    'spwindow_flag',
-    'window_ranks'
-]
-
-_FLAG_2_RANK = {
-    'window_flag': 'time_ranks',
-    'roll_flag': 'roll_ranks',
-    'spwindow_flag': 'window_ranks',
-}
 
 def determine_changes(ocat_form_dict, ocat_data):
     """Iterate over select keys in the ocat_form_dict to identify revised parameters

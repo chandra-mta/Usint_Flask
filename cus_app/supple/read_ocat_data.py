@@ -49,7 +49,7 @@ _ACIS_PARAM_LIST = ['exp_mode', 'ccdi0_on', 'ccdi1_on', 'ccdi2_on', 'ccdi3_on', 
 _ACISWIN_PARAM_LIST = ['chip', 'start_row', 'start_column', 'width', 'height',\
               'lower_threshold', 'pha_range', 'sample']
 
-_NULL_LIST = ['NA', 'N/A', 'none','None', 'NONE', 'null', 'Null', 'NULL', ''] #: List of database null string values we intend to be python native None
+_NULL_LIST = (None,'NA', 'N/A', 'none','None', 'NONE', 'null', 'Null', 'NULL', '') #: List of database null string values we intend to be python native None
 
 def get_value_from_sybase(cmd):
     conn = sqsh.Sqsh(dbi='sybase', server=_SERV, database = _DB, user = _USR, authdir = _AUTHDIR)

@@ -13,33 +13,25 @@ from datetime import datetime
 import json
 import os
 
-
 #
 #---- Common Choice of Pulldown Fields
 #
-_CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
 _CHOICE_INSTRUMENT = [(x,x) for x in ('ACIS-I', 'ACIS-S', 'HRC-I', 'HRC-S')]
 
 _CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
 _CHOICE_CHIP = [(None, "NA"),('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
 _CHOICE_WINDOW_CHIP = [(None,'NA')] + [(x, x) for x in ('I0', 'I1',  'I2', 'I3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5')]
 
-
 _CHOICE_NY   = (('N','NO'), ('Y','YES'))
 _CHOICE_NPY = (('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'))
 _CHOICE_NNY  = ((None, 'NA'), ('N', 'NO'), ('Y', 'YES'))
-
-_CHOICE_NNPY = ((None, 'NA'), ('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'),)
-
-_CHOICE_NNPC = ((None,'NA'),('N','NO'), ('P','PREFERENCE'), ('Y', 'CONSTRAINT'),)
-
+_CHOICE_CP   = (('Y','CONSTRAINT'),('P','PREFERENCE'),)
 
 _CHOICE_SUBMIT = [("norm", "Normal Change"),
                 ("asis","Observation is Approved for flight"),
                 ("remove","ObsID no longer ready to go"),
                 ("clone","Split this ObsID")
             ]
-
 #
 #--- Time Selectors
 #
