@@ -20,9 +20,7 @@
 <!-- if there are any warnings, display here -->
 <!-- -->
 {% if warning != '' %}
-<h3 style='color:#db1709;'>{{ warning }}</h3>
-{% else %}
-<h3 style='color:#db1709;'>TODO: include future check here for ['unobserved', 'scheduled', 'untriggered'] status obsid which are in our "Approved" list and warn that this observation is already on the approved list.</h3>
+    <h3 style='color:#db1709;'>{{ warning }}</h3>
 {% endif %}
 <!-- -->
 <!-- if something went wrong with updating the data file... --->

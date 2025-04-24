@@ -10,7 +10,10 @@ import astropy.table
 import os
 import numpy as np
 from datetime import datetime
+
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
+from cus_app import db
+from cus_app.models import register_user, User, Revision, Signoff, Parameter, Request, Original
 #
 #--- Set sqsh Parameters
 #
@@ -451,3 +454,17 @@ def check_obsid_in_or_list(obsids_list):
         else:
             or_dict[obsid] = False
     return or_dict
+
+def check_approval(obsid):
+    """
+    Check whether an obsid is listed as approved in the usint database
+    """
+    obsid = int(obsid)
+    revision_result = db.session.execute(db.select(Revision).where(Revision.obsid==obsid).order_by(Revision.revision_number)).scalars().all()
+    is_approved = False
+    for rev in revision_result:
+        if rev.kind == 'asis':
+            is_approved = True
+        elif rev.kind == 'remove':
+            is_approved = False
+    return is_approved

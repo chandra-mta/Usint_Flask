@@ -9,7 +9,7 @@ from astropy.coordinates import Angle
 from datetime import datetime
 import os
 from flask import current_app
-from cus_app.supple.read_ocat_data import _NULL_LIST
+from cus_app.supple.read_ocat_data import _NULL_LIST, check_approval
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
 _COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
@@ -129,6 +129,10 @@ def create_warning_line(ocat_data):
             line += f" (LTS Date: {obs_date}.)"
         else:
             line += f" (Scheduled on: {obs_date}.)"
+    
+    if check_approval(ocat_data.get('obsid')):
+        line = "This Observation Is Already On the Approved List"
+
     return line
 
 def create_orient_maps(ocat_data):
