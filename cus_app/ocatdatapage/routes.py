@@ -72,9 +72,9 @@ def confirm(obsid=None):
             #: Got back and edit
             return redirect(url_for('ocatdatapage.index', obsid=obsid))
         elif form.finalize:
-            #: Got back and edit
+            #: Write changes to the database files
+            session['multi_obsid'] = multi_obsid
             return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
-    print(change_dict)#: TODO remove
     return render_template('ocatdatapage/confirm.html',
                            form = form,
                            obsid = obsid,
@@ -86,7 +86,7 @@ def confirm(obsid=None):
                            _LABELS = _LABELS,
                            )
 
-@bp.route('/finalize', methods=['GET', 'POST'])
+@bp.route('/finalize/<obsid>', methods=['GET', 'POST'])
 def finalize(obsid=None):
     #: TODO make sure that the finalized submission will run the functions to submit the SQLAlchemy commit and then clear the session data
     #: Then display the page informing the user that their revision went through.

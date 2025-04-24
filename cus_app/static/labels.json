@@ -67,7 +67,7 @@
     "remove_rank": "Remove",
     "roll_ranks": "Roll Constraints",
     "roll_flag": "Roll Flag",
-    "roll_constraints": "Type of Constraint",
+    "roll_constraint": "Type of Constraint",
     "roll_180": "Roll 180?",
     "roll": "Roll",
     "roll_tolerance": "Roll Tolerance",
