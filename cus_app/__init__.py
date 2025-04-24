@@ -10,20 +10,23 @@ from flask import Flask, render_template
 from flask_bootstrap import Bootstrap
 from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
+from flask_login import LoginManager
 from config import _CONFIG_DICT
 
 bootstrap = Bootstrap()
 db = SQLAlchemy()
 sess = Session()
+login = LoginManager()
 
 def create_app(_configuration_name):
     app = Flask(__name__)
     app.jinja_env.filters['enumerate'] = enumerate
     app.config.from_object(_CONFIG_DICT[_configuration_name])
-    app.config['SESSION_SQLALCHEMY'] = db #: Must set the SQLAlchemy database for session data after construction
+    app.config['SESSION_SQLALCHEMY'] = db #: Must set the SQLAlchemy database for server-side session data after construction
     bootstrap.init_app(app)
     db.init_app(app)
     sess.init_app(app)
+    login.init_app(app)
     #
     # --- connect all apps with blueprint
     #

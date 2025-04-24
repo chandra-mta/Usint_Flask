@@ -14,6 +14,8 @@ from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from wtforms.validators import ValidationError
 
 from flask import current_app, render_template, request, flash, session, redirect, url_for
+from flask_login    import current_user
+from cus_app.models     import register_user, User, Revision, Signoff, Parameter, Request, Original
 
 from cus_app.ocatdatapage import bp
 from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
@@ -24,6 +26,13 @@ import cus_app.ocatdatapage.format_ocat_data as fod
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'labels.json')) as f:
     _LABELS = json.load(f)
+
+
+@bp.before_app_request
+def before_request():
+    if not current_user.is_authenticated:
+        register_user()
+
 
 @bp.route("/", methods=["GET", "POST"])
 @bp.route("/<obsid>", methods=["GET", "POST"])

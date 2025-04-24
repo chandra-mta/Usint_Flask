@@ -13,7 +13,6 @@ class BaseConfig(object):
     #
     # --- SQLAlchemy
     #
-    #SQLALCHEMY_DATABASE_URI = "sqlite:////data/mta4/CUS/Data/FakeUsers/app.db"
     SQLALCHEMY_DATABASE_URI = "sqlite:///usint.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     #

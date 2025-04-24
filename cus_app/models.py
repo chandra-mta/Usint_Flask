@@ -1,0 +1,193 @@
+"""
+**models.py**: Defines the SQLAlchemy models for working with the Usint Database.
+
+:Author: W. Aaron (william.aaron@cfa.harvard.edu)
+:Last Updated: Apr 28, 2025
+
+"""
+import sys
+import os
+import sqlite3 as sq
+from contextlib import closing
+import re
+import numpy as np
+from astropy.io import ascii
+from astropy.table import Table, Column
+from datetime import datetime
+import subprocess
+import glob
+import json
+import traceback
+
+from flask              import current_app, session, request
+from flask_login        import UserMixin, login_user
+
+from cus_app                import db, login
+
+from typing import Optional, List #: Allows for Mapper to determine nullability of the table column.
+
+from sqlalchemy import create_engine, ForeignKey, select, insert, delete
+from sqlalchemy.schema import UniqueConstraint, ForeignKeyConstraint
+
+from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column, relationship
+
+"""
+In regular SQLAlchemy, the sqlalchemy.orm.DeclarativeBase parent class should be used to define the translation between Python classes that
+represent an SQLAlchemy ORM structure system and relational database model statements.
+
+For Flask SQLAlchemy, we use the instantiated db.Model as our parent class instead because it performs the same translations
+while also tying the create ORM into the Flask application context.
+
+In **__init__.py**, the db = SQLAlchemy() call will define the db.Model class with the sqlalchemy.orm.DeclarativeBase as a parent on our behalf.
+"""
+
+class User(db.Model, UserMixin):
+    __tablename__ = "users"
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[int]= mapped_column(primary_key=True, autoincrement=True)
+    username: Mapped[str] = mapped_column(unique=True)
+    email: Mapped[Optional[str]]
+    groups: Mapped[Optional[str]]
+    full_name: Mapped[Optional[str]]
+    
+    revisions: Mapped[List["Revision"]] = relationship(back_populates='user', foreign_keys="Revision.user_id")
+    gen: Mapped[List["Signoff"]] = relationship(back_populates='general_signoff', foreign_keys="Signoff.general_signoff_id")
+    acis: Mapped[List["Signoff"]] = relationship(back_populates='acis_signoff', foreign_keys="Signoff.acis_signoff_id")
+    acis_si: Mapped[List["Signoff"]] = relationship(back_populates='acis_si_signoff', foreign_keys="Signoff.acis_si_signoff_id")
+    hrc_si: Mapped[List["Signoff"]] = relationship(back_populates='hrc_si_signoff', foreign_keys="Signoff.hrc_si_signoff_id")
+    usint: Mapped[List["Signoff"]] = relationship(back_populates='usint_signoff', foreign_keys="Signoff.usint_signoff_id")
+
+    def __repr__(self) -> str:
+         return f"User(id={self.id!r}, username={self.username!r}, email={self.email!r}, groups={self.groups!r}, fullname={self.full_name!r})"
+
+class Revision(db.Model):
+    __tablename__ = "revisions"
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    obsid: Mapped[int] = mapped_column(nullable=False)
+    revision_number: Mapped[int] = mapped_column(nullable=False)
+    kind: Mapped[str] = mapped_column(nullable=False)
+    sequence_number: Mapped[int] = mapped_column(nullable=False)
+    time: Mapped[int]
+    
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+        
+    user: Mapped["User"] = relationship(back_populates='revisions', foreign_keys=user_id)
+    signoff: Mapped["Signoff"] = relationship(back_populates='revision', foreign_keys="Signoff.revision_id")
+        
+    request: Mapped["Request"] = relationship(back_populates='revision', foreign_keys="Request.revision_id")
+    original: Mapped["Original"] = relationship(back_populates='revision', foreign_keys="Original.revision_id")
+        
+    def __repr__(self) -> str:
+        return f"Revision(id={self.id!r}, user_id={self.user_id!r}, obsid={self.obsid!r}, revision_number={self.revision_number!r}, kind={self.kind!r})"
+
+class Signoff(db.Model):
+    __tablename__ = "signoffs"
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    
+    revision_id: Mapped[int] = mapped_column(ForeignKey("revisions.id"))
+    revision: Mapped["Revision"] = relationship(back_populates='signoff', foreign_keys=revision_id)
+        
+    general_status: Mapped[str] = mapped_column(nullable = False)
+    general_signoff_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = True)
+    general_signoff: Mapped[Optional["User"]] = relationship(back_populates='gen', foreign_keys=general_signoff_id)
+    general_time: Mapped[Optional[int]]
+        
+    acis_status: Mapped[str] = mapped_column(nullable = False)
+    acis_signoff_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = True)
+    acis_signoff: Mapped[Optional["User"]] = relationship(back_populates='acis', foreign_keys=acis_signoff_id)
+    acis_time: Mapped[Optional[int]]
+        
+    acis_si_status: Mapped[str] = mapped_column(nullable = False)
+    acis_si_signoff_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = True)
+    acis_si_signoff: Mapped[Optional["User"]] = relationship(back_populates='acis_si', foreign_keys=acis_si_signoff_id)
+    acis_si_time: Mapped[Optional[int]]
+    
+    hrc_si_status: Mapped[str] = mapped_column(nullable = False)
+    hrc_si_signoff_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = True)
+    hrc_si_signoff: Mapped[Optional["User"]] = relationship(back_populates='hrc_si', foreign_keys=hrc_si_signoff_id)
+    hrc_si_time: Mapped[Optional[int]]
+    
+    usint_status: Mapped[str] = mapped_column(nullable = False)
+    usint_signoff_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = True)
+    usint_signoff: Mapped[Optional["User"]] = relationship(back_populates='usint', foreign_keys=usint_signoff_id)
+    usint_time: Mapped[Optional[int]]
+    
+    def __repr__(self) -> str:
+        return f"Signoff(id={self.id!r}, revision={self.revision!r}, usint_signoff_id={self.usint_signoff_id!r})"
+
+class Parameter(db.Model):
+    __tablename__ = 'parameters'
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[int] = mapped_column(primary_key = True, autoincrement=True)
+    request: Mapped["Request"] = relationship(back_populates='parameter', foreign_keys="Request.parameter_id")
+    original: Mapped["Original"] = relationship(back_populates='parameter', foreign_keys="Original.parameter_id")
+        
+    name: Mapped[str] = mapped_column(unique=True, nullable= False)
+    is_modifiable : Mapped[bool] = mapped_column(nullable = False)
+    data_type: Mapped[str]
+    description: Mapped[str]
+        
+    def __repr__(self) -> str:
+        return f"Parameter(id={self.id!r}, name={self.name!r}, data_type={self.data_type!r})"
+
+class Request(db.Model):
+    __tablename__ = 'requests'
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[int] = mapped_column(primary_key = True, autoincrement=True)
+    revision_id: Mapped[int] = mapped_column(ForeignKey("revisions.id"))
+    revision: Mapped["Revision"] = relationship(back_populates="request", foreign_keys=revision_id)
+        
+    parameter_id: Mapped[int] = mapped_column(ForeignKey("parameters.id"))
+    parameter: Mapped["Parameter"] = relationship(back_populates="request", foreign_keys=parameter_id)
+    
+    value: Mapped[str] = mapped_column(nullable=True)
+    def __repr__(self) -> str:
+        return f"Request(id={self.id!r}, revision_id={self.revision_id!r}, parameter_id={self.parameter_id!r}, value={self.value!r})"
+
+class Original(db.Model):
+    __tablename__ = 'originals'
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[int] = mapped_column(primary_key = True, autoincrement=True)
+    revision_id: Mapped[int] = mapped_column(ForeignKey("revisions.id"))
+    revision: Mapped["Revision"] = relationship(back_populates="original", foreign_keys=revision_id)
+    
+    parameter_id: Mapped[int] = mapped_column(ForeignKey("parameters.id"))
+    parameter: Mapped["Parameter"] = relationship(back_populates="original", foreign_keys=parameter_id)
+    #
+    #--- By convention, we don't want to store null values in the original state representation of the obsid parameters.
+    #--- This can be inferred by the lack of this parameter in the table for a specific revision.
+    #--- For example, an obsid could have no y_det_offset both before and after a specific norm revision, so we don't record that information.
+    #--- Nevertheless, the value column can take NULL values to future-proof edge cases.
+    #
+    value: Mapped[str] = mapped_column(nullable=True)
+        
+    def __repr__(self) -> str:
+        return f"Original(id={self.id!r}, revision_id={self.revision_id!r}, parameter_id={self.parameter_id!r}, value={self.value!r})"
+
+
+def register_user():
+    session.clear()
+    if os.environ.get("REMOTE_USER") is not None:
+        username = os.environ.get("REMOTE_USER") #: Defined in Shell script invoking the flask executable to test application on local host
+    else:
+        username = request.environ.get("REMOTE_USER") #: Defined by Apache Web Server Context with LDAP authentication
+    
+    user = db.session.execute(db.select(User).where(User.username == username)).scalar()
+    login_user(user)
+    #current_app.logger.info(f"Login User: {username}") #: TODO implement logger
+
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+#----------------------------------------------------------------------------------------
+
+@login.user_loader
+def load_user(id):
+    return db.session.get(User,int(id))
