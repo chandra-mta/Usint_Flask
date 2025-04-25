@@ -178,8 +178,8 @@ class OcatParamForm(FlaskForm):
     #
     monitor_flag = SelectField(_LABELS.get('monitor_flag'), choices=_CHOICE_NY)
     pre_id = IntegerField(_LABELS.get('pre_id'), validators=[Optional()])
-    pre_min_lead = FloatField(_LABELS.get('pre_min_lead'), validators=[Optional(),NumberRange(min=0, max=364)])
-    pre_max_lead = FloatField(_LABELS.get('pre_max_lead'), validators=[Optional(),NumberRange(min=0.01, max=365)])
+    pre_min_lead = FloatField(_LABELS.get('pre_min_lead'), validators=[Optional(),NumberRange(min=0)])
+    pre_max_lead = FloatField(_LABELS.get('pre_max_lead'), validators=[Optional(),NumberRange(min=0.01)])
     #
     # --- Other (Joint)
     #

@@ -82,16 +82,13 @@ def _convert_astropy_to_native(astropy_object, orient = None):
         #
         # --- Multiple possible orientations.
         # --- Similar argument to pandas dataframe for consistency but does not use pandas
-        # --- REVISIT:// 
-        # --- If single row then return as row in list
-        # --- If single column then return as dict with one column entry.
         #
         if (orient == 'records') or (len(astropy_object) == 1 and orient is None):
             result = []
             for row in astropy_object:
                 result.append(_convert_row_to_dict(row))
             return result
-        elif (orient == 'list') or (len(astropy_object.colnames) == 1 and orient is None):
+        elif (orient == 'columns') or (len(astropy_object.colnames) == 1 and orient is None):
             result = {}
             for col in astropy_object.colnames:
                 result[col] = astropy_object[col].tolist()
@@ -99,7 +96,7 @@ def _convert_astropy_to_native(astropy_object, orient = None):
         elif len(astropy_object) == 0:
             raise ValueError("Cannot convert empty astropy table.")
         else:
-            raise ValueError(f"Provide object orient [records, list]. Provided orient: {orient}.")
+            raise ValueError(f"Provide object orient [records, columns]. Provided orient: {orient}.")
             
     elif type(astropy_object) == astropy.table.row.Row:
         return _convert_row_to_dict(astropy_object)
@@ -321,7 +318,7 @@ def roll_params(obsid):
     cmd = f"select roll_constraint,roll_180,roll,roll_tolerance from rollreq where obsid={obsid} order by ordr"
     roll_fetch = get_value_from_sybase(cmd)
     records = _convert_astropy_to_native(roll_fetch, orient = 'records')
-    return {'roll_ranks':records}
+    return {'roll_ranks':records, 'roll_ordr': len(records)}
 
 def time_constraint_params(obsid):
     """extract time constraint related parameter data
@@ -335,7 +332,7 @@ def time_constraint_params(obsid):
     for i in range(len(records)):
         records[i]['tstart'] = datetime.strptime(records[i]['tstart'],_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT)
         records[i]['tstop'] = datetime.strptime(records[i]['tstop'],_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT)
-    return {'time_ranks': records}
+    return {'time_ranks': records, 'time_ordr': len(records)}
 
 def too_ddt_params(tooid):
     """extract time constraint related parameter data
@@ -372,7 +369,7 @@ def aciswin_params(obsid):
     cmd = f"select {','.join(_ACISWIN_PARAM_LIST)} from aciswin where obsid={obsid} order by ordr"
     aciswin_fetch = get_value_from_sybase(cmd)
     records = _convert_astropy_to_native(aciswin_fetch, orient = 'records')
-    return {'window_ranks': records}
+    return {'window_ranks': records, 'window_order': len(records)}
 def phase_params(obsid):
     """extract phase related parameter data
     """
