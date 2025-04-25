@@ -316,6 +316,48 @@ def equal_values(org,new):
     else:
         return org == new
 
+def reorient_rank(ranks, orient):
+    """
+    Reorient a set of ranks, similar to how _convert_astropy_to_native() operates.
+    But this alters a set of python natives rather than an astropy table.
+    
+    'records' is an ordered list of ranks, each entry being a dictionary of parameter name to value for that numbered rank
+    'columns' is a dictionary of parameter columns, each entry matching an ordered list of values
+    """
+    if ranks is None:
+        return None
+    if orient not in ('records', 'columns'):
+        raise ValueError(f"Provide object orient [records, columns]. Provided orient: {orient}.")
+    
+    if isinstance(ranks,list) and ranks != []:
+        #: Is records
+        if orient == 'records':
+            return ranks
+        else:
+            columns = {}
+            for key, value in ranks[0].items():
+                columns[key] = [value]
+            for i in range(1,len(ranks)):
+                for key, value in ranks[i].items():
+                    columns[key].append(value)
+        return columns
+                    
+    elif isinstance(ranks,dict) and ranks != {}:
+        #: Is columns
+        if orient == 'columns':
+            return ranks
+        else:
+            records = []
+            key_list = list(ranks.keys())
+            for i in range(len(ranks[key_list[0]])):
+                rec = {}
+                for key in key_list:
+                    rec[key] = ranks[key][i]
+                records.append(rec)
+        return records
+    else:
+        raise ValueError(f"Incompatible Rank Object: {ranks}")
+
 #
 # --- Old function in case of usefulness
 #
