@@ -6,10 +6,11 @@
 
 """
 import ska_dbi.sqsh as sqsh
-import astropy.table
+from astropy.table import vstack
 import os
 import numpy as np
 from datetime import datetime
+from helper_functions import convert_astropy_to_native, OCAT_DATETIME_FORMAT
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from cus_app import db
@@ -26,7 +27,7 @@ _OBS_SS = "/data/mta4/obs_ss/"
 # --- NOTE Ocat dates are recorded without a leading zero. This makes datetime formatting difficult so we convert for the fetch.
 # --- While datetime can process these dates, it never prints without a leading zero.
 #
-_OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"
+
 
 #
 # --- Parameter Lists
@@ -58,54 +59,6 @@ def get_value_from_sybase(cmd):
     conn = sqsh.Sqsh(dbi='sybase', server=_SERV, database = _DB, user = _USR, authdir = _AUTHDIR)
     row = conn.fetchall(cmd)
     return row
-
-def _convert_astropy_to_native(astropy_object, orient = None):
-    """Converts an astropy object into python native objects.
-
-    :param astropy_object: astropy object
-    :type astropy_object: Table, Row, Column, ect.
-    :param orient: Orientation of data Table conversion(uses pandas convention), defaults to None
-    :type orient: str, optional
-    """
-    def _convert_row_to_dict(row):
-        """convert an astropy table row into data formats expected by the application
-
-        :param row: Sybase fetched astropy table row.
-        :type row: Astropy.table.row.Row
-        :returns: Formatted python dictionary
-        :rtype: dict
-        """
-        row_dict = {col: row[col].tolist() for col in row.colnames}
-        return row_dict
-    
-    if type(astropy_object) == astropy.table.table.Table:
-        #
-        # --- Multiple possible orientations.
-        # --- Similar argument to pandas dataframe for consistency but does not use pandas
-        #
-        if (orient == 'records') or (len(astropy_object) == 1 and orient is None):
-            result = []
-            for row in astropy_object:
-                result.append(_convert_row_to_dict(row))
-            return result
-        elif (orient == 'columns') or (len(astropy_object.colnames) == 1 and orient is None):
-            result = {}
-            for col in astropy_object.colnames:
-                result[col] = astropy_object[col].tolist()
-            return result
-        elif len(astropy_object) == 0:
-            raise ValueError("Cannot convert empty astropy table.")
-        else:
-            raise ValueError(f"Provide object orient [records, columns]. Provided orient: {orient}.")
-            
-    elif type(astropy_object) == astropy.table.row.Row:
-        return _convert_row_to_dict(astropy_object)
-    
-    elif type(astropy_object) == astropy.table.column.Column:
-        return astropy_object.tolist()
-    
-    elif hasattr(astropy_object, 'tolist'):
-        return astropy_object.tolist()
 
 def read_ocat_data(obsid):
     """
@@ -209,16 +162,16 @@ def general_params(obsid):
     elif len(result) >= 2:
         raise MultipleResultsFound(f"Multiple query result for {obsid}")
     else:
-        p_dict = _convert_astropy_to_native(result[0])
+        p_dict = convert_astropy_to_native(result[0])
         p_dict['comments'] = p_dict.pop('mp_remarks')
         p_dict['obs_type'] = p_dict.pop('type')
         if p_dict.get('soe_st_sched_date') is not None:
             val = p_dict.get('soe_st_sched_date')
-            val = datetime.strptime(val,_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT) #: Ensure leading zero format
+            val = datetime.strptime(val,OCAT_DATETIME_FORMAT).strftime(OCAT_DATETIME_FORMAT) #: Ensure leading zero format
             p_dict['soe_st_sched_date'] = val
         if p_dict.get('lts_lt_plan') is not None:
             val = p_dict.get('lts_lt_plan')
-            val = datetime.strptime(val,_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT) #: Ensure leading zero format
+            val = datetime.strptime(val,OCAT_DATETIME_FORMAT).strftime(OCAT_DATETIME_FORMAT) #: Ensure leading zero format
             p_dict['lts_lt_plan'] = val
         for flag in ['dither_flag', 'window_flag', 'roll_flag', 'spwindow_flag']:
             if p_dict.get(flag) is None:
@@ -280,7 +233,7 @@ def find_monitoring_series(obsid):
             out = get_value_from_sybase(cmd)
             if len(out) == 0:
                 break
-            rev = astropy.table.vstack([out,rev])
+            rev = vstack([out,rev])
             val = rev[0]['pre_id'].tolist()
         return rev
     
@@ -295,7 +248,7 @@ def find_monitoring_series(obsid):
             out = get_value_from_sybase(cmd)
             if len(out) == 0:
                 break
-            fwd = astropy.table.vstack([fwd,out])
+            fwd = vstack([fwd,out])
             val = fwd[-1]['obsid'].tolist()
         return fwd
     #
@@ -308,7 +261,7 @@ def find_monitoring_series(obsid):
     elif len(fwd) == 0:
         series = rev
     else:
-        series = astropy.table.vstack([rev,fwd])
+        series = vstack([rev,fwd])
     sel = np.isin(series['status'], ['unobserved', 'scheduled', 'untriggered'])
     return sorted(series[sel]['obsid'].tolist())
 
@@ -317,7 +270,7 @@ def roll_params(obsid):
     """
     cmd = f"select roll_constraint,roll_180,roll,roll_tolerance from rollreq where obsid={obsid} order by ordr"
     roll_fetch = get_value_from_sybase(cmd)
-    records = _convert_astropy_to_native(roll_fetch, orient = 'records')
+    records = convert_astropy_to_native(roll_fetch, orient = 'records')
     return {'roll_ranks':records, 'roll_ordr': len(records)}
 
 def time_constraint_params(obsid):
@@ -325,13 +278,13 @@ def time_constraint_params(obsid):
     """
     cmd = f"select window_constraint,tstart,tstop from timereq where obsid={obsid} order by ordr"
     time_fetch = get_value_from_sybase(cmd)
-    records = _convert_astropy_to_native(time_fetch, orient = 'records')
+    records = convert_astropy_to_native(time_fetch, orient = 'records')
     #
     # --- Ensure leading zero format
     #
     for i in range(len(records)):
-        records[i]['tstart'] = datetime.strptime(records[i]['tstart'],_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT)
-        records[i]['tstop'] = datetime.strptime(records[i]['tstop'],_OCAT_DATETIME_FORMAT).strftime(_OCAT_DATETIME_FORMAT)
+        records[i]['tstart'] = datetime.strptime(records[i]['tstart'],OCAT_DATETIME_FORMAT).strftime(OCAT_DATETIME_FORMAT)
+        records[i]['tstop'] = datetime.strptime(records[i]['tstop'],OCAT_DATETIME_FORMAT).strftime(OCAT_DATETIME_FORMAT)
     return {'time_ranks': records, 'time_ordr': len(records)}
 
 def too_ddt_params(tooid):
@@ -342,7 +295,7 @@ def too_ddt_params(tooid):
     #: Rename keys to prepend too
     for col in too_fetch.colnames:
         too_fetch.rename_column(col,f"too_{col}")
-    p_dict = _convert_astropy_to_native(too_fetch[0])
+    p_dict = convert_astropy_to_native(too_fetch[0])
     return p_dict
 
 def hrc_params(hrcid):
@@ -352,7 +305,7 @@ def hrc_params(hrcid):
     hrc_fetch = get_value_from_sybase(cmd)
     for col in (hrc_fetch.colnames)[1:]:
         hrc_fetch.rename_column(col,f"hrc_{col}") #: Rename keys to prepend too
-    p_dict = _convert_astropy_to_native(hrc_fetch[0])
+    p_dict = convert_astropy_to_native(hrc_fetch[0])
     return p_dict
 
 def acis_params(acisid):
@@ -360,7 +313,7 @@ def acis_params(acisid):
     """
     cmd = f"select {','.join(_ACIS_PARAM_LIST)} from acisparam where acisid={acisid}"
     acis_fetch = get_value_from_sybase(cmd)
-    p_dict = _convert_astropy_to_native(acis_fetch[0])
+    p_dict = convert_astropy_to_native(acis_fetch[0])
     return p_dict
 
 def aciswin_params(obsid):
@@ -368,14 +321,14 @@ def aciswin_params(obsid):
     """
     cmd = f"select {','.join(_ACISWIN_PARAM_LIST)} from aciswin where obsid={obsid} order by ordr"
     aciswin_fetch = get_value_from_sybase(cmd)
-    records = _convert_astropy_to_native(aciswin_fetch, orient = 'records')
+    records = convert_astropy_to_native(aciswin_fetch, orient = 'records')
     return {'window_ranks': records, 'window_order': len(records)}
 def phase_params(obsid):
     """extract phase related parameter data
     """
     cmd = f"select phase_period,phase_epoch,phase_start,phase_end,phase_start_margin,phase_end_margin from phasereq where obsid={obsid}"
     phase_fetch = get_value_from_sybase(cmd)
-    p_dict = _convert_astropy_to_native(phase_fetch[0])
+    p_dict = convert_astropy_to_native(phase_fetch[0])
     return p_dict
 
 def dither_params(obsid):
@@ -383,7 +336,7 @@ def dither_params(obsid):
     """
     cmd = f"select y_amp,y_freq,y_phase,z_amp,z_freq,z_phase from dither where obsid={obsid}"
     dither_fetch = get_value_from_sybase(cmd)
-    p_dict = _convert_astropy_to_native(dither_fetch[0])
+    p_dict = convert_astropy_to_native(dither_fetch[0])
     return p_dict
 
 def sim_params(obsid):
@@ -392,7 +345,7 @@ def sim_params(obsid):
     cmd = f"select trans_offset,focus_offset from sim where obsid={obsid}"
     sim_fetch = get_value_from_sybase(cmd)
     if len(sim_fetch) > 0:
-        return _convert_astropy_to_native(sim_fetch[0])
+        return convert_astropy_to_native(sim_fetch[0])
     else:
         return {}
     
@@ -402,7 +355,7 @@ def soe_params(obsid):
     cmd = f"select soe_roll from soe where obsid={obsid} and unscheduled='N'"
     soe_fetch = get_value_from_sybase(cmd)
     if len(soe_fetch) > 0:
-        return _convert_astropy_to_native(soe_fetch[0])
+        return convert_astropy_to_native(soe_fetch[0])
     else:
         return {}
 
@@ -415,7 +368,7 @@ def prop_params(ocat_propid):
     prop_fetch.rename_column('title', 'proposal_title')
     prop_fetch.rename_column('joint', 'proposal_joint')
     prop_fetch.rename_column('ao_str', 'obs_ao_str') #: We overwrite the observation ao string with proposer information
-    p_dict = _convert_astropy_to_native(prop_fetch[0])
+    p_dict = convert_astropy_to_native(prop_fetch[0])
     if p_dict['proposal_joint'] == 'None':
         p_dict['proposal_joint'] = None #: Overwrite string convention of this table with python natives.
     #
