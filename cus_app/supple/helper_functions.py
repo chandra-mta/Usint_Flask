@@ -13,6 +13,11 @@ from datetime import datetime
 import astropy.table
 
 #
+# --- Globals
+#
+ALL_NULL_SET = {None,'',' ','<Blank>','N/A','NA','NONE','NULL','Na','None','Null','none','null'} #: Processes external tools markers for a Null value
+
+#
 # --- Time Formats
 #
 OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"
