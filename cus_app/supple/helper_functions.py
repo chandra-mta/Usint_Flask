@@ -15,13 +15,73 @@ import astropy.table
 #
 # --- Globals
 #
-ALL_NULL_SET = {None,'',' ','<Blank>','N/A','NA','NONE','NULL','Na','None','Null','none','null'} #: Processes external tools markers for a Null value
-
-#
-# --- Time Formats
-#
+ALL_NULL_SET = {None,'',' ','<Blank>','N/A','NA','NONE','NULL','Na','None','Null','none','null'}
 OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"
+USINT_DATETIME_FORMAT = "%b %d %Y %H:%M"
+DATETIME_FORMATS = ['%m:%d:%Y:%H:%M:%S', '%m:%d:%Y:%H:%M', USINT_DATETIME_FORMAT, OCAT_DATETIME_FORMAT, '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']
+STORAGE_FORMAT = '%Y-%m-%dT%H:%M:%SZ' #: ISO 8601 format. Used in storage for Usint SQL Database
 
+#
+# --- Parameter selection for time, roll, and window ranks
+#
+TIME_RANK_PARAMS = {'window_constraint', 'tstart', 'tstop'}
+ROLL_RANK_PARAMS = {'roll_constraint', 'roll_180', 'roll', 'roll_tolerance'}
+WINDOW_RANK_PARAMS = {'chip', 'start_row', 'start_column', 'width', 'height', 'lower_threshold', 'pha_range', 'sample'}
+ALL_RANK_PARAMS = TIME_RANK_PARAMS.union(ROLL_RANK_PARAMS).union(WINDOW_RANK_PARAMS)
+
+#
+# --- Coercion section. Converting the strings text to the correct data types.
+#
+def coerce_none(val):
+    if val in ALL_NULL_SET:
+        return None
+    return val
+
+def coerce_number(val):
+    if not isinstance(val,(int,float)):
+        try:
+            val = int(val)
+        except ValueError:
+            try:
+                val = float(val)
+            except ValueError:
+                pass
+    return val
+
+def coerce_time(val):
+    if isinstance(val, str):
+        x = val.replace('::', ':')
+        if x[-1] == "Z":
+            x = x[:-1]
+        x = x.split('.')[0]
+        for format in DATETIME_FORMATS:
+            try:
+                return datetime.strptime(x,format)
+            except ValueError:
+                pass
+    return val
+
+def coerce_json(val):
+    """Coercion of python data type to a json-formatted string for data storage"""
+    if val in ALL_NULL_SET:
+        return None
+    else:
+        return json.dumps(val)
+
+def coerce(val):
+    #: Null section
+    if val in ALL_NULL_SET:
+        return None
+    #: Number section
+    val = coerce_number(val)
+    if isinstance(val,(int,float)):
+        return val
+    #: Time section.
+    val = coerce_time(val)
+    if isinstance(val,datetime):
+        return val
+    #: Regular string
+    return val
 #
 # --- Fetching Functions
 #
