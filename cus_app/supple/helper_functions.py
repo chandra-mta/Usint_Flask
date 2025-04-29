@@ -34,7 +34,11 @@ NULL_LIST = [None,'',' ','<Blank>','N/A','NA','NONE','NULL','Na','None','Null','
 # --- Coercion section. Converting the strings text to the correct data types.
 #
 def coerce_none(val):
-    if val in ALL_NULL_SET:
+    if isinstance(val, (list, tuple)):
+        return [coerce_none(x) for x in val]
+    elif isinstance(val, dict):
+        return {k:coerce_none(v) for k,v in val.items()}
+    elif val in ALL_NULL_SET:
         return None
     return val
 

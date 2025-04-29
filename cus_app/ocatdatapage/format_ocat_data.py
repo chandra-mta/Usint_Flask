@@ -10,7 +10,8 @@ from datetime import datetime
 import os
 from flask import current_app
 from cus_app.supple.read_ocat_data import check_approval
-from cus_app.supple.helper_functions import NULL_LIST, coerce_none
+from cus_app.supple.helper_functions import NULL_LIST, coerce_none, coerce, approx_equals
+import itertools
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
 _COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
@@ -27,7 +28,6 @@ _FUNCTIONAL = [
 
 #: Edge case handling in processing form changes for flag-dependent divs, since the form will still have that information
 _DITHER_PARAMS = [
-    'dither_flag',
     'y_amp_asec',
     'y_freq_asec',
     'y_phase',
@@ -292,46 +292,66 @@ def format_POST(ocat_form_dict):
             ocat_form_dict['window_flag'] = 'P'
     return ocat_form_dict
 
-def determine_changes(ocat_form_dict, ocat_data):
+def construct_entries(ocat_form_dict, ocat_data):
     """
     Iterate over select keys in the ocat_form_dict to identify revised parameters
     This generates the set of information used in filling out the Originals and Requests tables
+
+    :Note: Original state information entries are only written if the value is non-null.
+    Request change entries are only written if the parameter has changed from Original
     """
+
+    org_dict = {}
+    req_dict = {}
+    display_org_rank = {}
+    display_req_rank = {}
+
     #: Regular Changes
-    change_dict = {}
-    for key, new in ocat_form_dict.items():
-        if key in _SKIP_PARAM:
+    for param, org, req in itertools.zip_longest(ocat_form_dict.keys(), ocat_data.values(), ocat_form_dict.values(), fillvalue=None):
+        if param in _SKIP_PARAM:
             continue
         else:
-            org = ocat_data.get(key)
-            if not equal_values(org,new):
-                    change_dict[key] = [org, new]
-    #
-    # --- Rank Changes (Handled Separately)
-    # --- If flag changes, list that specifically and all ranks as changed
-    #
-    for flag in _FLAG_2_RANK.keys():
-        new = ocat_form_dict.get(flag)
-        org = ocat_data.get(flag)
-        rank_list = _FLAG_2_RANK.get(flag)
-        if org != new:
-            change_dict[flag] = [org, new]
-            change_dict[rank_list] = [ocat_data.get(rank_list), ocat_form_dict.get(rank_list)]
-        elif not (org == 'N' and new == 'N'):
-            #: Individual ranks possibly changed in instance where the selected ranks are
-            change_dict = determine_changed_rank(change_dict, rank_list, ocat_data.get(rank_list), ocat_form_dict.get(rank_list))
-    return change_dict
+            tmp_org = coerce(org)
+            tmp_req = coerce(req)
+            if tmp_org is not None:
+                org_dict[param] = tmp_org
+            if not approx_equals(tmp_org, tmp_req):
+                req_dict[param] = tmp_req
+    
+    #: Dither Set (This is a special case of a div-dependent flag which doesn't process list changes)
+    dither_org, dither_req = process_flag_set(ocat_data, ocat_form_dict, _DITHER_PARAMS, 'dither_flag')
+    org_dict.update(dither_org)
+    req_dict.update(dither_req)
 
+    #: rank set
 
-def determine_changed_rank(change_dict, rank_list, org, new):
-    """
-    Changes amongst individual ranks
-    """
-    change_list = []
-    #: TODO check different sizes
-    #: DOD, if same size, individual differences
-    #: Special case when comparing time
-    for org_rank, new_rank in zip(org, new):
-        for key in new_rank.keys():
-            pass
-    return change_dict
+    return org_dict, req_dict, display_org_rank, display_req_rank
+
+def process_flag_set(ocat_data, ocat_form_dict, param_set, flag):
+
+    org_dict = {}
+    req_dict = {}
+
+    #: Flag changes
+    if ocat_data.get(flag) == 'N' and ocat_form_dict.get(flag) == 'N':
+        return org_dict, req_dict #: No information
+    
+    elif ocat_data.get(flag) == 'N' and ocat_form_dict.get(flag) in ('Y', 'P'):
+        for param in param_set:
+            tmp_req = coerce(ocat_form_dict.get(param))
+            req_dict[param] = tmp_req
+
+    elif ocat_data.get(flag) in ('Y', 'P') and ocat_form_dict.get(flag) == 'N':
+        for param in param_set:
+            tmp_org = coerce(ocat_data.get(param))
+            if tmp_org is not None:
+                org_dict[param] = tmp_org
+    else:
+        for param in param_set:
+            tmp_org = coerce(ocat_data.get(param))
+            tmp_req = coerce(ocat_form_dict.get(param))
+            if tmp_org is not None:
+                org_dict[param] = tmp_org
+            if not approx_equals(tmp_org, tmp_req):
+                req_dict[param] = tmp_req
+    return org_dict, req_dict
