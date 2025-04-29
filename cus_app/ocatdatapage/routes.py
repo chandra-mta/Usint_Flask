@@ -87,7 +87,7 @@ def confirm(obsid=None):
     #
     form = ConfirmForm(request.form)
     ocat_data, warning, orient_maps, ocat_form_dict = fetch_session_data(obsid)
-    change_dict = fod.determine_changes(ocat_form_dict, ocat_data)
+    org_dict, req_dict, display_org_rank, display_req_rank = fod.determine_changes(ocat_form_dict, ocat_data)
     multi_obsid = create_obsid_list(ocat_form_dict.get('multiobsid'), obsid)
     or_dict = rod.check_obsid_in_or_list([int(obsid)] + multi_obsid)
     if request.method == "POST" and form.is_submitted(): #: no validators
@@ -105,7 +105,10 @@ def confirm(obsid=None):
                            or_dict = or_dict,
                            ocat_form_dict = ocat_form_dict,
                            ocat_data = ocat_data,
-                           change_dict = change_dict,
+                           org_dict = org_dict,
+                            req_dict = req_dict,
+                            display_org_rank = display_org_rank,
+                            display_req_rank = display_req_rank,
                            _LABELS = _LABELS,
                            )
 

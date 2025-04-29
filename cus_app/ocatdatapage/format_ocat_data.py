@@ -9,12 +9,13 @@ from astropy.coordinates import Angle
 from datetime import datetime
 import os
 from flask import current_app
-from cus_app.supple.read_ocat_data import _NULL_LIST, check_approval
+from cus_app.supple.read_ocat_data import check_approval
+from cus_app.supple.helper_functions import NULL_LIST, coerce_none
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
 _COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
 
-_SKIP_CHANGE_CHECK = [
+_FUNCTIONAL = [
     'multiobsid',
     'csrf_token',
     'template_time',
@@ -22,12 +23,41 @@ _SKIP_CHANGE_CHECK = [
     'template_window',
     'submit_choice',
     'submit',
-    'window_flag',
-    'time_ranks',
-    'roll_flag',
-    'roll_ranks',
-    'spwindow_flag',
-    'window_ranks'
+]
+
+#: Edge case handling in processing form changes for flag-dependent divs, since the form will still have that information
+_DITHER_PARAMS = [
+    'dither_flag',
+    'y_amp_asec',
+    'y_freq_asec',
+    'y_phase',
+    'z_amp_asec',
+    'z_freq_asec',
+    'z_phase',
+]
+
+_TIME_PARAMS = [
+    'window_constraint',
+    'tstart',
+    'tstop'
+]
+
+_ROLL_PARAMS = [
+    'roll_constraint',
+    'roll_180',
+    'roll',
+    'roll_tolerance'
+]
+
+_WINDOW_PARAMS = [
+    'chip',
+    'start_row',
+    'start_column',
+    'width',
+    'height',
+    'lower_threshold',
+    'pha_range',
+    'sample'
 ]
 
 _FLAG_2_RANK = {
@@ -35,6 +65,15 @@ _FLAG_2_RANK = {
     'roll_flag': 'roll_ranks',
     'spwindow_flag': 'window_ranks',
 }
+
+_FLAG_2_COLUMN = {
+    'window_flag': _TIME_PARAMS,
+    'roll_flag': _ROLL_PARAMS,
+    'spwindow_flag': _WINDOW_PARAMS
+}
+
+_SKIP_PARAM = _FUNCTIONAL + _TIME_PARAMS + _ROLL_PARAMS + _WINDOW_PARAMS + list(_FLAG_2_RANK.keys()) + list(_FLAG_2_RANK.values())
+
 
 def create_warning_line(ocat_data):
     """
@@ -232,13 +271,9 @@ def format_POST(ocat_form_dict):
     """
     Minor changes to listed form data after POST request and preparing ocat_form_dict
     """
-    def _coerce_none(val):
-        if val in _NULL_LIST:
-            return None
-        return val
     
     for k,v in ocat_form_dict.items():
-        ocat_form_dict[k] = _coerce_none(v)
+        ocat_form_dict[k] = coerce_none(v)
 
     if ocat_form_dict.get('window_flag') == 'Y':
         #: Check if needs to be preference instead
@@ -258,12 +293,14 @@ def format_POST(ocat_form_dict):
     return ocat_form_dict
 
 def determine_changes(ocat_form_dict, ocat_data):
-    """Iterate over select keys in the ocat_form_dict to identify revised parameters
+    """
+    Iterate over select keys in the ocat_form_dict to identify revised parameters
+    This generates the set of information used in filling out the Originals and Requests tables
     """
     #: Regular Changes
     change_dict = {}
     for key, new in ocat_form_dict.items():
-        if key in _SKIP_CHANGE_CHECK:
+        if key in _SKIP_PARAM:
             continue
         else:
             org = ocat_data.get(key)
@@ -385,7 +422,7 @@ def coerce(value):
             return value
         except (ValueError, TypeError):
             pass
-        if value in _NULL_LIST:
+        if value in NULL_LIST:
             return None #: Apply as coerce argument to any field to cast None to correct data type
         return value #: Simple string
     if isinstance(value,list):

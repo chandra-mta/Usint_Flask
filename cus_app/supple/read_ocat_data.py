@@ -10,7 +10,7 @@ from astropy.table import vstack
 import os
 import numpy as np
 from datetime import datetime
-from helper_functions import convert_astropy_to_native, OCAT_DATETIME_FORMAT
+from helper_functions import convert_astropy_to_native, OCAT_DATETIME_FORMAT, NULL_LIST
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from cus_app import db
@@ -52,8 +52,6 @@ _ACIS_PARAM_LIST = ['exp_mode', 'ccdi0_on', 'ccdi1_on', 'ccdi2_on', 'ccdi3_on', 
 
 _ACISWIN_PARAM_LIST = ['chip', 'start_row', 'start_column', 'width', 'height',\
               'lower_threshold', 'pha_range', 'sample']
-
-_NULL_LIST = (None,'NA', 'N/A', 'none','None', 'NONE', 'null', 'Null', 'NULL', '') #: List of database null string values we intend to be python native None
 
 def get_value_from_sybase(cmd):
     conn = sqsh.Sqsh(dbi='sybase', server=_SERV, database = _DB, user = _USR, authdir = _AUTHDIR)
@@ -123,7 +121,7 @@ def read_ocat_data(obsid):
     # --- Assign the variety of tables different null values to python native None
     #
     for k,v in p_dict.items():
-        if v in _NULL_LIST:
+        if v in NULL_LIST:
             p_dict[k] = None
     #
     # --- Planned Roll if it exists (EDGE CASE)
