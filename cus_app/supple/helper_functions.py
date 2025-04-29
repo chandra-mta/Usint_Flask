@@ -49,6 +49,7 @@ def coerce_number(val):
     return val
 
 def coerce_time(val):
+    """Parse a variety of different datatypes across CXC tools and data sources"""
     if isinstance(val, str):
         x = val.replace('::', ':')
         if x[-1] == "Z":
@@ -65,6 +66,9 @@ def coerce_json(val):
     """Coercion of python data type to a json-formatted string for data storage"""
     if val in ALL_NULL_SET:
         return None
+    elif isinstance(val, datetime):
+        #: Convert to ISO 8601 string then store
+        return json.dumps(val.strftime(STORAGE_FORMAT))
     else:
         return json.dumps(val)
 
