@@ -79,13 +79,13 @@
             <th class='cent'>Original Value</th>
             <th class='cent'>Requested</th>
         </tr>
-        {% for param in ocat_form_dict.keys() %}
+        {% for param in (org_dict.keys()|set).union(req_dict.keys()|set) %}
             {% if param not in skip_param%}
                 {% set ns.param_count = ns.param_count + 1 %}
                 {% if ns.param_count % 2 == 1 %}
                     <tr>
                 {% endif %}
-                    {{compare_param_values(param, ocat_form_dict, change_dict, _LABELS)}}
+                    {{compare_param_values(param, org_dict, req_dict, _LABELS)}}
                 {% if ns.param_count % 2 == 0 %}
                     </tr>
                 {% else %}
@@ -97,16 +97,7 @@
     <!-- remarks and comments need an extra step to display the format correctly -->
     <hr style='border-top: 1px dashed;'>
 
-    <h3>Remarks</h3>
-    <div style='margin-left: 50px; margin-right:50px;'>
-        {{ remark_section(ocat_form_dict.get('remarks'), change_dict.get('remarks')) }}
-    </div>
-    <hr style='border-top: 1px dashed;'>
 
-    <h3>Comments</h3>
-    <div style='margin-left: 50px; margin-right:50px;'>
-        {{ remark_section(ocat_form_dict.get('comments'), change_dict.get('comments')) }}
-    </div>
 
     <hr>
     <p>

@@ -49,15 +49,24 @@
 {% endmacro %}
 
 <!-- Confirmation Page Macros-->
-{% macro compare_param_values(param, ocat_form_dict, change_dict, _LABELS) %}
-    {% if param in change_dict.keys() %}
-        <th><span  style='color:red;'>{{ _LABELS.get(param)  }}</span></th>
-        <td><span  style='color:red;'>{{ change_dict.get(param)[0] }}</span></td>
-        <td><span  style='color:red;'>{{ change_dict.get(param)[0] }}</span></td>
+
+{% macro change_block(label,org,req) %}
+<th><span  style='color:red;'>{{ label  }}</span></th>
+<td><span  style='color:red;'>{{ org }}</span></td>
+<td><span  style='color:red;'>{{ req }}</span></td>
+{% endmacro%}
+
+{% macro no_change_block(label,org) %}
+<th>{{ label }} </th>
+<td>{{ org }}</td>
+<td>No Change</td>
+{% endmacro%}
+
+{% macro compare_param_values(param, org_dict, req_dict, _LABELS) %}
+    {% if param in req_dict.keys() %}
+        {{ change_block(_LABELS.get(param), org_dict.get(param), req_dict.get(param)) }}
     {% else %}
-        <th>{{ _LABELS.get(param) }} </th>
-        <td>{{ ocat_form_dict.get(param) }}</td>
-        <td>No Change</td>
+        {{ no_change_block(_LABELS.get(param), org_dict.get(param)) }}
     {% endif %}
 {% endmacro %}
 

@@ -10,7 +10,7 @@ from astropy.table import vstack
 import os
 import numpy as np
 from datetime import datetime
-from helper_functions import convert_astropy_to_native, OCAT_DATETIME_FORMAT, NULL_LIST
+from cus_app.supple.helper_functions import convert_astropy_to_native, OCAT_DATETIME_FORMAT, NULL_LIST
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from cus_app import db
