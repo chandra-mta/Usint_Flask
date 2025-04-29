@@ -106,13 +106,8 @@ def approx_equals(first,second):
         return False
     elif first is None and second is None:
         return True
-    elif isinstance(first, (float,int)):
+    elif isinstance(first, (float,int)) and isinstance(second, (float,int)):
         if abs(first - second) < 0.000001:
-            return True
-        else:
-            return False
-    elif isinstance(first, str):
-        if first == second:
             return True
         else:
             return False
