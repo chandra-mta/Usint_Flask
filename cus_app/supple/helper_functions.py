@@ -12,6 +12,75 @@ import itertools
 from datetime import datetime
 import astropy.table
 from astropy.coordinates import Angle
+#
+# --- Classes
+#
+class IterateRecords:
+    """Iterating through a records oriented object"""
+    def __init__(self,list1, list2):
+        self.list1 = list1
+        self.list2 = list2
+        self.top_level_iterator = enumerate(itertools.zip_longest(self.list1 or [],self.list2 or [],fillvalue={}))
+        _ = next(self.top_level_iterator)
+        self.order = _[0]
+        self.inner_iterator = itertools.zip_longest(_[1][0].keys() or _[1][1].keys(),
+                                                                   _[1][0].values(),
+                                                                   _[1][1].values(),
+                                                                  fillvalue=None)
+    def __iter__(self):
+        return self
+
+    
+    def __next__(self):
+        try:
+            param, org, req = next(self.inner_iterator)
+            return self.order, param, org, req
+        except StopIteration:
+            _ = next(self.top_level_iterator)
+            self.order = _[0]
+            self.inner_iterator = itertools.zip_longest(_[1][0].keys() or _[1][1].keys(),
+                                                                       _[1][0].values(),
+                                                                       _[1][1].values(),
+                                                                      fillvalue=None)
+            
+        return self.__next__()
+
+class IterateColumns:
+    """Iterating through a columns oriented object"""
+    
+    def __get_more__(self,obj,key):
+        if obj == None:
+            return None
+        else:
+            return obj[key]
+    
+    def __init__(self,dict1, dict2):
+        self.dict1 = dict1
+        self.dict2 = dict2
+        self.top_level_iterator = iter(self.dict1.keys() or self.dict2.keys())
+        _ = next(self.top_level_iterator)
+        self.parameter = _
+        self.inner_iterator = enumerate(itertools.zip_longest(get_more(self.dict1, _) or [],
+                                                                 get_more(self.dict2, _) or [],
+                                                                 fillvalue=None
+                                                                ))
+    def __iter__(self):
+        return self
+
+    
+    def __next__(self):
+        try:
+            i, (org, req) = next(self.inner_iterator)
+            return i, self.parameter, org, req
+        except StopIteration:
+            _ = next(self.top_level_iterator)
+            self.parameter = _
+            self.inner_iterator = enumerate(itertools.zip_longest(get_more(self.dict1, _) or [],
+                                                                 get_more(self.dict2, _) or [],
+                                                                 fillvalue=None
+                                                                ))
+            
+        return self.__next__()
 
 #
 # --- Globals
@@ -162,7 +231,7 @@ def reorient_rank(ranks, orient):
     'records' is an ordered list of ranks, each entry being a dictionary of parameter name to value for that numbered rank
     'columns' is a dictionary of parameter columns, each entry matching an ordered list of values
     """
-    if ranks is None:
+    if ranks in (None, [], {}):
         return None
     if orient not in ('records', 'columns'):
         raise ValueError(f"Provide object orient [records, columns]. Provided orient: {orient}.")
