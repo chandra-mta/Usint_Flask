@@ -78,8 +78,12 @@ def coerce_json(val):
         return json.dumps(val)
 
 def coerce(val):
+    if isinstance(val, (list, tuple)):
+        return [coerce(x) for x in val]
+    elif isinstance(val, dict):
+        return {k:coerce(v) for k,v in val.items()}
     #: Null section
-    if val in ALL_NULL_SET:
+    elif val in ALL_NULL_SET:
         return None
     #: Number section
     val = coerce_number(val)
