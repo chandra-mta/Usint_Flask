@@ -664,7 +664,7 @@
         <hr>
         <!------------------------------------------------------------------------------------------------------------------------------->
         <h2>Options</h2>
-        {% if ocat_data.get('status') in ['unobserved', 'scheduled', 'untriggered'] %}
+        {% if ocat_data.get('status') in ['unobserved', 'scheduled', 'untriggered'] or config['REV_VERSION'] == 'test_database' %}
         <table>
             <tr>
             <th>Normal Change</th>
