@@ -45,7 +45,7 @@
         "pha_range",
         "sample"
     ],
-    "regular_confirmation": [
+    "basic_params": [
         "instrument",
         "grating",
         "obs_type",
@@ -65,12 +65,6 @@
         "est_cnt_rate",
         "forder_cnt_rate",
         "dither_flag",
-        "y_amp_asec",
-        "y_freq_asec",
-        "y_phase",
-        "z_amp_asec",
-        "z_freq_asec",
-        "z_phase",
         "window_flag",
         "roll_flag",
         "constr_in_remarks",
@@ -120,26 +114,6 @@
         "multiple_spectral_lines",
         "spectra_max_count",
         "spwindow_flag"
-    ],
-    "rank_confirmation": [
-        "window_flag",
-        "window_constraint",
-        "tstart",
-        "tstop",
-        "roll_flag",
-        "roll_constraint",
-        "roll_180",
-        "roll",
-        "roll_tolerance",
-        "spwindow_flag",
-        "chip",
-        "start_row",
-        "start_column",
-        "width",
-        "height",
-        "lower_threshold",
-        "pha_range",
-        "sample"
     ],
     "usint_created": [
         "ra_hms",

@@ -275,8 +275,8 @@ def construct_entries(ocat_form_dict, ocat_data):
     Iterate over select keys in the ocat_form_dict to identify revised parameters
     This generates the set of information used in filling out the Originals and Requests tables
 
-    :Note: Original state information entries are only written if the value is non-null.
-    Request change entries are only written if the parameter has changed from Original
+    :Note: Original state information entries are all recorded for comparison purposes, but only put into the SQL database if non-null.
+    Request change entries are only recorded if the parameter has changed from the Original
     """
 
     org_dict = {}
@@ -285,16 +285,14 @@ def construct_entries(ocat_form_dict, ocat_data):
     display_req_rank = {}
 
     #: Regular Changes
-    for param in _PARAM_SELECTIONS['regular_confirmation'] + _PARAM_SELECTIONS['usint_created']:
+    for param in _PARAM_SELECTIONS['basic_params'] + _PARAM_SELECTIONS['usint_created']:
         org = coerce(ocat_data.get(param))
         req = coerce(ocat_form_dict.get(param))
-        if org is not None:
-            org_dict[param] = org
+        org_dict[param] = org 
         if not approx_equals(org, req):
             req_dict[param] = req
-    
     #: Dither Set (This is a special case of a div-dependent flag which doesn't process list changes)
-    dither_org, dither_req = process_flag_set(ocat_data, ocat_form_dict, _DITHER_PARAMS, 'dither_flag')
+    dither_org, dither_req = process_flag_set(ocat_data, ocat_form_dict, _PARAM_SELECTIONS['dither_params_usint'] + _PARAM_SELECTIONS['dither_params_ocat'], 'dither_flag')
     org_dict.update(dither_org)
     req_dict.update(dither_req)
 
@@ -304,7 +302,7 @@ def construct_entries(ocat_form_dict, ocat_data):
 
 def process_flag_set(ocat_data, ocat_form_dict, param_set, flag):
 
-    org_dict = {}
+    org_dict = {k:None for k in param_set}
     req_dict = {}
 
     #: Flag changes
@@ -312,21 +310,20 @@ def process_flag_set(ocat_data, ocat_form_dict, param_set, flag):
         return org_dict, req_dict #: No information
     
     elif ocat_data.get(flag) == 'N' and ocat_form_dict.get(flag) in ('Y', 'P'):
+        #: No original values, but new requested ones
         for param in param_set:
-            tmp_req = coerce(ocat_form_dict.get(param))
-            req_dict[param] = tmp_req
+            req_dict[param] = coerce(ocat_form_dict.get(param))
 
     elif ocat_data.get(flag) in ('Y', 'P') and ocat_form_dict.get(flag) == 'N':
+        #: Original values exist, but must be recorded as nullified
         for param in param_set:
-            tmp_org = coerce(ocat_data.get(param))
-            if tmp_org is not None:
-                org_dict[param] = tmp_org
+            org_dict[param] = coerce(ocat_data.get(param))
+            req_dict[param] = None
     else:
         for param in param_set:
-            tmp_org = coerce(ocat_data.get(param))
-            tmp_req = coerce(ocat_form_dict.get(param))
-            if tmp_org is not None:
-                org_dict[param] = tmp_org
-            if not approx_equals(tmp_org, tmp_req):
-                req_dict[param] = tmp_req
+            org = coerce(ocat_data.get(param))
+            req = coerce(ocat_form_dict.get(param))
+            org_dict[param] = org
+            if not approx_equals(org, req):
+                req_dict[param] = req
     return org_dict, req_dict

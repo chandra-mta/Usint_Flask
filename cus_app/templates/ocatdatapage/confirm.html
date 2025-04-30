@@ -79,18 +79,16 @@
             <th class='cent'>Original Value</th>
             <th class='cent'>Requested</th>
         </tr>
-        {% for param in _PARAM_SELECTIONS.get('regular_confirmation') %}
-            {% if param not in skip_param%}
-                {% set ns.param_count = ns.param_count + 1 %}
-                {% if ns.param_count % 2 == 1 %}
-                    <tr>
-                {% endif %}
-                    {{compare_param_values(param, org_dict, req_dict, _LABELS)}}
-                {% if ns.param_count % 2 == 0 %}
-                    </tr>
-                {% else %}
-                    <td> &#160;</td>
-                {% endif %}
+        {% for param in _PARAM_SELECTIONS['basic_params'][:19] + _PARAM_SELECTIONS['dither_params_usint'] + _PARAM_SELECTIONS['basic_params'][19:]%}
+            {% set ns.param_count = ns.param_count + 1 %}
+            {% if ns.param_count % 2 == 1 %}
+                <tr>
+            {% endif %}
+                {{compare_param_values(param, org_dict, req_dict, _LABELS)}}
+            {% if ns.param_count % 2 == 0 %}
+                </tr>
+            {% else %}
+                <td> &#160;</td>
             {% endif %}
         {% endfor %}
     </table>
