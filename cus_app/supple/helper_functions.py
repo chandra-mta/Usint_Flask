@@ -11,6 +11,7 @@ import json
 import itertools
 from datetime import datetime
 import astropy.table
+from astropy.coordinates import Angle
 
 #
 # --- Globals
@@ -243,3 +244,41 @@ def convert_astropy_to_native(astropy_object, orient = None):
     
     elif hasattr(astropy_object, 'tolist'):
         return astropy_object.tolist()
+
+#
+# --- Calculative Functions
+#
+def convert_ra_dec_format(dra, ddec, oformat):
+    """
+    convert ra/dec format
+    input:  dra     --- either <hh>:<mm>:<ss> or <dd.ddddd> format
+            ddec    --- either <dd>:<mm>:<ss> or <ddd.ddddd> format
+            oformat --- specify output format as either 'dd', or 'hmsdms'
+
+    output: tra     --- either <hh>:<mm>:<ss> or <dd.ddddd> format
+            tdec    --- either <dd>:<mm>:<ss> or <ddd.ddddd> format
+    """
+    #
+    #--- Define input format
+    #
+    if ":" in str(ddec):
+        iformat = 'hmsdms'
+    else:
+        iformat = 'dd'
+    #
+    #--- Switch formats
+    #
+    if iformat == 'dd' and oformat == 'hmsdms':
+        angle_ra = Angle(f"{dra} degrees")
+        tra = str(angle_ra.to_string(sep=":",pad=True,precision=4,unit='hourangle'))
+        angle_dec = Angle(f"{ddec} degrees")
+        tdec = str(angle_dec.to_string(sep=":",pad=True,precision=4,alwayssign=True,unit='degree'))
+    elif iformat == 'hmsdms' and oformat == 'dd':
+        angle_ra = Angle(f"{dra} hours")
+        tra = float(angle_ra.to_string(decimal=True,precision=6,unit='degree'))
+        angle_dec = Angle(f"{ddec} degrees")
+        tdec = float(angle_dec.to_string(decimal=True,precision=6,unit='degree'))
+    else:
+        return dra, ddec
+    
+    return tra,tdec

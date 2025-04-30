@@ -5,13 +5,12 @@
 :Last Updated: Mar 18, 2025
 
 """
-from astropy.coordinates import Angle
 from datetime import datetime
 import os
 import json
 from flask import current_app
 from cus_app.supple.read_ocat_data import check_approval
-from cus_app.supple.helper_functions import NULL_LIST, coerce_none, coerce, approx_equals
+from cus_app.supple.helper_functions import NULL_LIST, coerce_none, coerce, approx_equals, convert_ra_dec_format
 import itertools
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -236,41 +235,6 @@ def generate_additional(ocat_data):
         if val is not None:
             additional[f'{key}_asec'] = val * 3600
     return additional
-
-def convert_ra_dec_format(dra, ddec, oformat):
-    """
-    convert ra/dec format
-    input:  dra     --- either <hh>:<mm>:<ss> or <dd.ddddd> format
-            ddec    --- either <dd>:<mm>:<ss> or <ddd.ddddd> format
-            oformat --- specify output format as either 'dd', or 'hmsdms'
-
-    output: tra     --- either <hh>:<mm>:<ss> or <dd.ddddd> format
-            tdec    --- either <dd>:<mm>:<ss> or <ddd.ddddd> format
-    """
-    #
-    #--- Define input format
-    #
-    if ":" in str(ddec):
-        iformat = 'hmsdms'
-    else:
-        iformat = 'dd'
-    #
-    #--- Switch formats
-    #
-    if iformat == 'dd' and oformat == 'hmsdms':
-        angle_ra = Angle(f"{dra} degrees")
-        tra = str(angle_ra.to_string(sep=":",pad=True,precision=4,unit='hourangle'))
-        angle_dec = Angle(f"{ddec} degrees")
-        tdec = str(angle_dec.to_string(sep=":",pad=True,precision=4,alwayssign=True,unit='degree'))
-    elif iformat == 'hmsdms' and oformat == 'dd':
-        angle_ra = Angle(f"{dra} hours")
-        tra = float(angle_ra.to_string(decimal=True,precision=6,unit='degree'))
-        angle_dec = Angle(f"{ddec} degrees")
-        tdec = float(angle_dec.to_string(decimal=True,precision=6,unit='degree'))
-    else:
-        return dra, ddec
-    
-    return tra,tdec
 
 def format_POST(ocat_form_dict):
     """
