@@ -243,6 +243,15 @@ def format_POST(ocat_form_dict):
     
     for k,v in ocat_form_dict.items():
         ocat_form_dict[k] = coerce_none(v)
+    
+    #: Include ocat-formatted copies of coordinate and dither parameters
+    ra, dec = convert_ra_dec_format(ocat_form_dict.get('ra_hms'),ocat_form_dict.get('dec_dms') , 'dd')
+    ocat_form_dict['ra'] = ra
+    ocat_form_dict['dec'] = dec
+    for key in ('y_amp', 'y_freq', 'z_amp', 'z_freq'):
+        val = ocat_form_dict.get(f'{key}_asec')
+        if val is not None:
+            ocat_form_dict[key] = val / 3600
 
     if ocat_form_dict.get('window_flag') == 'Y':
         #: Check if needs to be preference instead

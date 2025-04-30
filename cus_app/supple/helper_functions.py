@@ -258,6 +258,8 @@ def convert_ra_dec_format(dra, ddec, oformat):
     output: tra     --- either <hh>:<mm>:<ss> or <dd.ddddd> format
             tdec    --- either <dd>:<mm>:<ss> or <ddd.ddddd> format
     """
+    if dra is None and ddec is None:
+        return None, None
     #
     #--- Define input format
     #
