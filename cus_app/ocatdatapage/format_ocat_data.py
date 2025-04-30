@@ -10,7 +10,7 @@ import os
 import json
 from flask import current_app
 from cus_app.supple.read_ocat_data import check_approval
-from cus_app.supple.helper_functions import NULL_LIST, coerce_none, coerce, approx_equals, convert_ra_dec_format
+from cus_app.supple.helper_functions import NULL_LIST, coerce_none, coerce, approx_equals, convert_ra_dec_format, reorient_rank
 import itertools
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -78,6 +78,12 @@ _FLAG_2_COLUMN = {
 
 _SKIP_PARAM = _FUNCTIONAL + _TIME_PARAMS + _ROLL_PARAMS + _WINDOW_PARAMS + list(_FLAG_2_RANK.keys()) + list(_FLAG_2_RANK.values())
 
+
+_FLAG_RANK_COLUMN_ORDR = (
+    ('window_flag', 'time_ranks', 'time_columns', 'time_ordr'),
+    ('roll_flag', 'roll_ranks', 'roll_columns', 'roll_ordr'),
+    ('spwindow_flag', 'window_ranks', 'window_columns', 'window_ordr')
+)
 
 def create_warning_line(ocat_data):
     """
@@ -281,8 +287,6 @@ def construct_entries(ocat_form_dict, ocat_data):
 
     org_dict = {}
     req_dict = {}
-    display_org_rank = {}
-    display_req_rank = {}
 
     #: Regular Changes
     for param in _PARAM_SELECTIONS['basic_params'] + _PARAM_SELECTIONS['usint_created']:
@@ -296,9 +300,21 @@ def construct_entries(ocat_form_dict, ocat_data):
     org_dict.update(dither_org)
     req_dict.update(dither_req)
 
-    #: rank set
+    #: Rank set
+    #: Include copy of the times ranks in columns orientation into the comparison dictionaries
+    for flag, ranks, columns, ordr in _FLAG_RANK_COLUMN_ORDR:
+        org_columns = reorient_rank(ocat_data.get(ranks), 'columns')
+        req_columns = reorient_rank(ocat_form_dict.get(ranks), 'columns')
+        if org_columns is not None:
+            ocat_data.update(org_columns)
+        if req_columns is not None:
+            ocat_form_dict.update(req_columns)
 
-    return org_dict, req_dict, display_org_rank, display_req_rank
+        org, req = process_flag_set(ocat_data, ocat_form_dict, _PARAM_SELECTIONS[columns] + [ranks], flag)
+        org_dict.update(org)
+        req_dict.update(req)
+
+    return org_dict, req_dict
 
 def process_flag_set(ocat_data, ocat_form_dict, param_set, flag):
 
