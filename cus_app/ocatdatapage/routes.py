@@ -108,7 +108,7 @@ def confirm(obsid=None):
                             req_dict = req_dict,
                             _LABELS = _LABELS,
                             _PARAM_SELECTIONS = _PARAM_SELECTIONS,
-                            _FLAG_RANK_COLUMN = fod._FLAG_RANK_COLUMN,
+                            _FLAG_RANK_COLUMN_ORDR = fod._FLAG_RANK_COLUMN_ORDR,
                            )
 
 @bp.route('/finalize/<obsid>', methods=['GET', 'POST'])

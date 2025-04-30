@@ -13,7 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import _CONFIG_DICT
 from itertools import zip_longest
-from cus_app.supple.helper_functions import rank_ordr, IterateRecords
+from cus_app.supple.helper_functions import rank_ordr, approx_equals
 
 bootstrap = Bootstrap()
 db = SQLAlchemy()
@@ -24,7 +24,8 @@ function_dict = {
     'zip_longest': zip_longest,
     'set': set,
     'rank_ordr': rank_ordr,
-    'enumerate': enumerate
+    'enumerate': enumerate,
+    'approx_equals': approx_equals
 }
 def create_app(_configuration_name):
     app = Flask(__name__)

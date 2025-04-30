@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% from 'ocatdatapage/macros.html' import compare_param_values, remark_section  %}
+{% from 'ocatdatapage/macros.html' import compare_param_values, change_block, no_change_block, compare_values, remark_section  %}
 
 {% block title %}Ocat Data Page{% endblock %}
 {% block main_title %}Ocat Data Page{% endblock %}
@@ -16,8 +16,7 @@
     {% endif %}
 {% endwith %}
 
-{% set ns = namespace(multi_count=0, multi_orcnt=0, param_count=0) %}
-{% set skip_param = ('time_ranks', 'roll_ranks', 'window_ranks', 'multiobsid', 'template_time', 'template_roll', 'template_window', 'csrf_token', 'submit', 'submit_choice', 'remarks', 'comments')%}
+{% set ns = namespace(multi_count=0, multi_orcnt=0, param_count=0, rank_count=0) %}
 
 <form method="POST">
 <!-- TODO asis, remove, clone case. Either here or separate confirmation page?-->
@@ -92,6 +91,76 @@
             {% endif %}
         {% endfor %}
     </table>
+    <!-- Rank display table starts here-->
+    <h3>Ordered Entries</h3>
+    <table border=1 class='center' style='border-spacing:5px; border-collapse: separate;'>
+        <tr>
+            <th class='cent'>Parameter</th>
+            <th class='cent'>Original Value</th>
+            <th class='cent'>Requested</th>
+            <th>&#160;</th>
+            <th class='cent'>Parameter</th>
+            <th class='cent'>Original Value</th>
+            <th class='cent'>Requested</th>
+        </tr>
+         {% for flag, ranks, columns, ordr in _FLAG_RANK_COLUMN_ORDR%}
+            {% set org_ordr = rank_ordr(org_dict.get(ranks)) %}
+            {% if ranks in req_dict.keys() %}
+                {% set req_ordr = rank_ordr(req_dict.get(ranks)) %}
+            {% else%}
+                {% set req_ordr = org_ordr %}
+            {% endif%}
+            <tr><th colspan=7  style='background-color:#a8f0bb;'>{{ _LABELS.get(ranks) }}</th></tr>
+            <tr>
+                {{compare_param_values(flag, org_dict, req_dict, _LABELS)}}
+                <th>&#160;</th>
+                {% if org_ordr == req_ordr %}
+                    {{ no_change_block(_LABELS.get(ordr), org_ordr) }}
+                {% else %}
+                    {{ change_block(_LABELS.get(ordr), org_ordr, req_ordr) }}
+                {% endif %}
+            </tr>
+            {% if not (org_dict.get(flag) == 'N' and req_dict.get(flag) == None) %}
+                {% for i, (org_rank,req_rank) in enumerate(zip_longest(org_dict.get(ranks) or [], req_dict.get(ranks) or [],fillvalue={})) %}
+                <!--Iterating by order-->
+                <tr>
+                    {% if set(req_rank.values()) == set([None]) %}
+                    <th colspan=7 style='background-color:rgb(255,0,0, 0.2);'>
+                        Order = {{ i+1 }} (Deleted)
+                    </th>
+                    {% else %}
+                    <th colspan=7 style='background-color:#e6fff2;'>
+                        Order = {{ i+1 }}
+                    </th>
+                    {% endif%}
+                </tr>
+                {% set ns.rank_count = 0 %}
+                {% for col, org, req in zip_longest(org_rank.keys() or req_rank.keys(), org_rank.values(), req_rank.values(), fillvalue=None) %}
+                {% if not (col in _PARAM_SELECTIONS["functional_form_keys"] or col == None) %}
+                    {% set ns.rank_count = ns.rank_count + 1 %}
+                    {% if ns.rank_count % 2 == 1 %}
+                        <tr>
+                    {% endif %}
+                        {% if col in req_rank.keys() %}
+                        <!-- A change has been requested-->
+                            {{ change_block(_LABELS.get(col), org, req)}}
+                        {% else %}
+                        <!-- No change has been requested-->
+                            {{ no_change_block(_LABELS.get(col), org)}}
+                        {% endif %}
+                    {% if ns.rank_count % 2 == 0 %}
+                        </tr>
+                    {% else %}
+                        <td> &#160;</td>
+                    {% endif %}
+                {% endif %}
+                {% endfor %}
+                {% endfor %}
+            {% endif %}
+
+         {% endfor %}
+    </table>
+
     <!-- remarks and comments need an extra step to display the format correctly -->
     <hr style='border-top: 1px dashed;'>
 

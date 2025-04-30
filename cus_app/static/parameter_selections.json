@@ -2,6 +2,7 @@
     "functional_form_keys": [
         "multiobsid",
         "csrf_token",
+        "remove_rank",
         "template_time",
         "template_roll",
         "template_window",

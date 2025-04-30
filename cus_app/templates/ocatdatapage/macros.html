@@ -71,10 +71,10 @@
 {% endmacro %}
 
 {% macro compare_values(org, req, label) %}
-    {% if req == None %}
-        {{ no_change_block(label, org) }}
-    {% else %}
+    {% if approx_equals(org,req) %}
         {{ change_block(label, org, req) }}
+    {% else %}
+        {{ no_change_block(label, org) }}
     {% endif %}
 {% endmacro %}
 
