@@ -284,3 +284,13 @@ def convert_ra_dec_format(dra, ddec, oformat):
         return dra, ddec
     
     return tra,tdec
+
+def rank_ordr(ranks):
+    if ranks is None:
+        return 0
+    elif isinstance(ranks, list):
+        #: records orientation
+        return len(ranks)
+    elif isinstance(ranks, dict):
+        #: Columns orientation
+        return max([len(v) for v in ranks.values()])

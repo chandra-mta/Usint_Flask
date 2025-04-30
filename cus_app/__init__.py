@@ -13,6 +13,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import _CONFIG_DICT
 from itertools import zip_longest
+from cus_app.supple.helper_functions import rank_ordr
 
 bootstrap = Bootstrap()
 db = SQLAlchemy()
@@ -26,6 +27,7 @@ def create_app(_configuration_name):
     app = Flask(__name__)
     app.jinja_env.filters['enumerate'] = enumerate
     app.jinja_env.filters['set'] = set
+    app.jinja_env.filters['rank_ordr'] = rank_ordr
     app.jinja_env.globals.update(function_dict)
     app.config.from_object(_CONFIG_DICT[_configuration_name])
     app.config['SESSION_SQLALCHEMY'] = db #: Must set the SQLAlchemy database for server-side session data after construction
