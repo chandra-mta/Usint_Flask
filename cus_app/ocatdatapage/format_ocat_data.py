@@ -18,66 +18,6 @@ with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
-_COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
-
-_FUNCTIONAL = [
-    'multiobsid',
-    'csrf_token',
-    'template_time',
-    'template_roll',
-    'template_window',
-    'submit_choice',
-    'submit',
-]
-
-#: Edge case handling in processing form changes for flag-dependent divs, since the form will still have that information
-_DITHER_PARAMS = [
-    'y_amp_asec',
-    'y_freq_asec',
-    'y_phase',
-    'z_amp_asec',
-    'z_freq_asec',
-    'z_phase',
-]
-
-_TIME_PARAMS = [
-    'window_constraint',
-    'tstart',
-    'tstop'
-]
-
-_ROLL_PARAMS = [
-    'roll_constraint',
-    'roll_180',
-    'roll',
-    'roll_tolerance'
-]
-
-_WINDOW_PARAMS = [
-    'chip',
-    'start_row',
-    'start_column',
-    'width',
-    'height',
-    'lower_threshold',
-    'pha_range',
-    'sample'
-]
-
-_FLAG_2_RANK = {
-    'window_flag': 'time_ranks',
-    'roll_flag': 'roll_ranks',
-    'spwindow_flag': 'window_ranks',
-}
-
-_FLAG_2_COLUMN = {
-    'window_flag': _TIME_PARAMS,
-    'roll_flag': _ROLL_PARAMS,
-    'spwindow_flag': _WINDOW_PARAMS
-}
-
-_SKIP_PARAM = _FUNCTIONAL + _TIME_PARAMS + _ROLL_PARAMS + _WINDOW_PARAMS + list(_FLAG_2_RANK.keys()) + list(_FLAG_2_RANK.values())
-
 
 _FLAG_RANK_COLUMN_ORDR = (
     ('window_flag', 'time_ranks', 'time_columns', 'time_ordr'),
