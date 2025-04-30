@@ -40,7 +40,8 @@ import cus_app.ocatdatapage.format_ocat_data as fod
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'labels.json')) as f:
     _LABELS = json.load(f)
-
+with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
+    _PARAM_SELECTIONS = json.load(f)
 
 @bp.before_app_request
 def before_request():
@@ -99,17 +100,18 @@ def confirm(obsid=None):
             session[f'multi_obsid_{obsid}'] = multi_obsid
             return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
     return render_template('ocatdatapage/confirm.html',
-                           form = form,
-                           obsid = obsid,
-                           multi_obsid = multi_obsid,
-                           or_dict = or_dict,
-                           ocat_form_dict = ocat_form_dict,
-                           ocat_data = ocat_data,
-                           org_dict = org_dict,
+                            form = form,
+                            obsid = obsid,
+                            multi_obsid = multi_obsid,
+                            or_dict = or_dict,
+                            ocat_form_dict = ocat_form_dict,
+                            ocat_data = ocat_data,
+                            org_dict = org_dict,
                             req_dict = req_dict,
                             display_org_rank = display_org_rank,
                             display_req_rank = display_req_rank,
-                           _LABELS = _LABELS,
+                            _LABELS = _LABELS,
+                            _PARAM_SELECTIONS = _PARAM_SELECTIONS,
                            )
 
 @bp.route('/finalize/<obsid>', methods=['GET', 'POST'])

@@ -8,10 +8,15 @@
 from astropy.coordinates import Angle
 from datetime import datetime
 import os
+import json
 from flask import current_app
 from cus_app.supple.read_ocat_data import check_approval
 from cus_app.supple.helper_functions import NULL_LIST, coerce_none, coerce, approx_equals
 import itertools
+
+stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
+with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
+    _PARAM_SELECTIONS = json.load(f)
 
 _OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
 _COMBINE_DATETIME_FORMAT = "%b%d%Y%H:%M"
@@ -307,16 +312,13 @@ def construct_entries(ocat_form_dict, ocat_data):
     display_req_rank = {}
 
     #: Regular Changes
-    for param, org, req in itertools.zip_longest(ocat_form_dict.keys(), ocat_data.values(), ocat_form_dict.values(), fillvalue=None):
-        if param in _SKIP_PARAM:
-            continue
-        else:
-            tmp_org = coerce(org)
-            tmp_req = coerce(req)
-            if tmp_org is not None:
-                org_dict[param] = tmp_org
-            if not approx_equals(tmp_org, tmp_req):
-                req_dict[param] = tmp_req
+    for param in _PARAM_SELECTIONS['regular_confirmation'] + _PARAM_SELECTIONS['usint_created']:
+        org = coerce(ocat_data.get(param))
+        req = coerce(ocat_form_dict.get(param))
+        if org is not None:
+            org_dict[param] = org
+        if not approx_equals(org, req):
+            req_dict[param] = req
     
     #: Dither Set (This is a special case of a div-dependent flag which doesn't process list changes)
     dither_org, dither_req = process_flag_set(ocat_data, ocat_form_dict, _DITHER_PARAMS, 'dither_flag')

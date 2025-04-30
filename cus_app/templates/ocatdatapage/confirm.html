@@ -79,7 +79,7 @@
             <th class='cent'>Original Value</th>
             <th class='cent'>Requested</th>
         </tr>
-        {% for param in (org_dict.keys()|set).union(req_dict.keys()|set) %}
+        {% for param in _PARAM_SELECTIONS.get('regular_confirmation') %}
             {% if param not in skip_param%}
                 {% set ns.param_count = ns.param_count + 1 %}
                 {% if ns.param_count % 2 == 1 %}
