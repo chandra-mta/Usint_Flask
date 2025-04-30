@@ -70,6 +70,14 @@
     {% endif %}
 {% endmacro %}
 
+{% macro compare_values(org, req, label) %}
+    {% if req == None %}
+        {{ no_change_block(label, org) }}
+    {% else %}
+        {{ change_block(label, org, req) }}
+    {% endif %}
+{% endmacro %}
+
 {% macro remark_section(original, remark_change) %}
     {% if remark_change != None %}
         <h4 style='text-decoration: underline;'>Original</h4>

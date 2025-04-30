@@ -279,7 +279,7 @@
                 {% endfor %}
             </thead>
             <tbody>
-            {% for i, time_rank in form.time_ranks | enumerate %}
+            {% for i, time_rank in enumerate(form.time_ranks) %}
                 {{ render_rank(i,time_rank) }}
             {% endfor%}
             </tbody>
@@ -314,7 +314,7 @@
                 {% endfor %}
             </thead>
             <tbody>
-            {% for i, roll_rank in form.roll_ranks | enumerate %}
+            {% for i, roll_rank in enumerate(form.roll_ranks) %}
                 {{ render_rank(i,roll_rank) }}
             {% endfor%}
             </tbody>
@@ -577,7 +577,7 @@
                         {% endfor %}
                     </thead>
                     <tbody>
-                    {% for i, window_rank in form.window_ranks | enumerate %}
+                    {% for i, window_rank in enumerate(form.window_ranks) %}
                         {{ render_rank(i,window_rank) }}
                     {% endfor%}
                     </tbody>
