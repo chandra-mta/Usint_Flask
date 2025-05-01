@@ -25,7 +25,8 @@ function_dict = {
     'set': set,
     'rank_ordr': rank_ordr,
     'enumerate': enumerate,
-    'approx_equals': approx_equals
+    'approx_equals': approx_equals,
+    'zip': zip
 }
 def create_app(_configuration_name):
     app = Flask(__name__)

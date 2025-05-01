@@ -71,11 +71,78 @@
 {% endmacro %}
 
 {% macro compare_values(org, req, label) %}
-    {% if approx_equals(org,req) %}
+    {% if not approx_equals(org,req) %}
         {{ change_block(label, org, req) }}
     {% else %}
         {{ no_change_block(label, org) }}
     {% endif %}
+{% endmacro %}
+
+{% macro rank_compare_param_values(i, org_rank, req_rank, _LABELS) %}
+        <!--Include determination of a rank has been deleted or added-->
+        {% set ns = namespace(ordr=i+1, rank_count=0) %}
+        {% if org_rank|length == 0 %}
+            {% set kind = 'add' %}
+        {% elif req_rank|length == 0 %}
+            {% set kind = 'remove' %}
+        {% else %}
+            {% set kind = 'compare'%}
+        {% endif %}
+        <tr>
+            {% if kind == 'remove' %}
+            <th colspan=7 style='background-color:rgb(255,0,0, 0.2);'>
+                Order = {{ ns.ordr }} (Deleted)
+            </th>
+            {% else %}
+            <th colspan=7 style='background-color:#e6fff2;'>
+                Order = {{ ns.ordr }}
+            </th>
+            {% endif%}
+        </tr>
+        {% set ns.rank_count = 0 %}
+        {% if kind == 'add' %}
+            <!-- New Ordered Rank-->
+            {% for col, req in req_rank.items() %}
+                {% set ns.rank_count = ns.rank_count + 1 %}
+                {% if ns.rank_count % 2 == 1 %}
+                    <tr>
+                {% endif %}
+                {{ change_block(_LABELS.get(col), None, req)}}
+                {% if ns.rank_count % 2 == 0 %}
+                    </tr>
+                {% else %}
+                    <td> &#160;</td>
+                {% endif %}
+            {% endfor %}
+        {% elif kind == 'remove' %}
+            <!-- Remove Ordered Rank-->
+            {% for col, org in org_rank.items() %}
+                {% set ns.rank_count = ns.rank_count + 1 %}
+                {% if ns.rank_count % 2 == 1 %}
+                    <tr>
+                {% endif %}
+                {{ change_block(_LABELS.get(col), org, None)}}
+                {% if ns.rank_count % 2 == 0 %}
+                    </tr>
+                {% else %}
+                    <td> &#160;</td>
+                {% endif %}
+            {% endfor %}
+        {% elif kind == 'compare' %}
+            <!-- compare Ordered Rank-->
+            {% for col, org, req in zip(org_rank.keys(), org_rank.values(), req_rank.values()) %}
+                {% set ns.rank_count = ns.rank_count + 1 %}
+                {% if ns.rank_count % 2 == 1 %}
+                    <tr>
+                {% endif %}
+                {{ compare_values(org, req, _LABELS.get(col))}}
+                {% if ns.rank_count % 2 == 0 %}
+                    </tr>
+                {% else %}
+                    <td> &#160;</td>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
 {% endmacro %}
 
 {% macro remark_section(original, remark_change) %}

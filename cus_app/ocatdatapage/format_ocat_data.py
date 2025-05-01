@@ -10,7 +10,7 @@ import os
 import json
 from flask import current_app
 from cus_app.supple.read_ocat_data import check_approval
-from cus_app.supple.helper_functions import NULL_LIST, coerce_none, coerce, approx_equals, convert_ra_dec_format, reorient_rank
+from cus_app.supple.helper_functions import coerce_none, coerce, approx_equals, convert_ra_dec_format, reorient_rank
 import itertools
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -182,19 +182,24 @@ def generate_additional(ocat_data):
             additional[f'{key}_asec'] = val * 3600
     return additional
 
-def clean_POST(input_dict):
+def clean_POST(input_obj):
     """
     Perform coercion which is ignored in Flask-WTF forms and drop undesired values
     """
-    output_dict = {}
-    
-    for k,v in input_dict.items():
-        if k not in _PARAM_SELECTIONS['clean_POST']:
-            if isinstance(v,dict):
-                output_dict[k] = clean_POST(v)
-            else:
-                output_dict[k] = coerce_none(v)
-    return output_dict
+    if isinstance(input_obj, list):
+        return [clean_POST(item) for item in input_obj]
+    elif isinstance(input_obj, dict):
+        output_obj = {}
+        for k,v in input_obj.items():
+            if k not in _PARAM_SELECTIONS['clean_POST']:
+                if isinstance(v,(list,dict)):
+                    output_obj[k] = clean_POST(v)
+                else:
+                    output_obj[k] = coerce_none(v)
+        return output_obj
+    else:
+        #: No longer a container object. So just return a coerced value
+        return coerce_none(input_obj)
 
 def format_POST(ocat_form_dict):
     """
@@ -255,8 +260,9 @@ def construct_entries(ocat_form_dict, ocat_data):
     #: Rank set
     #: Include copy of the times ranks in columns orientation into the comparison dictionaries
     for flag, ranks, columns, ordr in _FLAG_RANK_COLUMN_ORDR:
-        org_columns = reorient_rank(ocat_data.get(ranks), 'columns')
-        req_columns = reorient_rank(ocat_form_dict.get(ranks), 'columns')
+        org_columns = coerce(reorient_rank(ocat_data.get(ranks), 'columns'))
+        req_columns = coerce(reorient_rank(ocat_form_dict.get(ranks), 'columns'))
+
         if org_columns is not None:
             ocat_data.update(org_columns)
         if req_columns is not None:
@@ -270,7 +276,7 @@ def construct_entries(ocat_form_dict, ocat_data):
 
 def process_flag_set(ocat_data, ocat_form_dict, param_set, flag):
 
-    org_dict = {k:None for k in param_set}
+    org_dict = {}
     req_dict = {}
 
     #: Flag changes

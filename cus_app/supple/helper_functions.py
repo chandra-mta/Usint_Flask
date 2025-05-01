@@ -85,7 +85,7 @@ class IterateColumns:
 #
 # --- Globals
 #
-ALL_NULL_SET = {None,'',' ','<Blank>','N/A','NA','NONE','NULL','Na','None','Null','none','null'}
+NULL_LIST = [None,'',' ','<Blank>','N/A','NA','NONE','NULL','Na','None','Null','none','null']
 OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"
 USINT_DATETIME_FORMAT = "%b %d %Y %H:%M"
 DATETIME_FORMATS = ['%m:%d:%Y:%H:%M:%S', '%m:%d:%Y:%H:%M', USINT_DATETIME_FORMAT, OCAT_DATETIME_FORMAT, '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']
@@ -107,7 +107,7 @@ def coerce_none(val):
         return [coerce_none(x) for x in val]
     elif isinstance(val, dict):
         return {k:coerce_none(v) for k,v in val.items()}
-    elif val in ALL_NULL_SET:
+    elif val in NULL_LIST:
         return None
     return val
 
@@ -115,10 +115,10 @@ def coerce_number(val):
     if not isinstance(val,(int,float)):
         try:
             val = int(val)
-        except ValueError:
+        except (ValueError, TypeError):
             try:
                 val = float(val)
-            except ValueError:
+            except (ValueError, TypeError):
                 pass
     return val
 
@@ -138,7 +138,7 @@ def coerce_time(val):
 
 def coerce_json(val):
     """Coercion of python data type to a json-formatted string for data storage"""
-    if val in ALL_NULL_SET:
+    if val in NULL_LIST:
         return None
     elif isinstance(val, datetime):
         #: Convert to ISO 8601 string then store
@@ -152,7 +152,7 @@ def coerce(val):
     elif isinstance(val, dict):
         return {k:coerce(v) for k,v in val.items()}
     #: Null section
-    elif val in ALL_NULL_SET:
+    elif val in NULL_LIST:
         return None
     #: Number section
     val = coerce_number(val)

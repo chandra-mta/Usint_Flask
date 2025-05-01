@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% from 'ocatdatapage/macros.html' import compare_param_values, change_block, no_change_block, compare_values, remark_section  %}
+{% from 'ocatdatapage/macros.html' import compare_param_values, rank_compare_param_values, change_block, no_change_block, remark_section  %}
 
 {% block title %}Ocat Data Page{% endblock %}
 {% block main_title %}Ocat Data Page{% endblock %}
@@ -16,7 +16,7 @@
     {% endif %}
 {% endwith %}
 
-{% set ns = namespace(multi_count=0, multi_orcnt=0, param_count=0, rank_count=0) %}
+{% set ns = namespace(multi_count=0, multi_orcnt=0, param_count=0) %}
 
 <form method="POST">
 <!-- TODO asis, remove, clone case. Either here or separate confirmation page?-->
@@ -122,39 +122,8 @@
             </tr>
             {% if not (org_dict.get(flag) == 'N' and req_dict.get(flag) == None) %}
                 {% for i, (org_rank,req_rank) in enumerate(zip_longest(org_dict.get(ranks) or [], req_dict.get(ranks) or [],fillvalue={})) %}
-                <!--Iterating by order-->
-                <tr>
-                    {% if set(req_rank.values()) == set([None]) %}
-                    <th colspan=7 style='background-color:rgb(255,0,0, 0.2);'>
-                        Order = {{ i+1 }} (Deleted)
-                    </th>
-                    {% else %}
-                    <th colspan=7 style='background-color:#e6fff2;'>
-                        Order = {{ i+1 }}
-                    </th>
-                    {% endif%}
-                </tr>
-                {% set ns.rank_count = 0 %}
-                {% for col, org, req in zip_longest(org_rank.keys() or req_rank.keys(), org_rank.values(), req_rank.values(), fillvalue=None) %}
-                {% if not (col in _PARAM_SELECTIONS["functional_form_keys"] or col == None) %}
-                    {% set ns.rank_count = ns.rank_count + 1 %}
-                    {% if ns.rank_count % 2 == 1 %}
-                        <tr>
-                    {% endif %}
-                        {% if col in req_rank.keys() %}
-                        <!-- A change has been requested-->
-                            {{ change_block(_LABELS.get(col), org, req)}}
-                        {% else %}
-                        <!-- No change has been requested-->
-                            {{ no_change_block(_LABELS.get(col), org)}}
-                        {% endif %}
-                    {% if ns.rank_count % 2 == 0 %}
-                        </tr>
-                    {% else %}
-                        <td> &#160;</td>
-                    {% endif %}
-                {% endif %}
-                {% endfor %}
+                    <!--Iterating by order-->
+                    {{ rank_compare_param_values(i, org_rank, req_rank, _LABELS) }}
                 {% endfor %}
             {% endif %}
 
