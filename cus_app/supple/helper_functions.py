@@ -98,7 +98,6 @@ TIME_RANK_PARAMS = {'window_constraint', 'tstart', 'tstop'}
 ROLL_RANK_PARAMS = {'roll_constraint', 'roll_180', 'roll', 'roll_tolerance'}
 WINDOW_RANK_PARAMS = {'chip', 'start_row', 'start_column', 'width', 'height', 'lower_threshold', 'pha_range', 'sample'}
 ALL_RANK_PARAMS = TIME_RANK_PARAMS.union(ROLL_RANK_PARAMS).union(WINDOW_RANK_PARAMS)
-NULL_LIST = [None,'',' ','<Blank>','N/A','NA','NONE','NULL','Na','None','Null','none','null']
 
 #
 # --- Coercion section. Converting the strings text to the correct data types.

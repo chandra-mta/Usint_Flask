@@ -182,13 +182,25 @@ def generate_additional(ocat_data):
             additional[f'{key}_asec'] = val * 3600
     return additional
 
+def clean_POST(input_dict):
+    """
+    Perform coercion which is ignored in Flask-WTF forms and drop undesired values
+    """
+    output_dict = {}
+    
+    for k,v in input_dict.items():
+        if k not in _PARAM_SELECTIONS['clean_POST']:
+            if isinstance(v,dict):
+                output_dict[k] = clean_POST(v)
+            else:
+                output_dict[k] = coerce_none(v)
+    return output_dict
+
 def format_POST(ocat_form_dict):
     """
     Minor changes to listed form data after POST request and preparing ocat_form_dict
     """
-    
-    for k,v in ocat_form_dict.items():
-        ocat_form_dict[k] = coerce_none(v)
+    ocat_form_dict = clean_POST(ocat_form_dict)
     
     #: Include ocat-formatted copies of coordinate and dither parameters
     ra, dec = convert_ra_dec_format(ocat_form_dict.get('ra_hms'),ocat_form_dict.get('dec_dms') , 'dd')

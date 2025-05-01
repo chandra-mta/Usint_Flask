@@ -1,13 +1,9 @@
 {
-    "functional_form_keys": [
-        "multiobsid",
-        "csrf_token",
+    "clean_POST": [
         "remove_rank",
         "template_time",
         "template_roll",
-        "template_window",
-        "submit_choice",
-        "submit"
+        "template_window"
     ],
     "dither_params_usint": [
         "y_amp_asec",
