@@ -93,6 +93,10 @@
             <th colspan=7 style='background-color:rgb(255,0,0, 0.2);'>
                 Order = {{ ns.ordr }} (Deleted)
             </th>
+            {% elif kind == 'add' %}
+            <th colspan=7 style='background-color:#16e67b;'>
+                Order = {{ ns.ordr }} (Created)
+            </th>
             {% else %}
             <th colspan=7 style='background-color:#e6fff2;'>
                 Order = {{ ns.ordr }}

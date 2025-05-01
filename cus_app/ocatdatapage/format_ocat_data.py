@@ -266,13 +266,17 @@ def construct_entries(ocat_form_dict, ocat_data):
         if req_columns is not None:
             ocat_form_dict.update(req_columns)
 
-        org, req = process_flag_set(ocat_data, ocat_form_dict, _PARAM_SELECTIONS[columns] + [ranks], flag)
+        org, req = process_ranked_flag_set(ocat_data, ocat_form_dict, _PARAM_SELECTIONS[columns], flag, ranks)
         org_dict.update(org)
         req_dict.update(req)
     return org_dict, req_dict
 
 def process_flag_set(ocat_data, ocat_form_dict, param_set, flag):
-
+    """
+    The usage of javascript hiding and revealing divs in the form is not destructive to form information.
+    This means that when changing the state of a flag, such as dither or subarray, that form information is still available, but our intention could be to nullify it.
+    This function processes that intention and writes that update to the org and req dictionaries accordingly.
+    """
     org_dict = {}
     req_dict = {}
 
@@ -295,6 +299,49 @@ def process_flag_set(ocat_data, ocat_form_dict, param_set, flag):
             org = coerce(ocat_data.get(param))
             req = coerce(ocat_form_dict.get(param))
             org_dict[param] = org
+            #: Pre-existing values exist and are still desired, so process if they have changed.
             if not approx_equals(org, req):
                 req_dict[param] = req
+    return org_dict, req_dict
+
+def process_ranked_flag_set(ocat_data, ocat_form_dict, param_set, flag, ranks):
+    """
+    This operates similarly to the process_flag_set() function, with an extra caveat.
+    The SQL ORM processes changed rank information in a column orientation, but the confirmation page displays rank information in a records orientation.
+    This means that we store the records orientation in the org and req dictionaries no matter what, in order to use as display information.
+    The presence of a record oriented rank set (time_ranks, roll_ranks, window_ranks) in req therefore is not indication of change. Only the columns are and indication.
+    """
+    org_dict = {}
+    req_dict = {}
+
+    #: Flag changes
+    if ocat_data.get(flag) == 'N' and ocat_form_dict.get(flag) == 'N':
+        return org_dict, req_dict #: No information
+    
+    elif ocat_data.get(flag) == 'N' and ocat_form_dict.get(flag) in ('Y', 'P'):
+        #: No original values, but new requested ones
+        for param in param_set + [ranks]:
+            #: Include the added columns orientation for the SQL insertion, and the added records orientation for the display
+            req_dict[param] = coerce(ocat_form_dict.get(param))
+
+    elif ocat_data.get(flag) in ('Y', 'P') and ocat_form_dict.get(flag) == 'N':
+        #: Original values exist, but must be recorded as nullified
+        for param in param_set + [ranks]:
+            #: Include the removed columns orientation for the SQL insertion, and the removed records orientation for the display
+            org_dict[param] = coerce(ocat_data.get(param))
+            req_dict[param] = None
+    else:
+        #: Simple change to existing ranks. Include the columns orientation only when changed.
+        for param in param_set:
+            org = coerce(ocat_data.get(param))
+            req = coerce(ocat_form_dict.get(param))
+            org_dict[param] = org
+            if not approx_equals(org, req):
+                req_dict[param] = req
+        #: Include the records orientation no matter what so that the display can operate
+        org = coerce(ocat_data.get(ranks))
+        req = coerce(ocat_form_dict.get(ranks))
+        org_dict[ranks] = org
+        req_dict[ranks] = req
+
     return org_dict, req_dict
