@@ -10,14 +10,12 @@ import os
 import json
 from flask import current_app
 from cus_app.supple.read_ocat_data import check_approval
-from cus_app.supple.helper_functions import coerce_none, coerce, approx_equals, convert_ra_dec_format, reorient_rank
+from cus_app.supple.helper_functions import coerce, approx_equals, convert_ra_dec_format, reorient_rank, OCAT_DATETIME_FORMAT
 import itertools
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
-
-_OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"  #: NOTE Ocat dates are recorded without a leading zero. While datetime can process these dates, it never prints without a leading zero
 
 _FLAG_RANK_COLUMN_ORDR = (
     ('window_flag', 'time_ranks', 'time_columns', 'time_ordr'),
@@ -57,7 +55,7 @@ def create_warning_line(ocat_data):
 
     if obs_date is not None:
         time_diff = (
-            datetime.strptime(obs_date, _OCAT_DATETIME_FORMAT) - datetime.now()
+            datetime.strptime(obs_date, OCAT_DATETIME_FORMAT) - datetime.now()
         ).total_seconds()
         inday = int(time_diff/86400)
         if inday < 0:
@@ -184,7 +182,7 @@ def generate_additional(ocat_data):
 
 def clean_POST(input_obj):
     """
-    Perform coercion which is ignored in Flask-WTF forms and drop undesired values
+    Perform coercion which might be ignored in Flask-WTF forms and drop undesired values
     """
     if isinstance(input_obj, list):
         return [clean_POST(item) for item in input_obj]
@@ -195,11 +193,11 @@ def clean_POST(input_obj):
                 if isinstance(v,(list,dict)):
                     output_obj[k] = clean_POST(v)
                 else:
-                    output_obj[k] = coerce_none(v)
+                    output_obj[k] = coerce(v)
         return output_obj
     else:
         #: No longer a container object. So just return a coerced value
-        return coerce_none(input_obj)
+        return coerce(input_obj)
 
 def format_POST(ocat_form_dict):
     """
@@ -271,7 +269,6 @@ def construct_entries(ocat_form_dict, ocat_data):
         org, req = process_flag_set(ocat_data, ocat_form_dict, _PARAM_SELECTIONS[columns] + [ranks], flag)
         org_dict.update(org)
         req_dict.update(req)
-
     return org_dict, req_dict
 
 def process_flag_set(ocat_data, ocat_form_dict, param_set, flag):

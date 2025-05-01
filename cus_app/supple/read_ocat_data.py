@@ -10,7 +10,7 @@ from astropy.table import vstack
 import os
 import numpy as np
 from datetime import datetime
-from cus_app.supple.helper_functions import convert_astropy_to_native, OCAT_DATETIME_FORMAT, NULL_LIST
+from cus_app.supple.helper_functions import convert_astropy_to_native, NULL_LIST, OCAT_DATETIME_FORMAT, STORAGE_FORMAT
 
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from cus_app import db
@@ -278,11 +278,11 @@ def time_constraint_params(obsid):
     time_fetch = get_value_from_sybase(cmd)
     records = convert_astropy_to_native(time_fetch, orient = 'records')
     #
-    # --- Ensure leading zero format
+    # --- Ensure storage format
     #
     for i in range(len(records)):
-        records[i]['tstart'] = datetime.strptime(records[i]['tstart'],OCAT_DATETIME_FORMAT).strftime(OCAT_DATETIME_FORMAT)
-        records[i]['tstop'] = datetime.strptime(records[i]['tstop'],OCAT_DATETIME_FORMAT).strftime(OCAT_DATETIME_FORMAT)
+        records[i]['tstart'] = datetime.strptime(records[i]['tstart'],OCAT_DATETIME_FORMAT).strftime(STORAGE_FORMAT)
+        records[i]['tstop'] = datetime.strptime(records[i]['tstop'],OCAT_DATETIME_FORMAT).strftime(STORAGE_FORMAT)
     return {'time_ranks': records, 'time_ordr': len(records)}
 
 def too_ddt_params(tooid):

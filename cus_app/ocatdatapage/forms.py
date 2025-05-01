@@ -12,6 +12,7 @@ from wtforms.widgets import Input
 from datetime import datetime
 import json
 import os
+from cus_app.supple.helper_functions import DATETIME_FORMATS
 
 #
 #---- Common Choice of Pulldown Fields
@@ -32,13 +33,6 @@ _CHOICE_SUBMIT = [("norm", "Normal Change"),
                 ("remove","ObsID no longer ready to go"),
                 ("clone","Split this ObsID")
             ]
-#
-#--- Time Selectors
-#
-_OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"
-_USINT_DATETIME_FORMAT = "%b %d %Y %H:%M"
-
-_DATETIME_FORMATS = [_USINT_DATETIME_FORMAT, _OCAT_DATETIME_FORMAT, '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']
 
 """
 **CONCEPT MEMO**: All of the variable and function names within the form classes follow specific FlaskForm criteria in order to
@@ -85,8 +79,8 @@ class TimeRankDateTimeField(DateTimeField):
 
 class TimeRank(Form):
     window_constraint = SelectField(_LABELS.get('window_constraint'), choices=_CHOICE_CP, default='Y')
-    tstart = TimeRankDateTimeField(_LABELS.get('tstart'), format=_DATETIME_FORMATS, default=datetime.now())
-    tstop = TimeRankDateTimeField(_LABELS.get('tstop'), format=_DATETIME_FORMATS, default=datetime.now())
+    tstart = TimeRankDateTimeField(_LABELS.get('tstart'), format=DATETIME_FORMATS, default=datetime.now())
+    tstop = TimeRankDateTimeField(_LABELS.get('tstop'), format=DATETIME_FORMATS, default=datetime.now())
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class RollRank(Form):

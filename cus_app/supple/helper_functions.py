@@ -86,10 +86,10 @@ class IterateColumns:
 # --- Globals
 #
 NULL_LIST = [None,'',' ','<Blank>','N/A','NA','NONE','NULL','Na','None','Null','none','null']
-OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p"
+OCAT_DATETIME_FORMAT = "%b %d %Y %I:%M%p" #: Warning Ocat Datetimes are stored without a leading zero in the day. This can cause python comparisons to fail
 USINT_DATETIME_FORMAT = "%b %d %Y %H:%M"
-DATETIME_FORMATS = ['%m:%d:%Y:%H:%M:%S', '%m:%d:%Y:%H:%M', USINT_DATETIME_FORMAT, OCAT_DATETIME_FORMAT, '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M', '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M']
 STORAGE_FORMAT = '%Y-%m-%dT%H:%M:%SZ' #: ISO 8601 format. Used in storage for Usint SQL Database
+DATETIME_FORMATS = [USINT_DATETIME_FORMAT, OCAT_DATETIME_FORMAT, STORAGE_FORMAT, '%Y-%m-%dT%H:%M:%S', '%Y-%m-%dT%H:%M','%m:%d:%Y:%H:%M:%S', '%m:%d:%Y:%H:%M', '%Y-%m-%d %H:%M:%S', '%Y-%m-%d %H:%M',]
 
 #
 # --- Parameter selection for time, roll, and window ranks
@@ -123,15 +123,13 @@ def coerce_number(val):
     return val
 
 def coerce_time(val):
-    """Parse a variety of different datatypes across CXC tools and data sources"""
+    """Parse a variety of different time formats across CXC tools and data sources"""
     if isinstance(val, str):
         x = val.replace('::', ':')
-        if x[-1] == "Z":
-            x = x[:-1]
         x = x.split('.')[0]
         for format in DATETIME_FORMATS:
             try:
-                return datetime.strptime(x,format)
+                return datetime.strptime(x,format).strftime(STORAGE_FORMAT)
             except ValueError:
                 pass
     return val
@@ -158,10 +156,8 @@ def coerce(val):
     val = coerce_number(val)
     if isinstance(val,(int,float)):
         return val
-    #: Time section.
+    #: Time section if applicable
     val = coerce_time(val)
-    if isinstance(val,datetime):
-        return val
     #: Regular string
     return val
 #
