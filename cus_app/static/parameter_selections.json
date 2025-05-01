@@ -3,7 +3,8 @@
         "remove_rank",
         "template_time",
         "template_roll",
-        "template_window"
+        "template_window",
+        "refresh"
     ],
     "dither_params_usint": [
         "y_amp_asec",

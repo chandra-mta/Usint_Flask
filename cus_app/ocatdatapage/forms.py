@@ -228,9 +228,10 @@ class OcatParamForm(FlaskForm):
     #
     # --- Submission
     #
-    submit_choice = RadioField(_LABELS.get('submit_choice'), choices=_CHOICE_SUBMIT, validators=[DataRequired()])
+    submit_choice = RadioField(_LABELS.get('submit_choice'), choices=_CHOICE_SUBMIT, default='norm', validators=[Optional()])
     multiobsid = StringField(_LABELS.get('multiobsid'), validators=[Optional()])
     submit = SubmitField(_LABELS.get('submit'))
+    refresh = SubmitField("Refresh")
     #
     # --- Templates for generating new ranks. Ignore all form data from these.
     # --- Hidden behind div which never appears to the user.

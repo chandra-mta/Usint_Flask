@@ -63,16 +63,20 @@ def index(obsid=None):
     # --- Render Ocat Data In A WTForm
     #
     form = OcatParamForm(request.form, data = ocat_form_dict)
-    if request.method == "POST" and form.is_submitted(): 
-        if not form.validate():
-            #: Form submitted but failed its validation, therefore refresh but display warning message
-            for field_name, error_messages in form.errors.items():
-                flash(f"Error in {_LABELS.get(field_name)}: {error_messages}")
-        else:
-            #: Form submitted, send form data to session and go to confirmation page
-            ocat_form_dict = fod.format_POST(form.data)
-            session[f'ocat_form_dict_{obsid}'] = ocat_form_dict
-            return redirect(url_for('ocatdatapage.confirm', obsid=obsid))
+    if request.method == "POST" and form.is_submitted():
+        if form.submit.data:
+            if not form.validate():
+                #: Form submitted but failed its validation, therefore refresh but display warning message
+                for field_name, error_messages in form.errors.items():
+                    flash(f"Error in {_LABELS.get(field_name)}: {error_messages}")
+            else:
+                #: Form submitted, send form data to session and go to confirmation page
+                ocat_form_dict = fod.format_POST(form.data)
+                session[f'ocat_form_dict_{obsid}'] = ocat_form_dict
+                return redirect(url_for('ocatdatapage.confirm', obsid=obsid))
+        elif form.refresh.data:
+            clear_session_data(obsid)
+            return redirect(url_for('ocatdatapage.index', obsid=obsid))
     return render_template("ocatdatapage/index.html", 
                            form=form, 
                            warning=warning,
@@ -117,6 +121,14 @@ def finalize(obsid=None):
     #: Then display the page informing the user that their revision went through.
     #: Needed so that we can complete a revision action and keep the cache clear (particularly of ocat data) for the next obsid revision
     pass
+
+def clear_session_data(obsid):
+    session.pop(f'ocat_data_{obsid}',None)
+    session.pop(f'warning_{obsid}',None)
+    session.pop(f'orient_maps_{obsid}',None)
+    session.pop(f"flag_override_{obsid}",None)
+    session.pop(f'ocat_form_dict_{obsid}',None)
+    session.pop(f'multi_obsid_{obsid}',None)
 
 def fetch_session_data(obsid):
     """

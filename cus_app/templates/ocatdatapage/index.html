@@ -65,6 +65,7 @@
 <hr>
 <!------------------------------------------------------------------------------------------------------------------------------->
 <form method="POST">
+    <p><b>Click {{ form.refresh() }} to clear your revisions and pull the original ocat data.</b></p>
     {{ form.hidden_tag() }}
     <!--For Hidden Form Fields In Rank Additions-->
     <div id="template_time_ranks" style="display: none;">
@@ -706,7 +707,8 @@
         </p>
         {{ form.multiobsid(size=80) }}
         <div style='padding-top:30px;'></div>
-        {{ form.submit() }}
+        <p><b>Click {{ form.submit() }} to submit your changes.</b></p>
+        <p><b>Click {{ form.refresh() }} to clear your revisions and pull the original ocat data.</b></p>
         {% else %}
 
         <p style='padding-bottom:20px;'>
