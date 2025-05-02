@@ -1,5 +1,17 @@
+"""
+Error Handlers
+==============
+
+**errors/handlers.py**: Error Redirection Handlers
+
+:Author: T. Isobe (tisobe@cfa.harvard.edu)
+:Maintainer: W. Aaron (william.aaron@cfa.harvard.edu)
+:Last Updated: May 02, 2025
+
+"""
 from flask      import render_template
 from cus_app.errors import bp
+from cus_app import db
 #
 #--- use blueprint error handler to take care the error
 #
@@ -10,4 +22,5 @@ def not_found_error(error):
 
 @bp.app_errorhandler(500)
 def internal_error(error):
+    db.session.rollback()
     return render_template('errors/500.html'), 500
