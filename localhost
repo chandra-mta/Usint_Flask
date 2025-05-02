@@ -1,6 +1,32 @@
 #!/bin/tcsh
 #Commands to run Ocat Flask App (cus_app) on localhost in dev configuration.
 
+#
+# --- process system arguments
+#
+set refresh = 0
+set sqlecho = 0
+#: Loop through all command line arguments
+foreach arg ($argv)
+    if ("$arg" == "--refresh") then
+        set refresh = 1
+    endif
+    if ("$arg" == "--sqlecho") then
+        set sqlecho = 1
+    endif
+end
+
+#: If --refresh is passed, copy the file
+if ($refresh == 1) then
+    cp ./instance/usint.db ./instance/test_usint.db
+    echo "File ./instance/usint.db has been copied to ./instance/test_usint.db"
+endif
+
+if ($sqlecho == 1) then
+    setenv SQLALCHEMY_ECHO true
+endif
+
+
 #As of 06/23/24, web-cxc, Ska3/flight, and MTA PyUsint all use a version of Python 3.11, All of these must be compatible versions.
 #Therefore, if one of these three upgrades to Python 3.12, then all must be upgraded.
 #setenv PYTHONPATH "/proj/sot/ska3/flight/lib:/proj/sot/ska3/flight/lib/python3.11/site-packages:/data/mta4/Script/Python3.11:/data/mta4/Script/Python3.11/lib/python3.11/site-packages"

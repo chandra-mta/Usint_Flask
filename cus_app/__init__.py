@@ -10,7 +10,6 @@ import signal
 import traceback
 from itertools import zip_longest
 
-
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap
 from flask_session import Session
@@ -19,6 +18,9 @@ from flask_login import LoginManager
 from config import _CONFIG_DICT
 from cus_app.supple.helper_functions import rank_ordr, approx_equals
 
+#
+# --- Flask Additions
+#
 bootstrap = Bootstrap()
 db = SQLAlchemy()
 sess = Session()
