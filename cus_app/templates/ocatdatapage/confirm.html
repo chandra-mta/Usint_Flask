@@ -132,9 +132,16 @@
 
     <!-- remarks and comments need an extra step to display the format correctly -->
     <hr style='border-top: 1px dashed;'>
-
-
-
+    <h3>Remarks</h3>
+    <div style='margin-left: 50px; margin-right:50px;'>
+        {{ remark_section('remarks', org_dict, req_dict) }}
+    </div>
+    <hr style='border-top: 1px dashed;'>
+ 
+    <h3>Comments</h3>
+    <div style='margin-left: 50px; margin-right:50px;'>
+        {{ remark_section('comments', org_dict, req_dict) }}
+    </div>
     <hr>
     <p>
     If these values are correct, click the Finalize button. Otherwise, use the Previous Page button

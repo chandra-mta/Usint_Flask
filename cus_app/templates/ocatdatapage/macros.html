@@ -149,44 +149,42 @@
         {% endif %}
 {% endmacro %}
 
-{% macro remark_section(original, remark_change) %}
-    {% if remark_change != None %}
+{% macro remark_section(param, org_dict, req_dict) %}
+    {% if param in req_dict.keys() %}
         <h4 style='text-decoration: underline;'>Original</h4>
             <p>
-                {% if remark_change[0] == None %}
+                {% if org_dict.get(param) == None %}
                     <span style='padding-left:50px;font-style:italic'>NA</span>
                 {% else %}
-                    <p style='padding-left:20px;'>{{remark_change[0].replace('\n','<br>')}}</p>
+                    <p style='padding-left:20px;'>{{org_dict.get(param).replace('\n','<br>')}}</p>
                 {% endif %}
             </p>
         <hr style='border-top:1px dotted;'>
         <h4 style='text-decoration: underline;'>New</h4>
             <p>
-                {% if remark_change[1] == None %}
+                {% if req_dict.get(param) == None %}
                     <span style='padding-left:50px;color:red;font-style:italic'>NA</span>
                 {% else %}
-                    <p style='padding-left:20px;color:red;'>{{remark_change[1].replace('\n','<br>')}}</p>
+                    <p style='padding-left:20px;color:red;'>{{req_dict.get(param).replace('\n','<br>')}}</p>
                 {% endif %}
-            </p>
-    {% elif original != None %}
-        <h4 style='text-decoration: underline;'>Original</h4>
-            <p>
-                <span style='padding-left:50px;font-style:italic;'>{{original}}</span>
-            </p>
-        <hr style='border-top:1px dotted;'>
-        <h4 style='text-decoration: underline;'>New</h4>
-            <p>
-                <span style='padding-left:50px;font-style:italic;'>{{original}}</span>
             </p>
     {% else %}
         <h4 style='text-decoration: underline;'>Original</h4>
             <p>
-                <span style='padding-left:50px;font-style:italic;'>NA</span>
+                {% if org_dict.get(param) == None %}
+                    <span style='padding-left:50px;font-style:italic'>NA</span>
+                {% else %}
+                    <p style='padding-left:20px;'>{{org_dict.get(param).replace('\n','<br>')}}</p>
+                {% endif %}
             </p>
         <hr style='border-top:1px dotted;'>
         <h4 style='text-decoration: underline;'>New</h4>
             <p>
-                <span style='padding-left:50px;font-style:italic;'>NA</span>
+                {% if org_dict.get(param) == None %}
+                    <span style='padding-left:50px;font-style:italic'>NA</span>
+                {% else %}
+                    <p style='padding-left:20px;'>{{org_dict.get(param).replace('\n','<br>')}}</p>
+                {% endif %}
             </p>
     {% endif %}
 {% endmacro %}

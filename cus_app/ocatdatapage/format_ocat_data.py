@@ -269,6 +269,13 @@ def construct_entries(ocat_form_dict, ocat_data):
         org, req = process_ranked_flag_set(ocat_data, ocat_form_dict, _PARAM_SELECTIONS[columns], flag, ranks)
         org_dict.update(org)
         req_dict.update(req)
+    #: Remarks and Comments
+    for param in ('remarks', 'comments'):
+        org = coerce(ocat_data.get(param))
+        req = coerce(ocat_form_dict.get(param))
+        org_dict[param] = org 
+        if not approx_equals(org, req):
+            req_dict[param] = req
     return org_dict, req_dict
 
 def process_flag_set(ocat_data, ocat_form_dict, param_set, flag):
