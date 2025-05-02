@@ -15,6 +15,7 @@ from cus_app.supple.helper_functions import convert_astropy_to_native, NULL_LIST
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from cus_app import db
 from cus_app.models import register_user, User, Revision, Signoff, Parameter, Request, Original
+from flask import current_app
 #
 #--- Set sqsh Parameters
 #
@@ -22,7 +23,6 @@ _SERV = 'ocatsqlsrv'
 _USR = 'mtaops_internal_web'
 _AUTHDIR = "/data/mta4/CUS/authorization"
 _DB = 'axafocat'
-_OBS_SS = "/data/mta4/obs_ss/"
 #
 # --- NOTE Ocat dates are recorded without a leading zero. This makes datetime formatting difficult so we convert for the fetch.
 # --- While datetime can process these dates, it never prints without a leading zero.
@@ -127,7 +127,7 @@ def read_ocat_data(obsid):
     # --- Planned Roll if it exists (EDGE CASE)
     #
     try:
-        with open(os.path.join(_OBS_SS, 'mp_long_term')) as f:
+        with open(os.path.join(current_app.config["OBS_SS"], 'mp_long_term')) as f:
             line = f.readline()
             atemp = line.strip().split(":")
             if str(obsid) == atemp[0]:
@@ -394,7 +394,7 @@ def check_obsid_in_or_list(obsids_list):
     :rtype: dict(bool)
     """
     or_dict = {}
-    with open(os.path.join(_OBS_SS, 'scheduled_obs_list')) as f:
+    with open(os.path.join(current_app.config["OBS_SS"], 'scheduled_obs_list')) as f:
         or_list = [int(line.strip().split()[0]) for line in f.readlines()]
     for obsid in obsids_list:
         if obsid in or_list:
