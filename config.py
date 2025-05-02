@@ -16,6 +16,7 @@ class BaseConfig(object):
     #
     SQLALCHEMY_DATABASE_URI = "sqlite:///test_usint.db"
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {'echo': True}
     #
     # --- Session Settings
     #
@@ -35,6 +36,7 @@ class CXCWebConfig(BaseConfig):
     CONFIGURATION_NAME = "cxcweb"
     HTTP_ADDRESS = "https://cxc.cfa.harvard.edu/wsgi/cus/usint"
     SQLALCHEMY_DATABASE_URI = "sqlite:///usint.db"
+    SQLALCHEMY_ENGINE_OPTIONS = {'echo': False}
     TEST_NOTIFICATIONS = False
     TEST_DATABASE = False
 
