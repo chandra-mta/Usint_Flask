@@ -5,6 +5,11 @@
 :Last Updated: Mar 13, 2025
 
 """
+import sys
+import signal
+import traceback
+from itertools import zip_longest
+
 
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap
@@ -12,7 +17,6 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import _CONFIG_DICT
-from itertools import zip_longest
 from cus_app.supple.helper_functions import rank_ordr, approx_equals
 
 bootstrap = Bootstrap()
@@ -37,6 +41,25 @@ def create_app(_configuration_name):
     db.init_app(app)
     sess.init_app(app)
     login.init_app(app)
+
+    #
+    #--- Available handler for processing in the event of keyboard interrupts (localhost testing)
+    #
+    def graceful_shutdown(signal, frame):
+        """
+        Handler to run operations in app context following keyboard interrupts (localhost testing)
+        """
+        with app.app_context():
+            print("Running graceful shutdown")
+            try:
+                pass
+            except Exception:
+                traceback.print_exc()
+            finally:
+                sys.exit(0)
+    #: Register signal for application
+    signal.signal(signal.SIGINT, graceful_shutdown)
+
     #
     # --- connect all apps with blueprint
     #
