@@ -59,7 +59,7 @@ class User(db.Model, UserMixin):
     usint: Mapped[List["Signoff"]] = relationship(back_populates='usint_signoff', foreign_keys="Signoff.usint_signoff_id")
 
     def __repr__(self) -> str:
-         return f"User(id={self.id!r}, username={self.username!r}, email={self.email!r}, groups={self.groups!r}, fullname={self.full_name!r})"
+         return f"User(id={self.id!r}, username={self.username!r}, email={self.email!r}, groups={self.groups!r}, full_name={self.full_name!r})"
 
 class Revision(db.Model):
     __tablename__ = "revisions"

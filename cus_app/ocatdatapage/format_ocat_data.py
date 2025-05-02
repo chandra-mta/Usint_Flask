@@ -71,7 +71,7 @@ def create_warning_line(ocat_data):
         mp_list = [line.strip().split() for line in f.readlines()]
     mp_chk = False
     for ent in mp_list:
-        if ent[0] == ocat_data.get('obsid'):
+        if ent[0] == str(ocat_data.get('obsid')):
             mp_chk = True
             break
     #
