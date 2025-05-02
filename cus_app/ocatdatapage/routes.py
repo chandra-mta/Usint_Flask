@@ -96,13 +96,12 @@ def confirm(obsid=None):
     multi_obsid = create_obsid_list(ocat_form_dict.get('multiobsid'), obsid)
     or_dict = rod.check_obsid_in_or_list([int(obsid)] + multi_obsid)
     if request.method == "POST" and form.is_submitted(): #: no validators
-        if form.previous_page:
-            #: Got back and edit
+        if form.previous_page.data:
+            #: Go back and edit
             return redirect(url_for('ocatdatapage.index', obsid=obsid))
-        elif form.finalize:
+        elif form.finalize.data:
             #: Write changes to the database files
-            session[f'multi_obsid_{obsid}'] = multi_obsid
-            return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
+            return redirect(url_for('ocatdatapage.finalize', obsids=[int(obsid)]+multi_obsid))
     return render_template('ocatdatapage/confirm.html',
                             form = form,
                             obsid = obsid,
@@ -115,12 +114,15 @@ def confirm(obsid=None):
                             _FLAG_RANK_COLUMN_ORDR = fod._FLAG_RANK_COLUMN_ORDR,
                            )
 
-@bp.route('/finalize/<obsid>', methods=['GET', 'POST'])
-def finalize(obsid=None):
-    #: TODO make sure that the finalized submission will run the functions to submit the SQLAlchemy commit and then clear the session data
-    #: Then display the page informing the user that their revision went through.
-    #: Needed so that we can complete a revision action and keep the cache clear (particularly of ocat data) for the next obsid revision
-    pass
+@bp.route('/finalize/<obsids>', methods=['GET', 'POST'])
+def finalize(obsids=[]):
+    """
+    If successfully redirected, then the confirmation page's database transactions were successful.
+    Therefore, we can clear the Flask-Session server side cookie data for this obsid.
+    """
+    if len(obsids)>0:
+        clear_session_data(obsids[0]) #: First obsid in finalized list is the one operated on in the revision set
+    return f"<p>obsids = {obsids}</p>"
 
 def clear_session_data(obsid):
     session.pop(f'ocat_data_{obsid}',None)
@@ -128,7 +130,6 @@ def clear_session_data(obsid):
     session.pop(f'orient_maps_{obsid}',None)
     session.pop(f"flag_override_{obsid}",None)
     session.pop(f'ocat_form_dict_{obsid}',None)
-    session.pop(f'multi_obsid_{obsid}',None)
 
 def fetch_session_data(obsid):
     """
