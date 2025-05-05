@@ -115,11 +115,11 @@ def confirm(obsid=None):
                 orgs = dbi.construct_originals(rev, org_dict)
                 for org in orgs:
                     db.session.add(org)
-            except:  # noqa: E722
+            except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
                 db.session.rollback()
-                traceback.print_exc() #: TODO replace with abort(500)
+                raise e #: TODO replace with abort(500)
             return redirect(url_for('ocatdatapage.finalize', obsids=[int(obsid)]+multi_obsid))
     return render_template('ocatdatapage/confirm.html',
                             form = form,
