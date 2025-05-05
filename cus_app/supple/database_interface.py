@@ -31,7 +31,7 @@ def construct_revision(obsid,ocat_data,kind):
                     )
     return revision
 
-def determine_signoffs(rev_obj):
+def construct_signoffs(rev_obj, req_dict={}):
     """
     Determine the Signoffs entry based on the revision object based in kind:(norm, asis, remove, clone).
     The signoff status options are : ('Signed', 'Not Required', 'Pending', 'Discard').
@@ -61,8 +61,26 @@ def determine_signoffs(rev_obj):
                     )
     elif rev_obj.kind == 'norm':
         #: Determine based on change requests linked to the revision object
-        signoff = None
+        gen, acis, acis_si, hrc_si =  determine_signoff(req_dict)
+        signoff = Signoff(revision=rev_obj,
+                          general_status = gen,
+                          acis_status = acis,
+                          acis_si_status = acis_si,
+                          hrc_si_status = hrc_si,
+                          usint_status = 'Pending'
+        )
     return signoff
+
+def determine_signoff(req_dict):
+    """
+    Read the requested changes and determine what kind of signoff is necessary.
+    """
+    gen = 'Not Required'
+    acis = 'Not Required'
+    acis_si = 'Not Required'
+    hrc_si = 'Not Required'
+    return gen, acis, acis_si, hrc_si
+
 
 def find_next_rev_no(obsid):
     """
