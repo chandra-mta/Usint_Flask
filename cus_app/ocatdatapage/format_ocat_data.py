@@ -244,7 +244,7 @@ def construct_entries(ocat_form_dict, ocat_data):
     req_dict = {}
 
     #: Regular Changes
-    for param in _PARAM_SELECTIONS['basic_params'] + _PARAM_SELECTIONS['usint_created']:
+    for param in _PARAM_SELECTIONS['basic_params'] + _PARAM_SELECTIONS['usint_unit_change'] + _PARAM_SELECTIONS['ocat_unit_change']:
         org = coerce(ocat_data.get(param))
         req = coerce(ocat_form_dict.get(param))
         org_dict[param] = org 

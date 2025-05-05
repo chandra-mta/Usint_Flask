@@ -141,6 +141,11 @@ def coerce_json(val):
     elif isinstance(val, datetime):
         #: Convert to ISO 8601 string then store
         return json.dumps(val.strftime(STORAGE_FORMAT))
+    elif isinstance(val, list):
+        if len(val) > 0 and isinstance(val[0], datetime):
+            return json.dumps([x.strftime(STORAGE_FORMAT) for x in val])
+        else:
+            return json.dumps(val)
     else:
         return json.dumps(val)
 

@@ -7,15 +7,22 @@ Database Interface
 :Author: W. Aaron (william.aaron@cfa.harvard.edu)
 :Last Updated: May 01, 2025
 
+
+:NOTE: Some of the ORM construction functions operate on the SQLalchemy.orm.relationship() mapping to instantiate parameters,
+while others reference foreign and primary keys directly. This is because the relationship() mapping requires related ORM's to be added to the database session
+before instantiation if the relationship mapped key has the NON NULL constraint. Therefore, it's more reliable to instantiate with the primary key id's directly
+for web interface transactions. 
 """
 import sys
 import os
 from datetime import datetime
 import json
 from sqlalchemy import select, insert
+from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
 from cus_app.models     import register_user, User, Revision, Signoff, Parameter, Request, Original
 from flask_login    import current_user
+from cus_app.supple.helper_functions import coerce_json
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
@@ -27,7 +34,7 @@ def construct_revision(obsid,ocat_data,kind):
     """
     rev_no = find_next_rev_no(obsid)
     curr_epoch = int(datetime.now().timestamp())
-    revision = Revision(obsid = obsid,
+    revision = Revision(obsid = int(obsid),
                     revision_number = rev_no,
                     kind = kind,
                     sequence_number = ocat_data.get('seq_nbr'),
@@ -36,7 +43,7 @@ def construct_revision(obsid,ocat_data,kind):
                     )
     return revision
 
-def construct_signoffs(rev_obj, req_dict={}):
+def construct_signoff(rev_obj, req_dict={}):
     """
     Determine the Signoffs entry based on the revision object based in kind:(norm, asis, remove, clone).
     The signoff status options are : ('Signed', 'Not Required', 'Pending', 'Discard').
@@ -76,6 +83,37 @@ def construct_signoffs(rev_obj, req_dict={}):
         )
     return signoff
 
+def construct_requests(rev_obj, req_dict):
+    """
+    Construct a list of Request ORM's for insertion.
+    """
+    all_requests = []
+    for key, value in req_dict.items():
+        if key in _PARAM_SELECTIONS["general_signoff_params"] + _PARAM_SELECTIONS["acis_signoff_params"] + _PARAM_SELECTIONS["acis_si_signoff_params"] + _PARAM_SELECTIONS["hrc_si_signoff_params"]:
+            param = pull_param(key)
+            req = Request(revision_id= rev_obj.id,
+                        parameter_id = param.id,
+                        value = coerce_json(value)
+            )
+            all_requests.append(req)
+    return all_requests
+
+def construct_originals(rev_obj, org_dict):
+    """
+    Construct a list of Original ORM's for insertion. Only adding non-null values as null is inferred.
+    """
+    all_originals = []
+    for key, value in org_dict.items():
+        if value is not None:
+            if key in _PARAM_SELECTIONS["general_signoff_params"] + _PARAM_SELECTIONS["acis_signoff_params"] + _PARAM_SELECTIONS["acis_si_signoff_params"] + _PARAM_SELECTIONS["hrc_si_signoff_params"]:
+                param = pull_param(key)
+                req = Original(revision_id= rev_obj.id,
+                            parameter_id = param.id,
+                            value = coerce_json(value)
+                )
+                all_originals.append(req)
+    return all_originals
+
 def determine_signoff(req_dict):
     """
     Read the requested changes and determine what kind of signoff is necessary.
@@ -96,6 +134,18 @@ def determine_signoff(req_dict):
             hrc_si = 'Pending'
     return gen, acis, acis_si, hrc_si
 
+def pull_param(param):
+    """
+    Fetch the Parameter ORM by name.
+    Will return an SQLAlchemy.orm.exc.NoResultFound if the parameter is not in the table
+    """
+    try:
+        result = db.session.execute(select(Parameter).where(Parameter.name == param)).scalar_one()
+    except NoResultFound:
+        #: Return same error with more specifics
+        raise NoResultFound(f"No result for '{param}' parameter search in table.")
+
+    return result
 
 def find_next_rev_no(obsid):
     """
