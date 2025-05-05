@@ -7,6 +7,11 @@ Database Interface
 :Author: W. Aaron (william.aaron@cfa.harvard.edu)
 :Last Updated: May 01, 2025
 
+
+:NOTE: Some of the ORM construction functions operate on the SQLalchemy.orm.relationship() mapping to instantiate parameters,
+while others reference foreign and primary keys directly. This is because the relationship() mapping requires related ORM's to be added to the database session
+before instantiation if the relationship mapped key has the NON NULL constraint. Therefore, it's more reliable to instantiate with the primary key id's directly
+for web interface transactions. 
 """
 import sys
 import os
@@ -84,12 +89,29 @@ def construct_requests(rev_obj, req_dict):
     all_requests = []
     for key, value in req_dict.items():
         if key in _PARAM_SELECTIONS["general_signoff_params"] + _PARAM_SELECTIONS["acis_signoff_params"] + _PARAM_SELECTIONS["acis_si_signoff_params"] + _PARAM_SELECTIONS["hrc_si_signoff_params"]:
-            req = Request(revision = rev_obj,
-                        parameter = pull_param(key),
+            param = pull_param(key)
+            req = Request(revision_id= rev_obj.id,
+                        parameter_id = param.id,
                         value = value
             )
             all_requests.append(req)
     return all_requests
+
+def construct_originals(rev_obj, org_dict):
+    """
+    Construct a list of Original ORM's for insertion. Only adding non-null values as null is inferred.
+    """
+    all_originals = []
+    for key, value in org_dict.items():
+        if value is not None:
+            if key in _PARAM_SELECTIONS["general_signoff_params"] + _PARAM_SELECTIONS["acis_signoff_params"] + _PARAM_SELECTIONS["acis_si_signoff_params"] + _PARAM_SELECTIONS["hrc_si_signoff_params"]:
+                param = pull_param(key)
+                req = Original(revision_id= rev_obj.id,
+                            parameter_id = param.id,
+                            value = value
+                )
+                all_originals.append(req)
+    return all_originals
 
 def determine_signoff(req_dict):
     """
