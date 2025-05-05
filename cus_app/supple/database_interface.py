@@ -22,6 +22,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
 from cus_app.models     import register_user, User, Revision, Signoff, Parameter, Request, Original
 from flask_login    import current_user
+from cus_app.supple.helper_functions import coerce_json
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
@@ -92,7 +93,7 @@ def construct_requests(rev_obj, req_dict):
             param = pull_param(key)
             req = Request(revision_id= rev_obj.id,
                         parameter_id = param.id,
-                        value = value
+                        value = coerce_json(value)
             )
             all_requests.append(req)
     return all_requests
@@ -108,7 +109,7 @@ def construct_originals(rev_obj, org_dict):
                 param = pull_param(key)
                 req = Original(revision_id= rev_obj.id,
                             parameter_id = param.id,
-                            value = value
+                            value = coerce_json(value)
                 )
                 all_originals.append(req)
     return all_originals
