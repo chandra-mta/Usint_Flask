@@ -37,7 +37,7 @@ def construct_revision(obsid,ocat_data,kind):
                     )
     return revision
 
-def construct_signoffs(rev_obj, req_dict={}):
+def construct_signoff(rev_obj, req_dict={}):
     """
     Determine the Signoffs entry based on the revision object based in kind:(norm, asis, remove, clone).
     The signoff status options are : ('Signed', 'Not Required', 'Pending', 'Discard').
@@ -77,7 +77,7 @@ def construct_signoffs(rev_obj, req_dict={}):
         )
     return signoff
 
-def construct_request(rev_obj, req_dict):
+def construct_requests(rev_obj, req_dict):
     """
     Construct a list of Request ORM's for insertion.
     """

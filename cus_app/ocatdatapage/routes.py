@@ -27,10 +27,11 @@ from datetime import datetime
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from wtforms.validators import ValidationError
 
-from flask import current_app, render_template, request, flash, session, redirect, url_for
+from flask import current_app, render_template, request, flash, session, redirect, url_for, abort
 from flask_login    import current_user
-from cus_app.models     import register_user, User, Revision, Signoff, Parameter, Request, Original
 
+from cus_app import db
+from cus_app.models import register_user, User, Revision, Signoff, Parameter, Request, Original
 from cus_app.ocatdatapage import bp
 from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
@@ -102,6 +103,19 @@ def confirm(obsid=None):
             return redirect(url_for('ocatdatapage.index', obsid=obsid))
         elif form.finalize.data:
             #: Write changes to the database files
+            try:
+                rev = dbi.construct_revision(obsid,ocat_data,ocat_form_dict.get("submit_choice"))
+                db.session.add(rev)
+                sign = dbi.construct_signoff(rev,req_dict)
+                db.session.add(sign)
+                reqs = dbi.construct_requests(rev, req_dict)
+                for req in reqs:
+                    db.session.add(req)
+            except:  # noqa: E722
+                #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
+                #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
+                db.session.rollback()
+                abort(500)
             return redirect(url_for('ocatdatapage.finalize', obsids=[int(obsid)]+multi_obsid))
     return render_template('ocatdatapage/confirm.html',
                             form = form,
