@@ -34,6 +34,7 @@ from cus_app.models     import register_user, User, Revision, Signoff, Parameter
 from cus_app.ocatdatapage import bp
 from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
+import cus_app.supple.database_interface as dbi
 import cus_app.ocatdatapage.format_ocat_data as fod
 
 

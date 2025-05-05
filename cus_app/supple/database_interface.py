@@ -11,10 +11,15 @@ Database Interface
 import sys
 import os
 from datetime import datetime
+import json
 from sqlalchemy import select, insert
 from cus_app import db
 from cus_app.models     import register_user, User, Revision, Signoff, Parameter, Request, Original
 from flask_login    import current_user
+
+stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
+with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
+    _PARAM_SELECTIONS = json.load(f)
 
 def construct_revision(obsid,ocat_data,kind):
     """
@@ -79,6 +84,16 @@ def determine_signoff(req_dict):
     acis = 'Not Required'
     acis_si = 'Not Required'
     hrc_si = 'Not Required'
+    #: Iterate through the requested parameter changes and define their signoff.
+    for key in req_dict.keys():
+        if key in _PARAM_SELECTIONS['general_signoff_params']:
+            gen = 'Pending'
+        if key in _PARAM_SELECTIONS['acis_signoff_params']:
+            acis = 'Pending'
+        if key in _PARAM_SELECTIONS['acis_si_signoff_params']:
+            acis_si = 'Pending'
+        if key in _PARAM_SELECTIONS['hrc_si_signoff_params']:
+            hrc_si = 'Pending'
     return gen, acis, acis_si, hrc_si
 
 
