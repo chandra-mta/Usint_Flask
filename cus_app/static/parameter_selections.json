@@ -113,7 +113,15 @@
         "spectra_max_count",
         "spwindow_flag"
     ],
-    "usint_created": [
+    "ocat_unit_change": [
+        "ra",
+        "dec",
+        "y_amp",
+        "y_freq",
+        "z_amp",
+        "z_freq"
+    ],
+    "usint_unit_change": [
         "ra_hms",
         "dec_dms",
         "y_amp_asec",
@@ -154,7 +162,8 @@
         "roll_constraint",
         "roll_180",
         "roll",
-        "roll_toleranceconstr_in_remarks",
+        "roll_tolerance",
+        "constr_in_remarks",
         "pointing_constraint",
         "phase_epoch",
         "phase_period",
