@@ -175,8 +175,6 @@
         "comments"
     ],
     "acis_signoff_params": [
-        "ra",
-        "dec",
         "exp_mode",
         "bep_pack",
         "frame_time",
@@ -216,8 +214,6 @@
         "sample"
     ],
     "acis_si_signoff_params": [
-        "ra",
-        "dec",
         "exp_mode",
         "bep_pack",
         "frame_time",
@@ -244,8 +240,6 @@
         "eventfilter",
         "eventfilter_lower",
         "eventfilter_higher",
-        "multiple_spectral_lines",
-        "spectra_max_count",
         "spwindow_flag",
         "chip",
         "start_row",
