@@ -252,11 +252,5 @@
     ],
     "hrc_si_signoff_params": [
         "hrc_si_mode"
-    ],
-    "notify_acis_separately": [
-        "ra",
-        "dec",
-        "multiple_spectral_lines",
-        "spectra_max_count"
     ]
 }
