@@ -9,9 +9,8 @@ from datetime import datetime
 import os
 import json
 from flask import current_app
-from cus_app.supple.read_ocat_data import check_approval
 from cus_app.supple.helper_functions import coerce, approx_equals, convert_ra_dec_format, reorient_rank, OCAT_DATETIME_FORMAT
-import itertools
+from cus_app.supple.database_interface import is_approved
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
@@ -117,7 +116,7 @@ def create_warning_line(ocat_data):
         else:
             line += f" (Scheduled on: {obs_date}.)"
     
-    if check_approval(ocat_data.get('obsid')):
+    if is_approved(ocat_data.get('obsid')):
         line = "This Observation Is Already On the Approved List"
 
     return line

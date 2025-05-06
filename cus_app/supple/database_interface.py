@@ -156,3 +156,18 @@ def find_next_rev_no(obsid):
         return 1
     else:
         return max(revision_numbers) + 1
+
+
+def is_approved(obsid):
+    """
+    Check whether an obsid is listed as approved in the usint database
+    """
+    obsid = int(obsid)
+    revision_result = db.session.execute(db.select(Revision).where(Revision.obsid==obsid).order_by(Revision.revision_number)).scalars().all()
+    is_approved = False
+    for rev in revision_result:
+        if rev.kind == 'asis':
+            is_approved = True
+        elif rev.kind == 'remove':
+            is_approved = False
+    return is_approved
