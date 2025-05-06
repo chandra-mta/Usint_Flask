@@ -8,6 +8,7 @@
 import sys
 import signal
 import traceback
+from datetime import datetime
 from itertools import zip_longest
 
 from flask import Flask, render_template
@@ -32,7 +33,8 @@ function_dict = {
     'rank_ordr': rank_ordr,
     'enumerate': enumerate,
     'approx_equals': approx_equals,
-    'zip': zip
+    'zip': zip,
+    'datetime': datetime
 }
 def create_app(_configuration_name):
     app = Flask(__name__)

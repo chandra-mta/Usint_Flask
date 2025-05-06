@@ -142,6 +142,13 @@ def determine_signoff(req_dict):
             hrc_si = 'Pending'
     return gen, acis, acis_si, hrc_si
 
+def name_by_id():
+    name_by_id = {None:None}
+    result = db.session.execute(select(User)).scalars()
+    for user in result:
+        name_by_id[user.id] = user.username
+    return name_by_id
+
 def pull_param(param):
     """
     Fetch the Parameter ORM by name.
@@ -179,7 +186,7 @@ def pull_revision(**kwargs):
     #
     last = kwargs.get('last')
     if last is not None:
-        return db.session.execute(select(Revision).order_by(desc(Revision.id)).limit(last)).all()
+        return db.session.execute(select(Revision).order_by(desc(Revision.id)).limit(last)).scalars().all()
 
     #
     # --- Fetch by time interval
@@ -187,11 +194,11 @@ def pull_revision(**kwargs):
     before = _to_epoch(kwargs.get('before'))
     after = _to_epoch(kwargs.get('after'))
     if before is None and after is not None:
-        return db.session.execute(select(Revision).where(Revision.time >= after).order_by(desc(Revision.id))).all()
+        return db.session.execute(select(Revision).where(Revision.time >= after).order_by(desc(Revision.id))).scalars().all()
     elif before is not None and after is None:
-        return db.session.execute(select(Revision).where(Revision.time <= before).order_by(desc(Revision.id))).all()
+        return db.session.execute(select(Revision).where(Revision.time <= before).order_by(desc(Revision.id))).scalars().all()
     elif before is not None and after is not None:
-        return db.session.execute(select(Revision).where(Revision.time <= before).where(Revision.time >= after).order_by(desc(Revision.id))).all()        
+        return db.session.execute(select(Revision).where(Revision.time <= before).where(Revision.time >= after).order_by(desc(Revision.id))).scalars().all()        
 
     
 def pull_signoff(rev_obj):

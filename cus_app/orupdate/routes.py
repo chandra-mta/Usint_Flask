@@ -40,7 +40,17 @@ def index():
     """
     Prototype
     """
-    revs = [SignoffRow(prefix='12345.001'), SignoffRow(prefix='12345.002')]
+    _NAME_BY_ID = dbi.name_by_id()
+    revs = dbi.pull_revision(last=10)
+    signoff_forms =[]
+    signoff_sqls = []
+    for rev in revs:
+        sql = dbi.pull_signoff(rev)
+        signoff_sqls.append(sql)
+        signoff_forms.append(SignoffRow(prefix=str(sql.id)))
+
     return render_template("orupdate/index.html",
-                           revs = revs
+                           signoff_forms = signoff_forms,
+                           signoff_sqls = signoff_sqls,
+                           _NAME_BY_ID = _NAME_BY_ID
                            )
