@@ -104,9 +104,12 @@ def confirm(obsid=None):
     #
     form = ConfirmForm(request.form)
     ocat_data, warning, orient_maps, ocat_form_dict = fetch_session_data(obsid)
+    #: An original state dictionary is always created and filled. The change request dictionary could be empty if the change is non-norm.
     org_dict, req_dict = fod.construct_entries(ocat_form_dict, ocat_data)
     multi_obsid = create_obsid_list(ocat_form_dict.get('multiobsid'), obsid)
     or_dict = rod.check_obsid_in_or_list([int(obsid)] + multi_obsid)
+    is_approved = dbi.is_approved(obsid)
+    kind = ocat_form_dict.get("submit_choice")
     if request.method == "POST" and form.is_submitted(): #: no validators
         if form.previous_page.data:
             #: Go back and edit
@@ -115,7 +118,7 @@ def confirm(obsid=None):
             #: Write changes to the database files
             try:
                 #: Change for the directly-edited obsid
-                write_to_database(obsid, ocat_data, ocat_form_dict.get("submit_choice"), org_dict, req_dict)
+                write_to_database(obsid, ocat_data, kind , org_dict, req_dict)
                 #: Changes to the obsids listed in the multi_obsid
             except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
@@ -128,6 +131,8 @@ def confirm(obsid=None):
                             obsid = obsid,
                             multi_obsid = multi_obsid,
                             or_dict = or_dict,
+                            is_approved = is_approved,
+                            kind = kind,
                             org_dict = org_dict,
                             req_dict = req_dict,
                             _LABELS = _LABELS,
@@ -221,7 +226,7 @@ def create_obsid_list(list_string, obsid):
     obsids_list = sorted(set(obsids_list) - {obsid})
     return obsids_list
 
-def write_to_database(obsid, ocat_data, kind, org_dict, req_dict):
+def write_to_database(obsid, ocat_data, kind, org_dict, req_dict={}):
     """
     Perform a set of database injections into the relevant usint.db tables for changes made in the ocatdatapage
     """
@@ -229,9 +234,15 @@ def write_to_database(obsid, ocat_data, kind, org_dict, req_dict):
     db.session.add(rev)
     sign = dbi.construct_signoff(rev,req_dict)
     db.session.add(sign)
-    reqs = dbi.construct_requests(rev, req_dict)
-    for req in reqs:
-        db.session.add(req)
     orgs = dbi.construct_originals(rev, org_dict)
     for org in orgs:
         db.session.add(org)
+    if kind == 'norm':
+        reqs = dbi.construct_requests(rev, req_dict)
+        for req in reqs:
+            db.session.add(req)
+    elif kind == 'clone':
+        only_comment = {'comments': req_dict.get('comments')}
+        reqs = dbi.construct_requests(rev, only_comment)
+        for req in reqs:
+            db.session.add(req)
