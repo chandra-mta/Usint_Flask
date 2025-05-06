@@ -61,7 +61,16 @@ def index(obsid=None):
     # --- Note that the 4KB limitation on client-side cookies means we use flask_session to
     # --- integrate server-side cookie directly into the session table of the usint revision SQL database
     #
-    ocat_data, warning, orient_maps, ocat_form_dict = fetch_session_data(obsid)
+    if obsid is None or not obsid.isdigit():
+        return redirect(url_for('ocatdatapage.provide_obsid'))
+    try:
+        ocat_data, warning, orient_maps, ocat_form_dict = fetch_session_data(obsid)
+    except NoResultFound as e:
+        flash("Obsid is not found in the database!")
+        return redirect(url_for('ocatdatapage.provide_obsid'))
+    except MultipleResultsFound as e:
+        flash("Multiple Obsid's found. Please contact Tech and Admin listed at the bottom of the webpage.")
+        return redirect(url_for('ocatdatapage.provide_obsid'))
     #
     # --- Render Ocat Data In A WTForm
     #
@@ -142,6 +151,10 @@ def finalize(obsids=[]):
     if len(obsids)>0:
         clear_session_data(obsids[0]) #: First obsid in finalized list is the one operated on in the revision set
     return f"<p>obsids = {obsids}</p>"
+
+@bp.route('/provide_obsid', methods=['GET', 'POST'])
+def provide_obsid():
+    return render_template('ocatdatapage/provide_obsid.html')
 
 def clear_session_data(obsid):
     session.pop(f'ocat_data_{obsid}',None)
