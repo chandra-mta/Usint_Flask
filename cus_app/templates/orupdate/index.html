@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+
+{% block title %}Ocat Data Page{% endblock %}
+{% block main_title %}Ocat Data Page{% endblock %}
+{% block app_content %}
+<form method="POST">
+    <table>
+    {% for form in revs %}
+        <tr>
+            <td>{{form.gen}}</td>
+            <td>{{form.acis}}</td>
+        </tr>
+    {% endfor %}
+    </table>
+</form>
+{% endblock%}
+
+{% block scripts %}
+    {{ super() }}
+    <script src="{{ url_for('static', filename='usint.js') }}"></script>
+{% endblock%}

@@ -78,6 +78,13 @@ def create_app(_configuration_name):
     app.register_blueprint(odp_bp, url_prefix="/ocatdatapage")
 
     #
+    # --- target parameter status page
+    #
+    from cus_app.orupdate import bp as oru_bp
+
+    app.register_blueprint(oru_bp, url_prefix="/orupdate")
+
+    #
     # --- Main Usint Page
     #
     @app.route("/")
