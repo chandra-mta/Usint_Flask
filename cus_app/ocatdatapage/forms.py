@@ -4,6 +4,11 @@
 :Author: W. Aaron (william.aaron@cfa.harvard.edu)
 :Last Updated: Mar 13, 2025
 
+**CONCEPT MEMO**: All of the variable and function names within the form classes follow specific FlaskForm criteria in order to
+allow for Jinja Template page generation to input initial data into the Ocat Form using the data argument, as well as validate
+input selections for fields with the validate_<field name> functions. Changing these names will break the form validation unless matched with corresponding
+initial data dictionary keys and field names.
+
 """
 from flask_wtf import FlaskForm
 from wtforms import Field, Form, SelectField, StringField, SubmitField, FormField, FloatField, IntegerField, FieldList, TextAreaField, RadioField, DateTimeField
@@ -33,13 +38,6 @@ _CHOICE_SUBMIT = [("norm", "Normal Change"),
                 ("remove","ObsID no longer ready to go"),
                 ("clone","Split this ObsID")
             ]
-
-"""
-**CONCEPT MEMO**: All of the variable and function names within the form classes follow specific FlaskForm criteria in order to
-allow for Jinja Template page generation to input initial data into the Ocat Form using the data argument, as well as validate
-input selections for fields with the validate_<field name> functions. Changing these names will break the form validation unless matched with corresponding
-initial data dictionary keys and field names.
-"""
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'labels.json')) as f:
     _LABELS = json.load(f)
