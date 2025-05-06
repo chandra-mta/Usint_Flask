@@ -1,0 +1,158 @@
+{% extends 'base.html' %}
+
+<!-- -->
+<!-- this page displays the final page after submitting the update to the database -->
+<!-- -->
+
+{% block title %}Ocat Data Page{% endblock %}
+{% block main_title %}Ocat Data Page{% endblock %}
+
+{% block app_content %}
+<p>
+<strong>
+    Obsid: {{ obsid }} has been submitted as {{ kind }}. Thank you.
+    {% if kind == 'norm' %}
+        The submitted changes may take 48 hours before appearing in the database.
+    {% elif kind == 'asis' %}
+        Approval occurs immediately.
+    {% elif kind == 'remove' %}
+        The {{ obsid }} was removed from the approved list. 
+    {% elif kind == 'clone' %}
+        The cloning of {{ obsid }} may take 48 hours.
+    {% endif %}
+</strong>
+</p>
+<!-- -->
+<!-- if multiple obsids are submitted, display the obsids -->
+<!-- -->
+{% set ns = namespace(requested=0, cannot_request=0, unaffected=0)%}
+{% if multi_dict['requested'] |length > 0 %}
+    <p>
+    Please make sure that all your obsids submitted are logged correctly,
+    either by checking emails you received, or going to: <br>
+    
+    </p>
+    <div style='margin-left:40px;padding-bottom:20px;'>
+    {% if multi_dict['requested']|length == 1 %}
+        <p>You also submitted a following obsid: </p>
+    {% else %}
+        <p>You also submitted following obsids: </p>
+    {% endif %}
+
+    <table border=0>
+    <tr>
+        {% for sobsid in multi_dict['requested'] %}
+            {% if ns.requested % 8 == 0 %}
+                </tr>
+                <tr>
+            {% endif %}
+            {% set slink = '../ocatdatapage/' + sobsid %}
+            <td>
+                <span style='padding-left:5px;'>
+                &#8729;
+                <a href="javascript:WindowOpener(' {{ slink }} ')"><b>{{ sobsid }}</b></a>
+                </span>
+                </td>
+            {% set ns.requested = ns.requested + 1 %}
+        {% endfor %}
+    </tr>
+    </table>
+    </div>
+    <hr>
+{% endif %}
+<!-- -->
+<!-- if there are obsids which cannot be updated (e.g., already observed), display here -->
+<!-- -->
+{% if multi_dict['cannot_request'] |length > 0 %}
+
+    <div style='margin-left:40px;padding-bottom:20px;'>
+    {% if multi_dict['cannot_request']| length == 1%}
+        <p> The following obsid was not processed due to its inactive status.</p>
+    {% else %}
+        <p> The following obsids were not processed due to their inactive status.</p>
+    {% endif %}
+    <table border=0>
+    <tr>
+        {% for sobsid in multi_dict['cannot_request'] %}
+            {% if ns.cannot_request % 8 == 0 %}
+                </tr>
+                <tr>
+            {% endif %}
+            {% set slink = '../ocatdatapage/' + sobsid %}
+            <td>
+                <span style='padding-left:5px;'>
+                &#8729;
+                <a href="javascript:WindowOpener(' {{ slink }} ')"><b>{{ sobsid }}</b></a>
+                </span>
+                </td>
+            {% set ns.cannot_request = ns.cannot_request + 1 %}
+        {% endfor %}
+    </tr>
+    </table>
+    </div>
+{% endif %}
+<!-- -->
+<!-- if the status of the obsids are 'unobserved' or 'scheduled', but none of the parameter -->
+<!-- values met the conditions of the update; no changes are made for these obsids          -->
+<!-- -->
+{% if multi_dict['unaffected'] | length >0 %}
+    <div style='margin-left:40px;padding-bottom:20px;'>
+    {% if multi_dict['unaffected'] | length == 1%}
+        <p> The following obsid was not processed because parameter values did not 
+            match the condition.</p>
+    {% else %}
+        <p> The following obsids were not processed because parameter values did not
+            match the condition.</p>
+    {% endif %}
+    <table border=0>
+    <tr>
+        {% for sobsid in multi_dict['unaffected'] %}
+            {% if ns.unaffected % 8 == 0 %}
+                </tr>
+                <tr>
+            {% endif %}
+            {% set slink = '../ocatdatapage/' + sobsid %}
+            <td>
+                <span style='padding-left:5px;'>
+                &#8729;
+                <a href="javascript:WindowOpener(' {{ slink }} ')"><b>{{ sobsid }}</b></a>
+                </span>
+                </td>
+            {% set ns.unaffected = ns.unaffected + 1 %}
+        {% endfor %}
+    </tr>
+    </div>
+{% endif %}
+<!-- -->
+<!-- normal ending display; asking the next obsid -->
+<!-- -->
+<form  name='newForm' method='post' onSubmit="openOcatPage(this)">
+
+<p style='padding-top:50px;padding-bottom:100px;'>
+
+<strong>Please Provide Next Obsid:</strong>
+
+<span style='padding-left:10px;'></span>
+<input type='text', id='nobsid' name='nobsid' size=10>
+
+<span style='padding-left:10px;'></span>
+<button onclick='OpenNextPage()'>Submit</button>
+
+</p>
+</form>
+{% endblock %}
+
+{% block scripts %}
+    {{ super() }}
+    <script>
+        function OpenNextPage(){
+            var obsid = document.getElementById('nobsid').value;
+            var link  = '../ocatdatapage/' + obsid;
+            window.open(link);
+            this.close();
+        }
+    </script>
+
+{% endblock %}
+
+

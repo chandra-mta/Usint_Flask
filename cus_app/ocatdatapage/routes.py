@@ -116,12 +116,17 @@ def confirm(obsid=None):
             return redirect(url_for('ocatdatapage.index', obsid=obsid))
         elif form.finalize.data:
             #: Write changes to the database files
+            multi_dict = {'requested': [], 'cannot_request': [], 'unaffected': []}
             try:
                 #: Change for the directly-edited obsid
                 write_to_database(obsid, ocat_data, kind, org_dict, req_dict)
                 #: Changes to the obsids listed in the multi_obsid
                 for additional_obsid in multi_obsid:
                     additional_ocat_data = rod.read_ocat_data(additional_obsid)
+
+                    if additional_ocat_data.get('status') in ['scheduled', 'unobserved', 'untriggered']:
+                        multi_dict['cannot_request'].append(str(additional_obsid))
+                        continue
                     
                     #: Generate form specific copies of ocat data. Added to ocat data to later change comparison.
                     additional_ocat_data.update(fod.generate_additional(additional_ocat_data))
@@ -142,14 +147,21 @@ def confirm(obsid=None):
                             additional_req_dict = {k:v for k,v in req_dict.items() if k not in ['hrc_timing_mode', 'hrc_zero_block', 'hrc_si_mode']}
                         else:
                             additional_req_dict = req_dict
+                    
+                    if len(additional_req_dict) == 0:
+                        multi_dict['unaffected'].append(str(additional_obsid))
+                        continue
 
+                    multi_dict['requested'].append(str(additional_obsid))
                     write_to_database(additional_obsid, additional_ocat_data, kind, additional_org_dict, additional_req_dict)
             except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
                 db.session.rollback()
                 raise e #: TODO replace with abort(500)
-            return redirect(url_for('ocatdatapage.finalize', obsids=[int(obsid)]+multi_obsid))
+            session[f'kind_{obsid}'] = kind
+            session[f'multi_dict_{obsid}'] = multi_dict
+            return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
     return render_template('ocatdatapage/confirm.html',
                             form = form,
                             obsid = obsid,
@@ -164,15 +176,20 @@ def confirm(obsid=None):
                             _FLAG_RANK_COLUMN_ORDR = fod._FLAG_RANK_COLUMN_ORDR,
                            )
 
-@bp.route('/finalize/<obsids>', methods=['GET', 'POST'])
-def finalize(obsids=[]):
+@bp.route('/finalize/<obsid>', methods=['GET', 'POST'])
+def finalize(obsid=None):
     """
     If successfully redirected, then the confirmation page's database transactions were successful.
     Therefore, we can clear the Flask-Session server side cookie data for this obsid.
     """
-    if len(obsids)>0:
-        clear_session_data(obsids[0]) #: First obsid in finalized list is the one operated on in the revision set
-    return f"<p>obsids = {obsids}</p>"
+    multi_dict = session.get(f'multi_dict_{obsid}')
+    kind = session.get(f"kind_{obsid}")
+    clear_session_data(obsid)
+    return render_template('ocatdatapage/finalize.html',
+                           obsid = obsid,
+                           multi_dict = multi_dict,
+                           kind = kind
+                           )
 
 @bp.route('/provide_obsid', methods=['GET', 'POST'])
 def provide_obsid():
@@ -184,6 +201,8 @@ def clear_session_data(obsid):
     session.pop(f'orient_maps_{obsid}',None)
     session.pop(f"flag_override_{obsid}",None)
     session.pop(f'ocat_form_dict_{obsid}',None)
+    session.pop(f'multi_dict_{obsid}',None)
+    session.pop(f"kind_{obsid}", None)
 
 def fetch_session_data(obsid):
     """
