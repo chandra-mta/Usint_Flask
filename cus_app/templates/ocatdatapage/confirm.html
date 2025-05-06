@@ -29,9 +29,9 @@
             <div style='margin-left: 40px;padding-bottom:30px;'>
             <h4>The same changes will also apply to obsid(s): </h4>
             <table border=0>
-                <tr>
-        {% for obsid in multi_obsid %}
-            {% set sobsid = obsid | string %}
+            <tr>
+            {% for obsid in multi_obsid %}
+                {% set sobsid = obsid | string %}
                 {% if ns.multi_count % 8 == 0 %}
                     </tr>
                     <tr>
@@ -56,6 +56,10 @@
             {% endfor %}
             </tr>
             </table>
+            <p>
+            Instrument-specific parameter changes will not be applied to the above obsids if they are different instruments.
+            (e.g ACIS subarray won't change for an HRC observation.)
+            </p>
             <!-- if some of the obsids are on the active OR list, display the warning -->
             {% if ns.multi_orcnt > 0 %}
                 <p>

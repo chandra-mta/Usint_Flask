@@ -118,8 +118,32 @@ def confirm(obsid=None):
             #: Write changes to the database files
             try:
                 #: Change for the directly-edited obsid
-                write_to_database(obsid, ocat_data, kind , org_dict, req_dict)
+                write_to_database(obsid, ocat_data, kind, org_dict, req_dict)
                 #: Changes to the obsids listed in the multi_obsid
+                for additional_obsid in multi_obsid:
+                    additional_ocat_data = rod.read_ocat_data(additional_obsid)
+                    
+                    #: Generate form specific copies of ocat data. Added to ocat data to later change comparison.
+                    additional_ocat_data.update(fod.generate_additional(additional_ocat_data))
+                    additional_org_dict, additional_req_dict = fod.construct_entries(ocat_form_dict, additional_ocat_data)
+
+                    #: Write the database changes for this new obsid, skipping past incompatible parameter changes.
+                    additional_req_dict = {} #: Only want to make changes as confirmed by user. Not infer new ones from construct_entries()
+                    if (req_dict.get('instrument') or org_dict.get('instrument')) in ['ACIS-I', 'ACIS-S']:
+                        #: Current request involves ACIS
+                        if  additional_org_dict.get('instrument')in ['HRC-I', 'HRC-S']:
+                            additional_req_dict = {k:v for k,v in req_dict.items() if k not in _PARAM_SELECTIONS['acis_signoff_params']}
+                        else:
+                            additional_req_dict = req_dict
+                    
+                    if (req_dict.get('instrument') or org_dict.get('instrument')) in ['HRC-I', 'HRC-S']:
+                        #: Current request involves ACIS
+                        if  additional_org_dict.get('instrument')in ['ACIS-I', 'ACIS-S']:
+                            additional_req_dict = {k:v for k,v in req_dict.items() if k not in ['hrc_timing_mode', 'hrc_zero_block', 'hrc_si_mode']}
+                        else:
+                            additional_req_dict = req_dict
+
+                    write_to_database(additional_obsid, additional_ocat_data, kind, additional_org_dict, additional_req_dict)
             except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
@@ -204,6 +228,7 @@ def create_obsid_list(list_string, obsid):
     Create a list of obsids from form input for a parameter display page.
     """
     obsid = int(obsid)
+    list_string = str(list_string)
     if list_string is None or list_string.strip() == '':
         return []
     #: Split the input string into elements
