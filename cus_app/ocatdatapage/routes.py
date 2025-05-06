@@ -114,16 +114,9 @@ def confirm(obsid=None):
         elif form.finalize.data:
             #: Write changes to the database files
             try:
-                rev = dbi.construct_revision(obsid,ocat_data,ocat_form_dict.get("submit_choice"))
-                db.session.add(rev)
-                sign = dbi.construct_signoff(rev,req_dict)
-                db.session.add(sign)
-                reqs = dbi.construct_requests(rev, req_dict)
-                for req in reqs:
-                    db.session.add(req)
-                orgs = dbi.construct_originals(rev, org_dict)
-                for org in orgs:
-                    db.session.add(org)
+                #: Change for the directly-edited obsid
+                write_to_database(obsid, ocat_data, ocat_form_dict.get("submit_choice"), org_dict, req_dict)
+                #: Changes to the obsids listed in the multi_obsid
             except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
@@ -227,3 +220,18 @@ def create_obsid_list(list_string, obsid):
     #: Remove duplicates, sort, and exclude the main obsid
     obsids_list = sorted(set(obsids_list) - {obsid})
     return obsids_list
+
+def write_to_database(obsid, ocat_data, kind, org_dict, req_dict):
+    """
+    Perform a set of database injections into the relevant usint.db tables for changes made in the ocatdatapage
+    """
+    rev = dbi.construct_revision(obsid,ocat_data,kind)
+    db.session.add(rev)
+    sign = dbi.construct_signoff(rev,req_dict)
+    db.session.add(sign)
+    reqs = dbi.construct_requests(rev, req_dict)
+    for req in reqs:
+        db.session.add(req)
+    orgs = dbi.construct_originals(rev, org_dict)
+    for org in orgs:
+        db.session.add(org)
