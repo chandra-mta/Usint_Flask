@@ -29,6 +29,8 @@ with open(os.path.join(stat_dir, 'labels.json')) as f:
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
 
+_SIGNOFF_COLUMNS = ('general', 'acis', 'acis_si', 'hrc_si', 'usint') #: Prefix names for the columns of Signoff
+
 @bp.before_app_request
 def before_request():
     if not current_user.is_authenticated:
@@ -38,19 +40,35 @@ def before_request():
 @bp.route('/index', methods=['GET', 'POST'])
 def index():
     """
-    Prototype
+    Display the Target Parameter Status Page
     """
     _NAME_BY_ID = dbi.name_by_id()
     revs = dbi.pull_revision(last=10)
-    signoff_forms =[]
-    signoff_sqls = []
+    open_signoff_forms =[]
+    open_signoff_sqls = []
+    closed_signoff_sqls = []
     for rev in revs:
         sql = dbi.pull_signoff(rev)
-        signoff_sqls.append(sql)
-        signoff_forms.append(SignoffRow(prefix=str(sql.id)))
+        if is_open(sql):
+            open_signoff_sqls.append(sql)
+            open_signoff_forms.append(SignoffRow(prefix=str(sql.id)))
+        else:
+            closed_signoff_sqls.append(sql)
 
     return render_template("orupdate/index.html",
-                           signoff_forms = signoff_forms,
-                           signoff_sqls = signoff_sqls,
+                           open_signoff_forms = open_signoff_forms,
+                           open_signoff_sqls = open_signoff_sqls,
+                           closed_signoff_sqls = closed_signoff_sqls,
                            _NAME_BY_ID = _NAME_BY_ID
                            )
+
+def is_open(signoff_obj):
+    """
+    Returns boolean if the signoff entry still needs a signature.
+    """
+    is_open = False
+    for attr in _SIGNOFF_COLUMNS:
+        if getattr(signoff_obj, f"{attr}_status") == 'Pending':
+            is_open = True
+            break
+    return is_open
