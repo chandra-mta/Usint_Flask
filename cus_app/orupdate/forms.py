@@ -34,3 +34,4 @@ class SignoffRow(FlaskForm):
     acis_si = SubmitField("Signoff")
     hrc_si = SubmitField("Signoff")
     usint = SubmitField("Signoff")
+    approve = SubmitField("Signoff & Approve")

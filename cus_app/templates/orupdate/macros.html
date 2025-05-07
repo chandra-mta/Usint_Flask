@@ -12,6 +12,14 @@
     </td>
 {% endmacro%}
 
+{% macro usint_cell(usint_field, approve_field, status, user, time)%}
+    {% if status == 'Pending' and usint_field != None and approve_field != None %}
+        <td>{{ usint_field() }}<br>{{ approve_field() }}</td>
+    {% else %}
+        {{ signoff_cell(usint_field, status, user, time) }}
+    {% endif %}
+{% endmacro%}
+
 {% macro revision_info_cell(revision, _NAME_BY_ID)%}
     <th class='cent' style='background-color:white;'>
         <!-- make link to chkupdata -->
@@ -29,7 +37,7 @@
         {{ signoff_cell(form.acis, sql.acis_status, _NAME_BY_ID.get(sql.acis_signoff_id), sql.acis_time) }}
         {{ signoff_cell(form.acis_si, sql.acis_si_status, _NAME_BY_ID.get(sql.acis_si_signoff_id), sql.acis_si_time) }}
         {{ signoff_cell(form.hrc_si, sql.hrc_si_status, _NAME_BY_ID.get(sql.hrc_si_signoff_id), sql.hrc_si_time) }}
-        {{ signoff_cell(form.usint, sql.usint_status, _NAME_BY_ID.get(sql.usint_signoff_id), sql.usint_time) }}
+        {{ usint_cell(form.usint, form.approve, sql.usint_status, _NAME_BY_ID.get(sql.usint_signoff_id), sql.usint_time) }}
     </tr>
 {% endmacro%}
 
@@ -40,7 +48,7 @@
         {{ signoff_cell(None, sql.acis_status, _NAME_BY_ID.get(sql.acis_signoff_id), sql.acis_time) }}
         {{ signoff_cell(None, sql.acis_si_status, _NAME_BY_ID.get(sql.acis_si_signoff_id), sql.acis_si_time) }}
         {{ signoff_cell(None, sql.hrc_si_status, _NAME_BY_ID.get(sql.hrc_si_signoff_id), sql.hrc_si_time) }}
-        {{ signoff_cell(None, sql.usint_status, _NAME_BY_ID.get(sql.usint_signoff_id), sql.usint_time) }}
+        {{ usint_cell(None, None, sql.usint_status, _NAME_BY_ID.get(sql.usint_signoff_id), sql.usint_time) }}
     </tr>
 {% endmacro%}
 
