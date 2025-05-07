@@ -218,17 +218,6 @@ def pull_revision(**kwargs):
     query = query.order_by(desc(Revision.id))
     return db.session.execute(query).scalars().all()
 
-    
-def pull_signoff(rev_obj):
-    """
-    Fetch signoff matching provides revision
-    """
-    try:
-        result = db.session.execute(select(Signoff).where(Signoff.revision_id == rev_obj.id)).scalar_one()
-    except NoResultFound:
-        raise NoResultFound(f"No Signoff for {rev_obj}")
-    return result
-
 def find_next_rev_no(obsid):
     """
     Find the revisions for the provided obsid in the listed revision table, and identify the next revision number

@@ -74,7 +74,7 @@ def index():
     closed_revs = []
 
     for rev in revs:
-        sql = dbi.pull_signoff(rev)
+        sql = rev.signoff
         if is_open(sql):
             open_signoff_sqls.append(sql)
             open_signoff_forms.append(SignoffRow(prefix=str(sql.id)))
