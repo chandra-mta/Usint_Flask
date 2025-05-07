@@ -4,8 +4,8 @@
 <!-- Import Macros-->
 {%  from 'orupdate/macros.html' import closed_signoff_row, open_signoff_row, signoff_cell, help_popup_page %}
 
-{% block title %}Ocat Data Page{% endblock %}
-{% block main_title %}Ocat Data Page{% endblock %}
+{% block title %}Target Parameter Status Page{% endblock %}
+{% block main_title %}Target Parameter Status Page{% endblock %}
 {% block app_content %}
     <p style='font-size:120%;'>
     This form contains all requested updates which have either 
@@ -50,7 +50,7 @@
     <!-- display table starts here -->
     <div style='padding-top:30px;'></div>
     <form method="POST">
-        <table border=1 style='margin-left:auto;margin-right:auto;'>
+        <table border=1 class='cent wide' style='margin-left:auto;margin-right:auto;'>
             <th class='cent'>OBSID.revision</th>
             <th class='cent'>General edits</th>
             <th class='cent'>ACIS edits</th>
@@ -61,16 +61,16 @@
                 <span style='padding-left:20px;padding-right:20px'>Note</span>
             </th>
             <!-- Open ObsIds -->
-            {% for form, sql in zip(open_signoff_forms,open_signoff_sqls) %}
-                {{open_signoff_row(form, sql, _NAME_BY_ID)}}
+            {% for rev, form, sql in zip(open_revs, open_signoff_forms,open_signoff_sqls) %}
+                {{open_signoff_row(rev, form, sql, _NAME_BY_ID)}}
             {% endfor %}
             <!-- Spacer if necessary -->
             {% if open_signoff_sqls|length > 0 and closed_signoff_sqls|length > 0 %}
                 <tr><th colspan=7>&#160;</th></tr>
             {% endif %}
             <!-- Closed ObsIds -->
-            {% for sql in closed_signoff_sqls %}
-            {{closed_signoff_row(sql, _NAME_BY_ID)}}
+            {% for rev, sql in zip(closed_revs, closed_signoff_sqls) %}
+                {{closed_signoff_row(rev, sql, _NAME_BY_ID)}}
             {% endfor %}
             <!-- Display for no recent revisions & signoffs -->
             {% if open_signoff_sqls|length == 0 and closed_signoff_sqls|length == 0 %}

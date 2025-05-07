@@ -46,19 +46,27 @@ def index():
     revs = dbi.pull_revision(last=10)
     open_signoff_forms =[]
     open_signoff_sqls = []
+    open_revs =[]
+
     closed_signoff_sqls = []
+    closed_revs = []
+
     for rev in revs:
         sql = dbi.pull_signoff(rev)
         if is_open(sql):
             open_signoff_sqls.append(sql)
             open_signoff_forms.append(SignoffRow(prefix=str(sql.id)))
+            open_revs.append(rev)
         else:
             closed_signoff_sqls.append(sql)
+            closed_revs.append(rev)
 
     return render_template("orupdate/index.html",
                            open_signoff_forms = open_signoff_forms,
                            open_signoff_sqls = open_signoff_sqls,
+                           open_revs = open_revs,
                            closed_signoff_sqls = closed_signoff_sqls,
+                           closed_revs = closed_revs,
                            _NAME_BY_ID = _NAME_BY_ID
                            )
 

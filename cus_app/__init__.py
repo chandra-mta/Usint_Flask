@@ -30,6 +30,7 @@ login = LoginManager()
 function_dict = {
     'zip_longest': zip_longest,
     'set': set,
+    'str': str,
     'rank_ordr': rank_ordr,
     'enumerate': enumerate,
     'approx_equals': approx_equals,

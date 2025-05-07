@@ -12,8 +12,19 @@
     </td>
 {% endmacro%}
 
-{% macro open_signoff_row(form, sql, _NAME_BY_ID)%}
+{% macro revision_info_cell(revision, _NAME_BY_ID)%}
+    <th class='cent' style='background-color:white;'>
+        <!-- make link to chkupdata -->
+        <u>{{ revision.obsid }}.{{str(revision.revision_number).zfill(3)}}</u><br>
+        {{ revision.sequence_number }}<br>
+        {{ datetime.fromtimestamp(revision.time).strftime('%m/%d/%y') }}<br>
+        {{ _NAME_BY_ID.get(revision.user_id) }}
+    </th>
+{% endmacro %}
+
+{% macro open_signoff_row(rev, form, sql, _NAME_BY_ID)%}
     <tr>
+        {{ revision_info_cell(rev,_NAME_BY_ID) }}
         {{ signoff_cell(form.gen, sql.general_status, _NAME_BY_ID.get(sql.general_signoff_id), sql.general_time) }}
         {{ signoff_cell(form.acis, sql.acis_status, _NAME_BY_ID.get(sql.acis_signoff_id), sql.acis_time) }}
         {{ signoff_cell(form.acis_si, sql.acis_si_status, _NAME_BY_ID.get(sql.acis_si_signoff_id), sql.acis_si_time) }}
@@ -22,8 +33,9 @@
     </tr>
 {% endmacro%}
 
-{% macro closed_signoff_row(sql, _NAME_BY_ID)%}
+{% macro closed_signoff_row(rev, sql, _NAME_BY_ID)%}
     <tr>
+        {{ revision_info_cell(rev,_NAME_BY_ID) }}
         {{ signoff_cell(None, sql.general_status, _NAME_BY_ID.get(sql.general_signoff_id), sql.general_time) }}
         {{ signoff_cell(None, sql.acis_status, _NAME_BY_ID.get(sql.acis_signoff_id), sql.acis_time) }}
         {{ signoff_cell(None, sql.acis_si_status, _NAME_BY_ID.get(sql.acis_si_signoff_id), sql.acis_si_time) }}
