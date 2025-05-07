@@ -247,8 +247,10 @@ def create_obsid_list(list_string, obsid):
     Create a list of obsids from form input for a parameter display page.
     """
     obsid = int(obsid)
+    if list_string is None:
+        return []
     list_string = str(list_string)
-    if list_string is None or list_string.strip() == '':
+    if list_string.strip() == '':
         return []
     #: Split the input string into elements
     raw_elements = [x for x in re.split(r'\s+|,|:|;', list_string) if x != '']
