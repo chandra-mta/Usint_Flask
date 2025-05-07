@@ -17,7 +17,7 @@ import sys
 import os
 from datetime import datetime
 import json
-from sqlalchemy import select, insert, desc
+from sqlalchemy import select, insert, desc, case
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
 from cus_app.models     import register_user, User, Revision, Signoff, Parameter, Request, Original
@@ -182,30 +182,51 @@ def pull_revision(**kwargs):
                 except ValueError:
                     pass
     #
-    # --- Fetch by recent number
+    # --- Starting query object
     #
-    last = kwargs.get('last')
-    if last is not None:
-        return db.session.execute(select(Revision).order_by(desc(Revision.id)).limit(last)).scalars().all()
+    query = select(Revision)
+    
+    #
+    # --- Fetch special kwargs first before general iteration for equals
+    #
+    limit = kwargs.pop('limit', None)
+    if limit is not None:
+        query = query.limit(limit)
+    
+    before = _to_epoch(kwargs.pop('before', None))
+    if before is not None:
+        query = query.where(Revision.time <= before)
+        
+    after = _to_epoch(kwargs.pop('after', None))
+    if after is not None:
+        query = query.where(Revision.time >= after)
+        
+    order_user = kwargs.pop('order_user', None)
+    if order_user is not None:
+        order_user = int(order_user)
+        query = query.order_by(case((Revision.user_id == order_user, 0),else_=1))
+    
+    order_obsid = kwargs.pop('order_obsid', False)
+    if bool(order_obsid):
+        query = query.order_by(Revision.obsid)
+    
+    for key, value in kwargs.items():
+        query = query.where(getattr(Revision, key) == value)
 
-    #
-    # --- Fetch by time interval
-    #
-    before = _to_epoch(kwargs.get('before'))
-    after = _to_epoch(kwargs.get('after'))
-    if before is None and after is not None:
-        return db.session.execute(select(Revision).where(Revision.time >= after).order_by(desc(Revision.id))).scalars().all()
-    elif before is not None and after is None:
-        return db.session.execute(select(Revision).where(Revision.time <= before).order_by(desc(Revision.id))).scalars().all()
-    elif before is not None and after is not None:
-        return db.session.execute(select(Revision).where(Revision.time <= before).where(Revision.time >= after).order_by(desc(Revision.id))).scalars().all()        
+    #: Order the query by descending Revision ID number so that the end result order
+    #: contains a suborder of returning the most recently made revisions first.
+    query = query.order_by(desc(Revision.id))
+    return db.session.execute(query).scalars().all()
 
     
 def pull_signoff(rev_obj):
     """
     Fetch signoff matching provides revision
     """
-    result = db.session.execute(select(Signoff).where(Signoff.revision_id == rev_obj.id)).scalar_one()
+    try:
+        result = db.session.execute(select(Signoff).where(Signoff.revision_id == rev_obj.id)).scalar_one()
+    except NoResultFound:
+        raise NoResultFound(f"No Signoff for {rev_obj}")
     return result
 
 def find_next_rev_no(obsid):

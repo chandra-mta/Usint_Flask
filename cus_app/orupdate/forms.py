@@ -6,8 +6,9 @@
 
 """
 from flask_wtf import FlaskForm
-from wtforms import SubmitField, Field
+from wtforms import SubmitField, Field, StringField
 from wtforms.widgets import Input
+from wtforms.validators import Optional
 from datetime import datetime
 import json
 import os
@@ -35,3 +36,9 @@ class SignoffRow(FlaskForm):
     hrc_si = SubmitField("Signoff")
     usint = SubmitField("Signoff")
     approve = SubmitField("Signoff & Approve")
+
+class OrderForm(FlaskForm):
+    order_submission = SubmitField("Date of Submission")
+    order_obsid = SubmitField("Obsid")
+    order_username = SubmitField("Username:")
+    username = StringField(validators=[Optional()])

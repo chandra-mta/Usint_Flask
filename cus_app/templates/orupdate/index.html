@@ -24,20 +24,6 @@
     <p>
     If caught early enough, any sign-off, verification, or discard action can be reversed by the user in the Remove Accidental Submission Page.
     </p>
-    
-    <!-- Links to the help page and other pages -->
-    <p style='padding-bottom:14px;'>
-    <div style='font-size:110%;'>
-    {{ help_popup_page('../static/orupdate/help.html', 'Help Page') }}
-    </div>
-    <a href="javascript:void(0);" onclick="openTab('../rm_submission/','Remove');" >
-        Remove Accidental Submission Page
-    </a>
-    <br>
-    <a href="javascript:void(0);" onclick="openTab('../express', 'Express');">
-        Express Approval Page
-    </a>
-    </p>
 
     <!-- If the database files were just updated by someone else, display the warning -->
     <!-- Warning now only notify the user if their actions would overwrite the signoffs submitted by another user, and so no action taken -->
@@ -50,6 +36,35 @@
     <!-- display table starts here -->
     <div style='padding-top:30px;'></div>
     <form method="POST">
+
+        <div style='float:right'>
+            <b><u>Order <em>UNVERIFIED</em> revisions by:</u></b>
+                <div style='font-size:90%;'>
+                    <ul>
+                        <li>{{order_form.order_submission()}}</li>
+                        <li>{{order_form.order_obsid()}}</li>
+                        <li> 
+                            {{order_form.order_username()}} 
+                            {{order_form.username(len=12)}}
+                        </li>
+                    </ul>
+                </div>
+        </div>
+
+        <!-- Links to the help page and other pages -->
+        <p style='padding-bottom:14px;'>
+        <div style='font-size:110%;'>
+        {{ help_popup_page('../static/orupdate/help.html', 'Help Page') }}
+        </div>
+        <a href="javascript:void(0);" onclick="openTab('../rm_submission/','Remove');" >
+            Remove Accidental Submission Page
+        </a>
+        <br>
+        <a href="javascript:void(0);" onclick="openTab('../express', 'Express');">
+            Express Approval Page
+        </a>
+        </p>
+
         <table border=1 class='cent wide' style='margin-left:auto;margin-right:auto;'>
             <th class='cent'>OBSID.revision</th>
             <th class='cent'>General edits</th>
