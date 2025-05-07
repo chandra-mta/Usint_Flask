@@ -3,7 +3,7 @@
     {% if status == 'Not Required' %}
         {{ status }}
     {% elif status == 'Signed' %}
-        {{user}} {{datetime.fromtimestamp(time).strftime('%m/%d/%y')}}
+        {{user.username}} {{datetime.fromtimestamp(time).strftime('%m/%d/%y')}}
     {% elif status == 'Discard' %}
         NA
     {% elif status == 'Pending' and field != None%}
@@ -20,7 +20,7 @@
     {% endif %}
 {% endmacro%}
 
-{% macro revision_info_cell(revision, _NAME_BY_ID)%}
+{% macro revision_info_cell(revision)%}
     <th class='cent' style='background-color:white;'>
         <!-- make link to chkupdata -->
         <u>{{ revision.obsid }}.{{str(revision.revision_number).zfill(3)}}</u><br>
@@ -30,25 +30,25 @@
     </th>
 {% endmacro %}
 
-{% macro open_signoff_row(rev, form, sql, _NAME_BY_ID)%}
+{% macro open_signoff_row(rev, form, sql)%}
     <tr>
-        {{ revision_info_cell(rev,_NAME_BY_ID) }}
-        {{ signoff_cell(form.gen, sql.general_status, _NAME_BY_ID.get(sql.general_signoff_id), sql.general_time) }}
-        {{ signoff_cell(form.acis, sql.acis_status, _NAME_BY_ID.get(sql.acis_signoff_id), sql.acis_time) }}
-        {{ signoff_cell(form.acis_si, sql.acis_si_status, _NAME_BY_ID.get(sql.acis_si_signoff_id), sql.acis_si_time) }}
-        {{ signoff_cell(form.hrc_si, sql.hrc_si_status, _NAME_BY_ID.get(sql.hrc_si_signoff_id), sql.hrc_si_time) }}
-        {{ usint_cell(form.usint, form.approve, sql.usint_status, _NAME_BY_ID.get(sql.usint_signoff_id), sql.usint_time) }}
+        {{ revision_info_cell(rev) }}
+        {{ signoff_cell(form.gen, sql.general_status, sql.general_signoff, sql.general_time) }}
+        {{ signoff_cell(form.acis, sql.acis_status, sql.acis_signoff, sql.acis_time) }}
+        {{ signoff_cell(form.acis_si, sql.acis_si_status, sql.acis_si_signoff, sql.acis_si_time) }}
+        {{ signoff_cell(form.hrc_si, sql.hrc_si_status, sql.hrc_si_signoff_id, sql.hrc_si_time) }}
+        {{ usint_cell(form.usint, form.approve, sql.usint_status, sql.usint_signoff, sql.usint_time) }}
     </tr>
 {% endmacro%}
 
-{% macro closed_signoff_row(rev, sql, _NAME_BY_ID)%}
+{% macro closed_signoff_row(rev, sql)%}
     <tr>
-        {{ revision_info_cell(rev,_NAME_BY_ID) }}
-        {{ signoff_cell(None, sql.general_status, _NAME_BY_ID.get(sql.general_signoff_id), sql.general_time) }}
-        {{ signoff_cell(None, sql.acis_status, _NAME_BY_ID.get(sql.acis_signoff_id), sql.acis_time) }}
-        {{ signoff_cell(None, sql.acis_si_status, _NAME_BY_ID.get(sql.acis_si_signoff_id), sql.acis_si_time) }}
-        {{ signoff_cell(None, sql.hrc_si_status, _NAME_BY_ID.get(sql.hrc_si_signoff_id), sql.hrc_si_time) }}
-        {{ usint_cell(None, None, sql.usint_status, _NAME_BY_ID.get(sql.usint_signoff_id), sql.usint_time) }}
+        {{ revision_info_cell(rev) }}
+        {{ signoff_cell(None, sql.general_status, sql.general_signoff, sql.general_time) }}
+        {{ signoff_cell(None, sql.acis_status, sql.acis_signoff, sql.acis_time) }}
+        {{ signoff_cell(None, sql.acis_si_status, sql.acis_si_signoff, sql.acis_si_time) }}
+        {{ signoff_cell(None, sql.hrc_si_status, sql.hrc_si_signoff, sql.hrc_si_time) }}
+        {{ usint_cell(None, None, sql.usint_status, sql.usint_signoff, sql.usint_time) }}
     </tr>
 {% endmacro%}
 

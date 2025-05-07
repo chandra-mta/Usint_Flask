@@ -142,12 +142,8 @@ def determine_signoff(req_dict):
             hrc_si = 'Pending'
     return gen, acis, acis_si, hrc_si
 
-def name_by_id():
-    name_by_id = {None:None}
-    result = db.session.execute(select(User)).scalars()
-    for user in result:
-        name_by_id[user.id] = user.username
-    return name_by_id
+def user_by_name(name):
+    return db.session.execute(select(User).where(User.username == name)).scalars().first()
 
 def pull_param(param):
     """

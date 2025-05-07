@@ -44,7 +44,6 @@ def index():
     """
     Display the Target Parameter Status Page
     """
-    _NAME_BY_ID = dbi.name_by_id()
     status_page_order_kwarg = session.get('status_page_order_kwarg', _DEFAULT_ORDER_KWARG) #: Pull revision orders by descending submission by default
 
     #: TODO Suggested future development to convert table sorting to a jQuery data table approach to avoid unnecessary queries.
@@ -57,11 +56,10 @@ def index():
         status_page_order_kwarg.update(_DEFAULT_ORDER_KWARG)
     elif order_form.order_username.data:
         #: Provide user id instead to refine query, if the username is misspelled no change
-        for k,v in _NAME_BY_ID.items():
-            if v == order_form.username.data:
-                status_page_order_kwarg = {'order_user': int(k)}
-                break
-        status_page_order_kwarg.update(_DEFAULT_ORDER_KWARG)
+        user = dbi.user_by_name(order_form.username.data)
+        if user is not None:
+            status_page_order_kwarg = {'order_user': user.id}
+            status_page_order_kwarg.update(_DEFAULT_ORDER_KWARG)
 
     session['status_page_order_kwarg'] = status_page_order_kwarg
     revs = dbi.pull_revision(**status_page_order_kwarg)
@@ -92,7 +90,6 @@ def index():
                            open_revs = open_revs,
                            closed_signoff_sqls = closed_signoff_sqls,
                            closed_revs = closed_revs,
-                           _NAME_BY_ID = _NAME_BY_ID
                            )
 
 def is_open(signoff_obj):

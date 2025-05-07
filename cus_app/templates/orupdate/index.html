@@ -77,7 +77,7 @@
             </th>
             <!-- Open ObsIds -->
             {% for rev, form, sql in zip(open_revs, open_signoff_forms,open_signoff_sqls) %}
-                {{open_signoff_row(rev, form, sql, _NAME_BY_ID)}}
+                {{open_signoff_row(rev, form, sql)}}
             {% endfor %}
             <!-- Spacer if necessary -->
             {% if open_signoff_sqls|length > 0 and closed_signoff_sqls|length > 0 %}
@@ -85,7 +85,7 @@
             {% endif %}
             <!-- Closed ObsIds -->
             {% for rev, sql in zip(closed_revs, closed_signoff_sqls) %}
-                {{closed_signoff_row(rev, sql, _NAME_BY_ID)}}
+                {{closed_signoff_row(rev, sql)}}
             {% endfor %}
             <!-- Display for no recent revisions & signoffs -->
             {% if open_signoff_sqls|length == 0 and closed_signoff_sqls|length == 0 %}
