@@ -25,6 +25,7 @@ class User(db.Model, UserMixin):
     
     id: Mapped[int]= mapped_column(primary_key=True, autoincrement=True)
     username: Mapped[str] = mapped_column(unique=True)
+    is_active: Mapped[bool] = mapped_column(nullable=False)
     email: Mapped[Optional[str]]
     groups: Mapped[Optional[str]]
     full_name: Mapped[Optional[str]]
@@ -48,15 +49,15 @@ class Revision(db.Model):
     revision_number: Mapped[int] = mapped_column(nullable=False)
     kind: Mapped[str] = mapped_column(nullable=False)
     sequence_number: Mapped[int] = mapped_column(nullable=False)
-    time: Mapped[int]
+    time: Mapped[int] = mapped_column(nullable=False)
     
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = False)
         
     user: Mapped["User"] = relationship(back_populates='revisions', foreign_keys=user_id)
-    signoff: Mapped["Signoff"] = relationship(back_populates='revision', foreign_keys="Signoff.revision_id")
+    signoff: Mapped["Signoff"] = relationship(back_populates='revision', foreign_keys="Signoff.revision_id", uselist=False, cascade="all, delete", passive_deletes=True)
         
-    request: Mapped["Request"] = relationship(back_populates='revision', foreign_keys="Request.revision_id")
-    original: Mapped["Original"] = relationship(back_populates='revision', foreign_keys="Original.revision_id")
+    request: Mapped[List["Request"]] = relationship(back_populates='revision', foreign_keys="Request.revision_id", cascade="all, delete, delete-orphan", passive_deletes=True)
+    original: Mapped[List["Original"]] = relationship(back_populates='revision', foreign_keys="Original.revision_id", cascade="all, delete, delete-orphan", passive_deletes=True)
         
     def __repr__(self) -> str:
         return f"Revision(id={self.id!r}, user_id={self.user_id!r}, obsid={self.obsid!r}, revision_number={self.revision_number!r}, kind={self.kind!r})"
@@ -67,8 +68,8 @@ class Signoff(db.Model):
     
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     
-    revision_id: Mapped[int] = mapped_column(ForeignKey("revisions.id"))
-    revision: Mapped["Revision"] = relationship(back_populates='signoff', foreign_keys=revision_id)
+    revision_id: Mapped[int] = mapped_column(ForeignKey("revisions.id", ondelete="CASCADE"), nullable=False, unique=True)
+    revision: Mapped["Revision"] = relationship(back_populates='signoff', foreign_keys=revision_id, single_parent=True)
         
     general_status: Mapped[str] = mapped_column(nullable = False)
     general_signoff_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = True)
@@ -103,13 +104,13 @@ class Parameter(db.Model):
     __table_args__ = {'extend_existing': True}
     
     id: Mapped[int] = mapped_column(primary_key = True, autoincrement=True)
-    request: Mapped["Request"] = relationship(back_populates='parameter', foreign_keys="Request.parameter_id")
-    original: Mapped["Original"] = relationship(back_populates='parameter', foreign_keys="Original.parameter_id")
+    request: Mapped[List["Request"]] = relationship(back_populates='parameter', foreign_keys="Request.parameter_id")
+    original: Mapped[List["Original"]] = relationship(back_populates='parameter', foreign_keys="Original.parameter_id")
         
     name: Mapped[str] = mapped_column(unique=True, nullable= False)
     is_modifiable : Mapped[bool] = mapped_column(nullable = False)
-    data_type: Mapped[str]
-    description: Mapped[str]
+    data_type: Mapped[str] = mapped_column(nullable=False)
+    description: Mapped[str] = mapped_column(nullable=False)
         
     def __repr__(self) -> str:
         return f"Parameter(id={self.id!r}, name={self.name!r}, data_type={self.data_type!r})"
@@ -119,7 +120,7 @@ class Request(db.Model):
     __table_args__ = {'extend_existing': True}
     
     id: Mapped[int] = mapped_column(primary_key = True, autoincrement=True)
-    revision_id: Mapped[int] = mapped_column(ForeignKey("revisions.id"))
+    revision_id: Mapped[int] = mapped_column(ForeignKey("revisions.id", ondelete="CASCADE"), nullable=False)
     revision: Mapped["Revision"] = relationship(back_populates="request", foreign_keys=revision_id)
         
     parameter_id: Mapped[int] = mapped_column(ForeignKey("parameters.id"))
@@ -134,7 +135,7 @@ class Original(db.Model):
     __table_args__ = {'extend_existing': True}
     
     id: Mapped[int] = mapped_column(primary_key = True, autoincrement=True)
-    revision_id: Mapped[int] = mapped_column(ForeignKey("revisions.id"))
+    revision_id: Mapped[int] = mapped_column(ForeignKey("revisions.id", ondelete="CASCADE"), nullable=False)
     revision: Mapped["Revision"] = relationship(back_populates="original", foreign_keys=revision_id)
     
     parameter_id: Mapped[int] = mapped_column(ForeignKey("parameters.id"))
