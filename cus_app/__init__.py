@@ -20,6 +20,19 @@ from config import _CONFIG_DICT
 from cus_app.supple.helper_functions import rank_ordr, approx_equals
 
 #
+# --- SQLAlchemy event handler to turn on Foreign Key Constraints for every engine connection.
+#
+from sqlalchemy.engine import Engine
+from sqlalchemy import event
+
+
+@event.listens_for(Engine, "connect")
+def set_sqlite_pragma(dbapi_connection, connection_record):
+    cursor = dbapi_connection.cursor()
+    cursor.execute("PRAGMA foreign_keys=ON")
+    cursor.close()
+
+#
 # --- Flask Additions
 #
 bootstrap = Bootstrap()
