@@ -4,42 +4,20 @@
 :Author: W. Aaron (william.aaron@cfa.harvard.edu)
 :Last Updated: Apr 28, 2025
 
-"""
-import sys
-import os
-import sqlite3 as sq
-from contextlib import closing
-import re
-import numpy as np
-from astropy.io import ascii
-from astropy.table import Table, Column
-from datetime import datetime
-import subprocess
-import glob
-import json
-import traceback
-
-from flask              import current_app, session, request
-from flask_login        import UserMixin, login_user
-
-from cus_app                import db, login
-
-from typing import Optional, List #: Allows for Mapper to determine nullability of the table column.
-
-from sqlalchemy import create_engine, ForeignKey, select, insert, delete
-from sqlalchemy.schema import UniqueConstraint, ForeignKeyConstraint
-
-from sqlalchemy.orm import sessionmaker, DeclarativeBase, Mapped, mapped_column, relationship
-
-"""
-In regular SQLAlchemy, the sqlalchemy.orm.DeclarativeBase parent class should be used to define the translation between Python classes that
+:NOTE:In regular SQLAlchemy, the sqlalchemy.orm.DeclarativeBase parent class should be used to define the translation between Python classes that
 represent an SQLAlchemy ORM structure system and relational database model statements.
-
 For Flask SQLAlchemy, we use the instantiated db.Model as our parent class instead because it performs the same translations
 while also tying the create ORM into the Flask application context.
-
 In **__init__.py**, the db = SQLAlchemy() call will define the db.Model class with the sqlalchemy.orm.DeclarativeBase as a parent on our behalf.
+
 """
+import os
+from flask import session, request
+from flask_login import UserMixin, login_user
+from cus_app import db, login
+from typing import Optional, List #: Allows for Mapper to determine nullability of the table column.
+from sqlalchemy import ForeignKey
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class User(db.Model, UserMixin):
     __tablename__ = "users"
@@ -183,10 +161,6 @@ def register_user():
     user = db.session.execute(db.select(User).where(User.username == username)).scalar()
     login_user(user)
     #current_app.logger.info(f"Login User: {username}") #: TODO implement logger
-
-#----------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------
-#----------------------------------------------------------------------------------------
 
 @login.user_loader
 def load_user(id):
