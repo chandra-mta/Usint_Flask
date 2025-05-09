@@ -30,7 +30,6 @@ with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
 
 _SIGNOFF_COLUMNS = ('general', 'acis', 'acis_si', 'hrc_si', 'usint') #: Prefix names for the columns of Signoff
-_DEFAULT_ORDER_KWARG = {'limit': 200}
 _36_HOURS_AGO = (datetime.now() - timedelta(days=1.5)).timestamp()
 
 @bp.before_app_request
@@ -44,25 +43,23 @@ def index():
     """
     Display the Target Parameter Status Page
     """
-    status_page_order_kwarg = session.get('status_page_order_kwarg', _DEFAULT_ORDER_KWARG) #: Pull revision orders by descending submission by default
+    status_page_order_kwarg = session.get('status_page_order_kwarg', {}) #: Pull revision orders by descending submission by default
 
     #: TODO Suggested future development to convert table sorting to a jQuery data table approach to avoid unnecessary queries.
     order_form = OrderForm(request.form, data={'username': current_user.username}) #: default input username is current user
     #: Process the order_form to determine the order of displayed revisions on the status page
     if order_form.order_submission.data:
-        status_page_order_kwarg = _DEFAULT_ORDER_KWARG
+        status_page_order_kwarg = {}
     elif order_form.order_obsid.data:
         status_page_order_kwarg = {'order_obsid': True}
-        status_page_order_kwarg.update(_DEFAULT_ORDER_KWARG)
     elif order_form.order_username.data:
         #: Provide user id instead to refine query, if the username is misspelled no change
         user = dbi.user_by_name(order_form.username.data)
         if user is not None:
             status_page_order_kwarg = {'order_user': user.id}
-            status_page_order_kwarg.update(_DEFAULT_ORDER_KWARG)
 
     session['status_page_order_kwarg'] = status_page_order_kwarg
-    revs = dbi.pull_revision(**status_page_order_kwarg)
+    result = dbi.pull_status(**status_page_order_kwarg)
 
     open_signoff_forms =[]
     open_signoff_sqls = []
@@ -71,8 +68,7 @@ def index():
     closed_signoff_sqls = []
     closed_revs = []
 
-    for rev in revs:
-        sql = rev.signoff
+    for rev, sql in result:
         if is_open(sql):
             open_signoff_sqls.append(sql)
             open_signoff_forms.append(SignoffRow(prefix=str(sql.id)))
