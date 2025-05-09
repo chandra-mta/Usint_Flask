@@ -13,15 +13,14 @@ while others reference foreign and primary keys directly. This is because the re
 before instantiation if the relationship mapped key has the NON NULL constraint. Therefore, it's more reliable to instantiate with the primary key id's directly
 for web interface transactions. 
 """
-import sys
 import os
 from datetime import datetime
 import json
-from sqlalchemy import select, insert, desc, case
+from sqlalchemy import select, desc, case
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
-from cus_app.models     import register_user, User, Revision, Signoff, Parameter, Request, Original
-from flask_login    import current_user
+from cus_app.models import User, Revision, Signoff, Parameter, Request, Original
+from flask_login import current_user
 from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
