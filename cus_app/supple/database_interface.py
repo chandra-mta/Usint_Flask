@@ -161,33 +161,14 @@ def pull_revision(**kwargs):
     """
     Fetch list of recent revisions based on kwarg criteria
     """
-    def _to_epoch(time):
-        if time is None:
-            return None
-        elif isinstance(time,(int, float)):
-            return time
-        elif isinstance(time, datetime):
-            return time.timestamp()
-        elif isinstance(time,str):
-            x = time.replace('::', ':')
-            x = x.split('.')[0]
-            for format in DATETIME_FORMATS:
-                try:
-                    return datetime.strptime(x,format).timestamp()
-                except ValueError:
-                    pass
     #
     # --- Starting query object
     #
     query = select(Revision)
     
     #
-    # --- Fetch special kwargs first before general iteration for equals
+    # --- Kwarg processing is ordered by order of execution (WHERE, ORDER_BY, LIMIT)
     #
-    limit = kwargs.pop('limit', None)
-    if limit is not None:
-        query = query.limit(limit)
-    
     before = _to_epoch(kwargs.pop('before', None))
     if before is not None:
         query = query.where(Revision.time <= before)
@@ -195,23 +176,42 @@ def pull_revision(**kwargs):
     after = _to_epoch(kwargs.pop('after', None))
     if after is not None:
         query = query.where(Revision.time >= after)
-        
-    order_user = kwargs.pop('order_user', None)
-    if order_user is not None:
-        order_user = int(order_user)
-        query = query.order_by(case((Revision.user_id == order_user, 0),else_=1))
     
-    order_obsid = kwargs.pop('order_obsid', False)
-    if bool(order_obsid):
-        query = query.order_by(Revision.obsid)
+    limit = kwargs.pop('limit', None)
+    if limit is not None:
+        query = query.limit(limit)
+    #
+    # --- Assumed the remaining unidentified kwargs are WHERE column equality searches
+    # --- which will still execute before the ORDER_BY and LIMIT statements in the SQL query,
+    # --- but the SQLAlchemy query builder will list these ones after the 'before', 'after' wheres
+    #
+    query = query.filter_by(**kwargs)
     
-    for key, value in kwargs.items():
-        query = query.where(getattr(Revision, key) == value)
-
     #: Order the query by descending Revision ID number so that the end result order
     #: contains a suborder of returning the most recently made revisions first.
     query = query.order_by(desc(Revision.id))
     return db.session.execute(query).scalars().all()
+
+def pull_status(limit = 200, **kwargs):
+    """Special version of the pull_revision function tailored for the target parameter status page.
+
+    :param limit: _description_, defaults to 200
+    :type limit: int, optional
+    :return: Recent (Revision, Signoff) in descending order.
+    """
+    if 'order_user' in kwargs.keys():
+        #: Order by listing the target user id first, then the rest in descending order
+        order_user = int(kwargs['order_user'])
+        query = select(Revision, Signoff).join(Revision.signoff).order_by(case((Revision.user_id == order_user, 0),else_=1)).order_by(desc(Revision.id)).limit(limit)
+
+    elif kwargs.get('order_obsid'):
+        #: Special case in which we must first subquery the most recent LIMIT number of revisions, then sort by obsid
+        subquery = select(Revision.id).order_by(desc(Revision.id)).limit(limit).subquery()
+        query = select(Revision, Signoff).join(Revision.signoff).select_from(Revision, subquery).where(Revision.id == subquery.c.id).order_by(Revision.obsid).order_by(desc(Revision.revision_number))
+    else:
+        #: Default descending order
+        query = select(Revision, Signoff).join(Revision.signoff).order_by(desc(Revision.id)).limit(limit)
+    return db.session.execute(query).all()
 
 def find_next_rev_no(obsid):
     """
@@ -237,3 +237,22 @@ def is_approved(obsid):
         elif rev.kind == 'remove':
             is_approved = False
     return is_approved
+
+def _to_epoch(time):
+    """
+    Convert variety of time input to epoch time
+    """
+    if time is None:
+        return None
+    elif isinstance(time,(int, float)):
+        return time
+    elif isinstance(time, datetime):
+        return time.timestamp()
+    elif isinstance(time,str):
+        x = time.replace('::', ':')
+        x = x.split('.')[0]
+        for format in DATETIME_FORMATS:
+            try:
+                return datetime.strptime(x,format).timestamp()
+            except ValueError:
+                pass
