@@ -50,6 +50,7 @@ class Revision(db.Model):
     kind: Mapped[str] = mapped_column(nullable=False)
     sequence_number: Mapped[int] = mapped_column(nullable=False)
     time: Mapped[int] = mapped_column(nullable=False)
+    notes: Mapped[str] = mapped_column(nullable=True)
     
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = False)
         
