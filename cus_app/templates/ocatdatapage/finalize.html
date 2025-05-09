@@ -41,16 +41,15 @@
 
     <table border=0>
     <tr>
-        {% for sobsid in multi_dict['requested'] %}
+        {% for r_obsid in multi_dict['requested'] %}
             {% if ns.requested % 8 == 0 %}
                 </tr>
                 <tr>
             {% endif %}
-            {% set slink = '../ocatdatapage/' + sobsid %}
             <td>
                 <span style='padding-left:5px;'>
                 &#8729;
-                <a href="javascript:WindowOpener(' {{ slink }} ')"><b>{{ sobsid }}</b></a>
+                <a href="javascript:WindowOpener(' {{ url_for('ocatdatapage.index', obsid=r_obsid) }} ')"><b>{{ r_obsid }}</b></a>
                 </span>
                 </td>
             {% set ns.requested = ns.requested + 1 %}
@@ -73,16 +72,15 @@
     {% endif %}
     <table border=0>
     <tr>
-        {% for sobsid in multi_dict['cannot_request'] %}
+        {% for c_obsid in multi_dict['cannot_request'] %}
             {% if ns.cannot_request % 8 == 0 %}
                 </tr>
                 <tr>
             {% endif %}
-            {% set slink = '../ocatdatapage/' + sobsid %}
             <td>
                 <span style='padding-left:5px;'>
                 &#8729;
-                <a href="javascript:WindowOpener(' {{ slink }} ')"><b>{{ sobsid }}</b></a>
+                <a href="javascript:WindowOpener(' {{ url_for('ocatdatapage.index', obsid=c_obsid) }} ')"><b>{{ c_obsid }}</b></a>
                 </span>
                 </td>
             {% set ns.cannot_request = ns.cannot_request + 1 %}
@@ -106,16 +104,15 @@
     {% endif %}
     <table border=0>
     <tr>
-        {% for sobsid in multi_dict['unaffected'] %}
+        {% for u_obsid in multi_dict['unaffected'] %}
             {% if ns.unaffected % 8 == 0 %}
                 </tr>
                 <tr>
             {% endif %}
-            {% set slink = '../ocatdatapage/' + sobsid %}
             <td>
                 <span style='padding-left:5px;'>
                 &#8729;
-                <a href="javascript:WindowOpener(' {{ slink }} ')"><b>{{ sobsid }}</b></a>
+                <a href="javascript:WindowOpener(' {{ url_for('ocatdatapage.index', obsid=u_obsid) }} ')"><b>{{ u_obsid }}</b></a>
                 </span>
                 </td>
             {% set ns.unaffected = ns.unaffected + 1 %}
@@ -146,8 +143,8 @@
     {{ super() }}
     <script>
         function OpenNextPage(){
-            var obsid = document.getElementById('nobsid').value;
-            var link  = '../ocatdatapage/' + obsid;
+            var nobsid = document.getElementById('nobsid').value;
+            var link  = "{{ url_for('ocatdatapage.index') }}" + nobsid;
             window.open(link);
             this.close();
         }

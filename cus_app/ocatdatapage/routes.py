@@ -125,7 +125,7 @@ def confirm(obsid=None):
                     additional_ocat_data = rod.read_ocat_data(additional_obsid)
 
                     if additional_ocat_data.get('status') in ['scheduled', 'unobserved', 'untriggered']:
-                        multi_dict['cannot_request'].append(str(additional_obsid))
+                        multi_dict['cannot_request'].append(additional_obsid)
                         continue
                     
                     #: Generate form specific copies of ocat data. Added to ocat data to later change comparison.
@@ -149,10 +149,10 @@ def confirm(obsid=None):
                             additional_req_dict = req_dict
                     
                     if len(additional_req_dict) == 0:
-                        multi_dict['unaffected'].append(str(additional_obsid))
+                        multi_dict['unaffected'].append(additional_obsid)
                         continue
 
-                    multi_dict['requested'].append(str(additional_obsid))
+                    multi_dict['requested'].append(additional_obsid)
                     write_to_database(additional_obsid, additional_ocat_data, kind, additional_org_dict, additional_req_dict)
             except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies

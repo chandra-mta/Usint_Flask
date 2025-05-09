@@ -356,7 +356,7 @@
                 {% if ocat_data.get('group_obsid')|length > 0 %}
                     {% for ent in ocat_data.get('group_obsid') %}
                         <span style='padding-left:5px;'></span>
-                        <a href='../ocatdatapage/{{ ent }} '>{{ ent }}</a> 
+                        <a href="{{ url_for('ocatdatapage.index', obsid=ent) }}">{{ ent }}</a>
                     {% endfor %}
                 {% else %}
                     <i style='padding-left:10px;'>NA</i>
@@ -368,7 +368,7 @@
                 {% if ocat_data.get('monitor_series')|length > 0 %}
                     {% for ent in ocat_data.get('monitor_series') %}
                         <span style='padding-left:5px;'></span>
-                        <a href='../ocatdatapage/{{ ent }} '>{{ ent }}</a> 
+                        <a href="{{ url_for('ocatdatapage.index', obsid=ent) }}">{{ ent }}</a> 
                     {% endfor %}
                 {% else %}
                     <i style='padding-left:10px;'>NA</i>

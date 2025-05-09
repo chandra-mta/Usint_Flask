@@ -30,24 +30,22 @@
             <h4>The same changes will also apply to obsid(s): </h4>
             <table border=0>
             <tr>
-            {% for obsid in multi_obsid %}
-                {% set sobsid = obsid | string %}
+            {% for m_obsid in multi_obsid %}
                 {% if ns.multi_count % 8 == 0 %}
                     </tr>
                     <tr>
                 {% endif %}
-            {% set slink = '../ocatdatapage/' + sobsid %}
                 <td>
                         <span style='padding-left:5px;'>
                     &#8729;
-                    <a href="javascript:WindowOpener(' {{ slink }} ')"><b>
+                    <a href="javascript:WindowOpener(' {{ url_for('ocatdatapage.index', obsid=m_obsid) }} ')"><b>
                 {% if or_dict.get(obsid) %}
                         <span style='color:red;'>
-                            {{ sobsid }}
+                            {{ m_obsid }}
                             {% set ns.multi_orcnt = ns.multi_orcnt + 1 %}
                         </span>
                     {% else %}
-                        {{ sobsid }}
+                        {{ m_obsid }}
                     {% endif %}
                     </b></a>
                     </span>
