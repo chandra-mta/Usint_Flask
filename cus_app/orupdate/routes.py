@@ -61,31 +61,26 @@ def index():
     session['status_page_order_kwarg'] = status_page_order_kwarg
     result = dbi.pull_status(**status_page_order_kwarg)
 
-    open_signoff_forms =[]
-    open_signoff_sqls = []
-    open_revs =[]
 
-    closed_signoff_sqls = []
-    closed_revs = []
+    open_revision_signoff = []
+    open_forms =[]
 
-    for rev, sql in result:
-        if is_open(sql):
-            open_signoff_sqls.append(sql)
-            open_signoff_forms.append(SignoffRow(prefix=str(sql.id)))
-            open_revs.append(rev)
+    closed_revision_signoff = []
+
+    for rev, sign in result:
+        if is_open(sign):
+            open_revision_signoff.append((rev,sign))
+            open_forms.append(SignoffRow(prefix=str(sign.id)))
         else:
             #: Limit the retention of closed revisions to the last 1.5 days
             if rev.time >= _36_HOURS_AGO:
-                closed_signoff_sqls.append(sql)
-                closed_revs.append(rev)
+                closed_revision_signoff.append((rev,sign))
 
     return render_template("orupdate/index.html",
                            order_form = order_form,
-                           open_signoff_forms = open_signoff_forms,
-                           open_signoff_sqls = open_signoff_sqls,
-                           open_revs = open_revs,
-                           closed_signoff_sqls = closed_signoff_sqls,
-                           closed_revs = closed_revs,
+                           open_revision_signoff = open_revision_signoff,
+                           open_forms = open_forms,
+                           closed_revision_signoff = closed_revision_signoff
                            )
 
 def is_open(signoff_obj):

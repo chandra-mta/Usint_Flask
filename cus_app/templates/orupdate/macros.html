@@ -30,25 +30,25 @@
     </th>
 {% endmacro %}
 
-{% macro open_signoff_row(rev, form, sql)%}
+{% macro open_signoff_row(rev, sign, form)%}
     <tr>
         {{ revision_info_cell(rev) }}
-        {{ signoff_cell(form.gen, sql.general_status, sql.general_signoff, sql.general_time) }}
-        {{ signoff_cell(form.acis, sql.acis_status, sql.acis_signoff, sql.acis_time) }}
-        {{ signoff_cell(form.acis_si, sql.acis_si_status, sql.acis_si_signoff, sql.acis_si_time) }}
-        {{ signoff_cell(form.hrc_si, sql.hrc_si_status, sql.hrc_si_signoff_id, sql.hrc_si_time) }}
-        {{ usint_cell(form.usint, form.approve, sql.usint_status, sql.usint_signoff, sql.usint_time) }}
+        {{ signoff_cell(form.gen, sign.general_status, sign.general_signoff, sign.general_time) }}
+        {{ signoff_cell(form.acis, sign.acis_status, sign.acis_signoff, sign.acis_time) }}
+        {{ signoff_cell(form.acis_si, sign.acis_si_status, sign.acis_si_signoff, sign.acis_si_time) }}
+        {{ signoff_cell(form.hrc_si, sign.hrc_si_status, sign.hrc_si_signoff_id, sign.hrc_si_time) }}
+        {{ usint_cell(form.usint, form.approve, sign.usint_status, sign.usint_signoff, sign.usint_time) }}
     </tr>
 {% endmacro%}
 
-{% macro closed_signoff_row(rev, sql)%}
+{% macro closed_signoff_row(rev, sign)%}
     <tr>
         {{ revision_info_cell(rev) }}
-        {{ signoff_cell(None, sql.general_status, sql.general_signoff, sql.general_time) }}
-        {{ signoff_cell(None, sql.acis_status, sql.acis_signoff, sql.acis_time) }}
-        {{ signoff_cell(None, sql.acis_si_status, sql.acis_si_signoff, sql.acis_si_time) }}
-        {{ signoff_cell(None, sql.hrc_si_status, sql.hrc_si_signoff, sql.hrc_si_time) }}
-        {{ usint_cell(None, None, sql.usint_status, sql.usint_signoff, sql.usint_time) }}
+        {{ signoff_cell(None, sign.general_status, sign.general_signoff, sign.general_time) }}
+        {{ signoff_cell(None, sign.acis_status, sign.acis_signoff, sign.acis_time) }}
+        {{ signoff_cell(None, sign.acis_si_status, sign.acis_si_signoff, sign.acis_si_time) }}
+        {{ signoff_cell(None, sign.hrc_si_status, sign.hrc_si_signoff, sign.hrc_si_time) }}
+        {{ usint_cell(None, None, sign.usint_status, sign.usint_signoff, sign.usint_time) }}
     </tr>
 {% endmacro%}
 

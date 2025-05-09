@@ -77,25 +77,25 @@
                 <span style='padding-left:20px;padding-right:20px'>Note</span>
             </th>
             <!-- Open ObsIds -->
-            {% for rev, form, sql in zip(open_revs, open_signoff_forms,open_signoff_sqls) %}
-                {{open_signoff_row(rev, form, sql)}}
+            {% for (rev, sign), form in zip(open_revision_signoff, open_forms) %}
+                {{open_signoff_row(rev, sign, form)}}
             {% endfor %}
             <!-- Spacer if necessary -->
-            {% if open_signoff_sqls|length > 0 and closed_signoff_sqls|length > 0 %}
+            {% if open_revision_signoff|length > 0 and closed_revision_signoff|length > 0 %}
                 <tr><th colspan=7>&#160;</th></tr>
             {% endif %}
             <!-- Closed ObsIds -->
-            {% for rev, sql in zip(closed_revs, closed_signoff_sqls) %}
-                {{closed_signoff_row(rev, sql)}}
+            {% for rev, sign in closed_revision_signoff %}
+                {{closed_signoff_row(rev, sign)}}
             {% endfor %}
             <!-- Display for no recent revisions & signoffs -->
-            {% if open_signoff_sqls|length == 0 and closed_signoff_sqls|length == 0 %}
+            {% if open_revision_signoff|length == 0 and closed_revision_signoff|length == 0 %}
                 <tr><th colspan=7 class='cent' style='line-height:200%;'>
                     All Recently Updated ObsIDs Were Signed-off and Clear.
                 </th></tr>
             {% endif %}
         </table>
-        {% if open_signoff_sqls|length == 0 and closed_signoff_sqls|length == 0 %}
+        {% if open_revision_signoff|length == 0 and closed_revision_signoff|length == 0 %}
             <div style='padding-bottom:300px;'></div>
         {% endif %}
     </form>
@@ -104,4 +104,10 @@
 {% block scripts %}
     {{ super() }}
     <script src="{{ url_for('static', filename='usint.js') }}"></script>
+    <script>
+        setInterval(function(){
+            window.onbeforeunload = null;
+            window.location = window.location.href;
+        },180000); 
+    </script>
 {% endblock%}
