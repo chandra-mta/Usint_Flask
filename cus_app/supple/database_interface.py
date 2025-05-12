@@ -16,6 +16,7 @@ for web interface transactions.
 import os
 from datetime import datetime
 import json
+from math import sqrt
 from sqlalchemy import select, desc, case
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
@@ -27,20 +28,74 @@ stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'stati
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
 
-def construct_revision(obsid,ocat_data,kind):
+def construct_revision(obsid,ocat_data,kind,org_dict,req_dict):
     """
     Generate a Revision ORM object based on the provided obsid information
     """
     rev_no = find_next_rev_no(obsid)
     curr_epoch = int(datetime.now().timestamp())
+    #: Identify Notes
+    if kind == 'norm':
+        notes = construct_notes(org_dict, req_dict)
+    else:
+        notes = None
     revision = Revision(obsid = int(obsid),
                     revision_number = rev_no,
                     kind = kind,
                     sequence_number = ocat_data.get('seq_nbr'),
                     time = curr_epoch,
-                    user = current_user
+                    user = current_user,
+                    notes = notes
                     )
     return revision
+
+def construct_notes(org_dict, req_dict):
+    """
+    Construct notes json based on change requests
+    """
+    notes = {}
+    ra = None
+    dec = None
+    ora = None
+    odec = None
+    for param, val in req_dict.items():
+        if param == 'targname':
+            notes.update({'target_name_change':True})
+        elif param == 'comments':
+            notes.update({'comment_change': True})
+        elif param == 'instrument':
+            notes.update({'instrument_change': True})
+        elif param == 'grating':
+            notes.update({'grating_change': True})
+        elif param in ('dither_flag', 'window_flag', 'roll_flag', 'spwindow_flag'):
+            notes.update({'flag_change': True})
+        elif param == 'ra':
+            ra = val
+        elif param == 'dec':
+            dec = val
+    if ra is not None or dec is not None:
+        ora = org_dict.get('ra')
+        if ra is None:
+            ra = ora
+        odec = org_dict.get('dec')
+        if dec is None:
+            dec = odec
+        if ora != 0 and odec != 0 and is_large_coord_shift(ra,dec, ora, odec):
+                notes.update({'large_coordinate_change': True})
+    
+    if len(notes) > 0:
+        return notes
+    else:
+        return None
+
+def is_large_coord_shift(ra,dec, ora, odec):
+    if ora is None or odec is None:
+        return False
+    diff = sqrt((ora -ra)**2 + (odec - dec)**2)
+    if diff > 0.1333:
+        return True
+    else:
+        return False
 
 def construct_signoff(rev_obj, req_dict={}):
     """

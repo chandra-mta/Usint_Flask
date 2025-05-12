@@ -41,6 +41,22 @@ class User(db.Model, UserMixin):
          return f"User(id={self.id!r}, username={self.username!r}, email={self.email!r}, groups={self.groups!r}, full_name={self.full_name!r})"
 
 class Revision(db.Model):
+    """
+    :id: Primary Key
+    :obsid: Observation ID
+    :revision_number: Identifying count of revisions for this obsid (indexing at one)
+    :kind: Type of revision (norm, asis, remove, clone)
+    :sequence_number: Sequence Number
+    :time: Epoch timestamp of when revision was created.
+    :notes: JSON formatted notes of revision specifics (usually a special norm change)
+    If not present assume false.
+        - target_name_change : Booelan
+        - comment_change : Boolean
+        - instrument_change : Boolean
+        - grating_change : Boolean
+        - flag_change : Boolean, listed for any change in constraint-specific parameters (dither, time, roll, ACIS window)
+        - large_coordinate_shift : Boolean, listed for a >8' cumulative shift in RA, DEC coordinates
+    """
     __tablename__ = "revisions"
     __table_args__ = {'extend_existing': True}
     

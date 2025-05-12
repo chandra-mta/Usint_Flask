@@ -276,7 +276,7 @@ def write_to_database(obsid, ocat_data, kind, org_dict, req_dict={}):
     """
     Perform a set of database injections into the relevant usint.db tables for changes made in the ocatdatapage
     """
-    rev = dbi.construct_revision(obsid,ocat_data,kind)
+    rev = dbi.construct_revision(obsid,ocat_data,kind,org_dict,req_dict)
     db.session.add(rev)
     sign = dbi.construct_signoff(rev,req_dict)
     db.session.add(sign)
