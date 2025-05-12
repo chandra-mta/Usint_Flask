@@ -110,6 +110,13 @@ def create_app(_configuration_name):
     app.register_blueprint(oru_bp, url_prefix="/orupdate")
 
     #
+    # --- express signoff page
+    #
+    from cus_app.express import bp as exp_bp
+
+    app.register_blueprint(exp_bp, url_prefix="/express")
+
+    #
     # --- Main Usint Page
     #
     @app.route("/")
