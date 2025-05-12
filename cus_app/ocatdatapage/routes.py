@@ -38,6 +38,7 @@ from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
 import cus_app.supple.database_interface as dbi
 import cus_app.ocatdatapage.format_ocat_data as fod
+from cus_app.supple.helper_functions import create_obsid_list
 
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -241,36 +242,6 @@ def fetch_session_data(obsid):
     ocat_form_dict = session.get(f'ocat_form_dict_{obsid}', (ocat_data | flag_override))
 
     return ocat_data, warning, orient_maps, ocat_form_dict
-
-def create_obsid_list(list_string, obsid):
-    """
-    Create a list of obsids from form input for a parameter display page.
-    """
-    obsid = int(obsid)
-    if list_string is None:
-        return []
-    list_string = str(list_string)
-    if list_string.strip() == '':
-        return []
-    #: Split the input string into elements
-    raw_elements = [x for x in re.split(r'\s+|,|:|;', list_string) if x != '']
-    
-    #: Combine into string replaceable format for dash parsing
-    combined = ','.join(raw_elements)
-    combined = combined.replace(',-,','-').replace('-,','-').replace(',-','-')
-    
-    #: Process Ranges
-    obsids_list = []
-    for element in combined.split(','):
-        if element.isdigit():
-            obsids_list.append(int(element))
-        else:
-            start, end = element.split('-')
-            obsids_list.extend(list(range(int(start), int(end) + 1)))
-    
-    #: Remove duplicates, sort, and exclude the main obsid
-    obsids_list = sorted(set(obsids_list) - {obsid})
-    return obsids_list
 
 def write_to_database(obsid, ocat_data, kind, org_dict, req_dict={}):
     """

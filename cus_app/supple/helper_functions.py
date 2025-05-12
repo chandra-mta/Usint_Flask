@@ -5,8 +5,7 @@
 :Last Updated: Apr 28, 2025
 
 """
-import sys
-import os
+import re
 import json
 import itertools
 from datetime import datetime
@@ -313,6 +312,38 @@ def convert_astropy_to_native(astropy_object, orient = None):
     
     elif hasattr(astropy_object, 'tolist'):
         return astropy_object.tolist()
+    
+def create_obsid_list(list_string, obsid = None):
+    """
+    Create a list of obsids from form input.
+    """
+    if list_string is None:
+        return []
+    list_string = str(list_string)
+    if list_string.strip() == '':
+        return []
+    #: Split the input string into elements
+    raw_elements = [x for x in re.split(r'\s+|,|:|;', list_string) if x != '']
+    
+    #: Combine into string replaceable format for dash parsing
+    combined = ','.join(raw_elements)
+    combined = combined.replace(',-,','-').replace('-,','-').replace(',-','-')
+    
+    #: Process Ranges
+    obsids_list = []
+    for element in combined.split(','):
+        if element.isdigit():
+            obsids_list.append(int(element))
+        else:
+            start, end = element.split('-')
+            obsids_list.extend(list(range(int(start), int(end) + 1)))
+    
+    #: Remove duplicates, sort, and exclude the main obsid if applicable
+    if obsid is not None:
+        obsids_list = sorted(set(obsids_list) - {int(obsid)})
+    else:
+        obsids_list = sorted(set(obsids_list))
+    return obsids_list
 
 #
 # --- Calculative Functions
