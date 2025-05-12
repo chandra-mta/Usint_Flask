@@ -173,7 +173,7 @@ def get_more(obj,key):
         return None
     else:
         if isinstance(obj,dict):
-            return object.get(key)
+            return obj.get(key)
         else:
             return obj[key]
 #

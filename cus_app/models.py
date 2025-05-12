@@ -80,6 +80,31 @@ class Revision(db.Model):
         return f"Revision(id={self.id!r}, user_id={self.user_id!r}, obsid={self.obsid!r}, revision_number={self.revision_number!r}, kind={self.kind!r})"
 
 class Signoff(db.Model):
+    """
+    Signoff Table ORM. The possible status options are ('Signed', 'Not Required', 'Pending', 'Discard')
+    :id: Primary Key
+    :revision_id: Foreign Key to matching Revision table entry Primary Key
+    
+    :general_status: String determining the status of the general signoff column
+    :general_signoff_id: Integer matching the user who performed the general signoff. Can be Null if signoff not necessary.
+    :general_time: Epoch timestamp of when the general signoff was made. Can be Null if signoff not necessary.
+
+    :acis_status: String determining the status of the acis signoff column
+    :acis_signoff_id: Integer matching the user who performed the acis signoff. Can be Null if signoff not necessary.
+    :acis_time: Epoch timestamp of when the acis signoff was made. Can be Null if signoff not necessary.
+
+    :acis_si_status: String determining the status of the acis_si signoff column
+    :acis_si_signoff_id: Integer matching the user who performed the acis_si signoff. Can be Null if signoff not necessary.
+    :acis_si_time: Epoch timestamp of when the acis_si signoff was made. Can be Null if signoff not necessary.
+
+    :hrc_si_status: String determining the status of the hrc_si signoff column
+    :hrc_si_signoff_id: Integer matching the user who performed the hrc_si signoff. Can be Null if signoff not necessary.
+    :hrc_si_time: Epoch timestamp of when the hrc_si signoff was made. Can be Null if signoff not necessary.
+
+    :usint_status: String determining the status of the usint signoff column
+    :usint_signoff_id: Integer matching the user who performed the usint signoff. Can be Null if signoff not necessary.
+    :usint_time: Epoch timestamp of when the usint signoff was made. Can be Null if signoff not necessary.
+    """
     __tablename__ = "signoffs"
     __table_args__ = {'extend_existing': True}
     

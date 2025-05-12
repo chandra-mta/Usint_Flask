@@ -145,6 +145,50 @@ def construct_auto_signoff(rev_obj):
                     )
     return signoff
 
+def perform_signoff(signoff_id, signoff_kind):
+    """
+    Update the signoff entry matching to the provided id
+
+    :param signoff_kind: String determining the kind of signoff to provide (gen, acis, acis_si, hrc_si, usint, approve)
+    """
+    signoff_id = int(signoff_id)
+    curr_epoch = int(datetime.now().timestamp())
+    signoff_obj = db.session.execute(select(Signoff).where(Signoff.id == signoff_id)).scalar_one()
+    if signoff_kind == 'gen':
+        signoff_obj.general_status = 'Signed'
+        signoff_obj.general_signoff_id = current_user.id
+        signoff_obj.general_time = curr_epoch
+    elif signoff_kind == 'acis':
+        signoff_obj.acis_status = 'Signed'
+        signoff_obj.acis_signoff_id = current_user.id
+        signoff_obj.acis_time = curr_epoch
+    elif signoff_kind == 'acis_si':
+        signoff_obj.acis_si_status = 'Signed'
+        signoff_obj.acis_si_signoff_id = current_user.id
+        signoff_obj.acis_si_time = curr_epoch
+    elif signoff_kind == 'hrc_si':
+        signoff_obj.hrc_si_status = 'Signed'
+        signoff_obj.hrc_si_signoff_id = current_user.id
+        signoff_obj.hrc_si_time = curr_epoch
+    elif signoff_kind in ('usint', 'approve'):
+        signoff_obj.usint_status = 'Signed'
+        signoff_obj.usint_signoff_id = current_user.id
+        signoff_obj.usint_time = curr_epoch
+        if signoff_kind == 'approve':
+            #: Additionally create an approval revision and signoff.
+            matching_rev = signoff_obj.revision
+            new_revision = Revision(obsid = matching_rev.obsid,
+                                    revision_number = matching_rev.revision_number + 1,
+                                    kind = 'asis',
+                                    sequence_number = matching_rev.sequence_number,
+                                    time = curr_epoch,
+                                    user_id = current_user.id
+            )
+            new_signoff = construct_auto_signoff(new_revision)
+            db.session.add(new_revision)
+            db.session.add(new_signoff)
+    db.session.commit()
+
 def construct_requests(rev_obj, req_dict):
     """
     Construct a list of Request ORM's for insertion.

@@ -45,8 +45,8 @@
     </td>
 {% endmacro %}
 
-{% macro revision_info_cell(revision, multi_revision_info)%}
-    {% if multi_revision_info[revision.obsid].get('color') != None %}
+{% macro revision_info_cell(revision, multi_revision_info = None)%}
+    {% if get_more(get_more(multi_revision_info, revision.obsid), 'color') != None %}
     <th class='cent' style='background-color:{{ multi_revision_info[revision.obsid].get("color") }};'>
     {% else %}
     <th class='cent'>

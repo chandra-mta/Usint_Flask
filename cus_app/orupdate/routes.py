@@ -46,6 +46,14 @@ def index():
     """
     Display the Target Parameter Status Page
     """
+    #: Process POST request for signoff buttons before displaying parameter status page.
+    if request.method == 'POST':
+        for k,v in request.form.to_dict().items():
+            if 'Signoff' in v:
+                #: Signoff requested. Following the PRG design pattern, perform redirect then come back.
+                signoff_id, signoff_kind = k.split('-')
+                return redirect(url_for('orupdate.perform_signoff', id = signoff_id, kind = signoff_kind))
+
     status_page_order_kwarg = session.get('status_page_order_kwarg', {}) #: Pull revision orders by descending submission by default
 
     #: TODO Suggested future development to convert table sorting to a jQuery data table approach to avoid unnecessary queries.
@@ -95,6 +103,11 @@ def index():
                            closed_revision_signoff = closed_revision_signoff,
                            multi_revision_info = multi_revision_info
                            )
+
+@bp.route('/<id>/<kind>', methods=['GET', 'POST'])
+def perform_signoff(id,kind):
+    dbi.perform_signoff(id, kind)
+    return redirect(url_for('orupdate.index'))
 
 def is_open(signoff_obj):
     """
