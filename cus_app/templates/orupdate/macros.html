@@ -45,8 +45,12 @@
     </td>
 {% endmacro %}
 
-{% macro revision_info_cell(revision)%}
-    <th class='cent' style='background-color:white;'>
+{% macro revision_info_cell(revision, multi_revision_info)%}
+    {% if multi_revision_info[revision.obsid].get('color') != None %}
+    <th class='cent' style='background-color:{{ multi_revision_info[revision.obsid].get("color") }};'>
+    {% else %}
+    <th class='cent'>
+    {% endif %}
         <!-- make link to chkupdata -->
         <u>{{ revision.obsid }}.{{str(revision.revision_number).zfill(3)}}</u><br>
         {{ revision.sequence_number }}<br>
@@ -57,7 +61,7 @@
 
 {% macro open_signoff_row(rev, sign, form, multi_revision_info)%}
     <tr>
-        {{ revision_info_cell(rev) }}
+        {{ revision_info_cell(rev, multi_revision_info) }}
         {{ signoff_cell(form.gen, sign.general_status, sign.general_signoff, sign.general_time) }}
         {{ signoff_cell(form.acis, sign.acis_status, sign.acis_signoff, sign.acis_time) }}
         {{ signoff_cell(form.acis_si, sign.acis_si_status, sign.acis_si_signoff, sign.acis_si_time) }}

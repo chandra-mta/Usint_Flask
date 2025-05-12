@@ -29,6 +29,9 @@ with open(os.path.join(stat_dir, 'labels.json')) as f:
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
 
+with open(os.path.join(stat_dir, 'color.json')) as f:
+    _COLORS = json.load(f)
+
 _SIGNOFF_COLUMNS = ('general', 'acis', 'acis_si', 'hrc_si', 'usint') #: Prefix names for the columns of Signoff
 _36_HOURS_AGO = (datetime.now() - timedelta(days=1.5)).timestamp()
 
@@ -66,19 +69,25 @@ def index():
     closed_revision_signoff = []
     multi_revision_info = {}
 
+    count = 0
+
     for rev, sign in result:
         if rev.obsid not in multi_revision_info.keys():
-            multi_revision_info[rev.obsid] = {'opened': [], 'closed': []}
+            multi_revision_info[rev.obsid] = {'opened': [], 'closed': [], 'color': None}
         if is_open(sign):
             open_revision_signoff.append((rev,sign))
             open_forms.append(SignoffRow(prefix=str(sign.id)))
             multi_revision_info[rev.obsid]['opened'].append(rev.revision_number)
+            #: Assign a multi color once two open revisions are found, applied to all
+            if len(multi_revision_info[rev.obsid]['opened']) == 2:
+                col = list(_COLORS)[count % len(_COLORS)]
+                multi_revision_info[rev.obsid]['color'] = _COLORS.get(col)
+                count += 1
         else:
             #: Limit the retention of closed revisions to the last 1.5 days
             multi_revision_info[rev.obsid]['closed'].append(rev.revision_number)
             if rev.time >= _36_HOURS_AGO:
                 closed_revision_signoff.append((rev,sign))
-
     return render_template("orupdate/index.html",
                            order_form = order_form,
                            open_revision_signoff = open_revision_signoff,
