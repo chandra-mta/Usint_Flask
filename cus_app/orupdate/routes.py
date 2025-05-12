@@ -74,6 +74,7 @@ def index():
 
     open_revision_signoff = []
     open_forms =[]
+    open_is_approved = []
     closed_revision_signoff = []
     multi_revision_info = {}
 
@@ -86,6 +87,10 @@ def index():
             open_revision_signoff.append((rev,sign))
             open_forms.append(SignoffRow(prefix=str(sign.id)))
             multi_revision_info[rev.obsid]['opened'].append(rev.revision_number)
+            if dbi.is_approved(rev.obsid):
+                open_is_approved.append(True)
+            else:
+                open_is_approved.append(False)
             #: Assign a multi color once two open revisions are found, applied to all
             if len(multi_revision_info[rev.obsid]['opened']) == 2:
                 col = list(_COLORS)[count % len(_COLORS)]
@@ -101,7 +106,8 @@ def index():
                            open_revision_signoff = open_revision_signoff,
                            open_forms = open_forms,
                            closed_revision_signoff = closed_revision_signoff,
-                           multi_revision_info = multi_revision_info
+                           multi_revision_info = multi_revision_info,
+                           open_is_approved = open_is_approved
                            )
 
 @bp.route('/<id>/<kind>', methods=['GET', 'POST'])

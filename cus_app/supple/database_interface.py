@@ -178,7 +178,7 @@ def perform_signoff(signoff_id, signoff_kind):
             #: Additionally create an approval revision and signoff.
             matching_rev = signoff_obj.revision
             new_revision = Revision(obsid = matching_rev.obsid,
-                                    revision_number = matching_rev.revision_number + 1,
+                                    revision_number = find_next_rev_no(matching_rev.obsid),
                                     kind = 'asis',
                                     sequence_number = matching_rev.sequence_number,
                                     time = curr_epoch,

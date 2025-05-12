@@ -77,8 +77,8 @@
                 <span style='padding-left:20px;padding-right:20px'>Note</span>
             </th>
             <!-- Open ObsIds -->
-            {% for (rev, sign), form in zip(open_revision_signoff, open_forms) %}
-                {{open_signoff_row(rev, sign, form, multi_revision_info)}}
+            {% for (rev, sign), form, is_approved in zip(open_revision_signoff, open_forms, open_is_approved) %}
+                {{open_signoff_row(rev, sign, form, multi_revision_info, is_approved)}}
             {% endfor %}
             <!-- Spacer if necessary -->
             {% if open_revision_signoff|length > 0 and closed_revision_signoff|length > 0 %}

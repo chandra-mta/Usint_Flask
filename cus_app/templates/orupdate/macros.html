@@ -13,8 +13,12 @@
 {% endmacro%}
 
 {% macro usint_cell(usint_field, approve_field, status, user, time)%}
-    {% if status == 'Pending' and usint_field != None and approve_field != None %}
-        <td>{{ usint_field() }}<br>{{ approve_field() }}</td>
+    {% if status == 'Pending' and usint_field != None%}
+        <td>{{ usint_field() }}<br>
+        {% if approve_field != None%}
+            {{ approve_field() }}
+        {% endif %}
+        </td>
     {% else %}
         {{ signoff_cell(usint_field, status, user, time) }}
     {% endif %}
@@ -59,14 +63,18 @@
     </th>
 {% endmacro %}
 
-{% macro open_signoff_row(rev, sign, form, multi_revision_info)%}
+{% macro open_signoff_row(rev, sign, form, multi_revision_info, is_approved)%}
     <tr>
         {{ revision_info_cell(rev, multi_revision_info) }}
         {{ signoff_cell(form.gen, sign.general_status, sign.general_signoff, sign.general_time) }}
         {{ signoff_cell(form.acis, sign.acis_status, sign.acis_signoff, sign.acis_time) }}
         {{ signoff_cell(form.acis_si, sign.acis_si_status, sign.acis_si_signoff, sign.acis_si_time) }}
         {{ signoff_cell(form.hrc_si, sign.hrc_si_status, sign.hrc_si_signoff_id, sign.hrc_si_time) }}
-        {{ usint_cell(form.usint, form.approve, sign.usint_status, sign.usint_signoff, sign.usint_time) }}
+        {% if is_approved %}
+            {{ usint_cell(form.usint, None, sign.usint_status, sign.usint_signoff, sign.usint_time) }}
+        {% else %}
+            {{ usint_cell(form.usint, form.approve, sign.usint_status, sign.usint_signoff, sign.usint_time) }}
+        {% endif %}
         {{ notes_cell(rev, multi_revision_info)}}
     </tr>
 {% endmacro%}
