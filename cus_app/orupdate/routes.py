@@ -61,18 +61,21 @@ def index():
     session['status_page_order_kwarg'] = status_page_order_kwarg
     result = dbi.pull_status(**status_page_order_kwarg)
 
-
     open_revision_signoff = []
     open_forms =[]
-
     closed_revision_signoff = []
+    multi_revision_info = {}
 
     for rev, sign in result:
+        if rev.obsid not in multi_revision_info.keys():
+            multi_revision_info[rev.obsid] = {'opened': [], 'closed': []}
         if is_open(sign):
             open_revision_signoff.append((rev,sign))
             open_forms.append(SignoffRow(prefix=str(sign.id)))
+            multi_revision_info[rev.obsid]['opened'].append(rev.revision_number)
         else:
             #: Limit the retention of closed revisions to the last 1.5 days
+            multi_revision_info[rev.obsid]['closed'].append(rev.revision_number)
             if rev.time >= _36_HOURS_AGO:
                 closed_revision_signoff.append((rev,sign))
 
@@ -80,7 +83,8 @@ def index():
                            order_form = order_form,
                            open_revision_signoff = open_revision_signoff,
                            open_forms = open_forms,
-                           closed_revision_signoff = closed_revision_signoff
+                           closed_revision_signoff = closed_revision_signoff,
+                           multi_revision_info = multi_revision_info
                            )
 
 def is_open(signoff_obj):

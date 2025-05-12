@@ -84,7 +84,7 @@ def construct_notes(org_dict, req_dict):
                 notes.update({'large_coordinate_change': True})
     
     if len(notes) > 0:
-        return notes
+        return json.dumps(notes)
     else:
         return None
 

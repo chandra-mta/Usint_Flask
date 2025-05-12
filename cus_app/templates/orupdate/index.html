@@ -78,7 +78,7 @@
             </th>
             <!-- Open ObsIds -->
             {% for (rev, sign), form in zip(open_revision_signoff, open_forms) %}
-                {{open_signoff_row(rev, sign, form)}}
+                {{open_signoff_row(rev, sign, form, multi_revision_info)}}
             {% endfor %}
             <!-- Spacer if necessary -->
             {% if open_revision_signoff|length > 0 and closed_revision_signoff|length > 0 %}

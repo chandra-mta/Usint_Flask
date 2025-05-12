@@ -55,7 +55,7 @@ class Revision(db.Model):
         - instrument_change : Boolean
         - grating_change : Boolean
         - flag_change : Boolean, listed for any change in constraint-specific parameters (dither, time, roll, ACIS window)
-        - large_coordinate_shift : Boolean, listed for a >8' cumulative shift in RA, DEC coordinates
+        - large_coordinate_change : Boolean, listed for a >8' cumulative shift in RA, DEC coordinates
     """
     __tablename__ = "revisions"
     __table_args__ = {'extend_existing': True}

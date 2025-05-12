@@ -10,6 +10,7 @@ import signal
 import traceback
 from datetime import datetime
 from itertools import zip_longest
+import json
 
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap
@@ -32,6 +33,12 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
 
+def loadnotes(notes):
+    if notes is None:
+        return {}
+    else:
+        return json.loads(notes)
+
 #
 # --- Flask Additions
 #
@@ -48,7 +55,8 @@ function_dict = {
     'enumerate': enumerate,
     'approx_equals': approx_equals,
     'zip': zip,
-    'datetime': datetime
+    'datetime': datetime,
+    'loadnotes': loadnotes
 }
 def create_app(_configuration_name):
     app = Flask(__name__)
