@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{%block title %}Express Approval Page{% endblock %}
+{%block main_title %}Express Approval Page{% endblock %}
+
+
+{% block app_content %}
+    <p style='font-weight:bold;'>
+        Please provide obsid(s) which you like to approve immediately.
+    </p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <p style='color:red; font-size:100%;'>
+                    {{ message }}
+                </p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method='POST' >
+        {{express_form.multiobsid(size=50)}}
+        {{express_form.submit()}}
+    </form>
+    <p style='padding-top:20px;'>
+        Obsids can be delimited by a 'comma', a 'colon', a 'semi-colon', or a blank space.
+        If they are in a sequence, you can connect them with a dash. The values 
+        are inclusive at both ends. You can add as many sequences as you like, 
+        separated by a comma, a colon, a semi-colon, or blank spaces. 
+    </p>
+
+    <p>Examples</p>
+    <ul>
+        <li> 12345, 12346</li>
+        <li> 12345:12346</li>
+        <li> 12345 ; 12346</li>
+        <li> 12345: 12346; 12347, 12348 12349</li>
+        <li> 12345-12349 12352 - 12357,12359- 12362</li>
+    </ul>
+{% endblock %}
+
