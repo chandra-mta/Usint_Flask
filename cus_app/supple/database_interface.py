@@ -44,7 +44,7 @@ def construct_revision(obsid,ocat_data,kind,org_dict = {},req_dict = {}):
                     kind = kind,
                     sequence_number = ocat_data.get('seq_nbr'),
                     time = curr_epoch,
-                    user = current_user,
+                    user_id = current_user.id,
                     notes = notes
                     )
     return revision

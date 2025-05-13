@@ -61,7 +61,7 @@ def confirm():
         elif confirm_form.finalize.data:
             return redirect(url_for('express.finalize'))
     else:
-        obsid_list = session.get('express_approval', [])
+        obsid_list = session.pop('express_approval', [])
         to_approve = {}
         unapprovable = {}
         for obsid in obsid_list:
@@ -81,3 +81,22 @@ def confirm():
                             unapprovable = unapprovable,
                             confirm_form = confirm_form
                                 )
+
+@bp.route('/finalize', methods=['GET', 'POST'])
+def finalize():
+    to_approve = session.pop('to_approve', {})
+    try:
+        for obsid, ocat_data in to_approve.items():
+            revision = dbi.construct_revision(obsid,ocat_data,'asis')
+            signoff = dbi.construct_signoff(revision)
+            db.session.add(revision)
+            db.session.add(signoff)
+        db.session.commit()
+    except Exception as e:  # noqa: E722
+        #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
+        #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
+        db.session.rollback()
+        raise e #: TODO replace with abort(500)
+    return render_template('express/finalize.html',
+                           to_approve = to_approve
+                           )

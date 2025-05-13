@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{%block title %}Express Approval Page{% endblock %}
+{%block main_title %}Express Approval Page{% endblock %}
+
+{% block app_content %}
+
+    <h3 style='padding-bottom:50px;'>
+        {% if to_approve| length > 0 %}
+            Observations are submitted to the approval process. You will receive a confirmation
+            email of each observation separately.
+        {% else %}
+            No ObsIDs that you requested met the conditions for approval;  none of them were
+            approved. Please go back to the main page, and try again.
+        {% endif %}
+    </h3>
+
+{% endblock %}
+
