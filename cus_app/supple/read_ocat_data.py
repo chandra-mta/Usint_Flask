@@ -23,11 +23,6 @@ _SERV = 'ocatsqlsrv'
 _USR = 'mtaops_internal_web'
 _AUTHDIR = "/data/mta4/CUS/authorization"
 _DB = 'axafocat'
-#
-# --- NOTE Ocat dates are recorded without a leading zero. This makes datetime formatting difficult so we convert for the fetch.
-# --- While datetime can process these dates, it never prints without a leading zero.
-#
-
 
 #
 # --- Parameter Lists
@@ -53,10 +48,35 @@ _ACIS_PARAM_LIST = ['exp_mode', 'ccdi0_on', 'ccdi1_on', 'ccdi2_on', 'ccdi3_on', 
 _ACISWIN_PARAM_LIST = ['chip', 'start_row', 'start_column', 'width', 'height',\
               'lower_threshold', 'pha_range', 'sample']
 
+
+_BASIC_LIST = ['target.obsid',
+               'target.seq_nbr',
+               'target.status',
+               'target.ocat_propid',
+               'prop_info.prop_num',
+               'prop_info.title',
+               'view_pi.last'
+               ]
 def get_value_from_sybase(cmd):
     conn = sqsh.Sqsh(dbi='sybase', server=_SERV, database = _DB, user = _USR, authdir = _AUTHDIR)
     row = conn.fetchall(cmd)
     return row
+
+def read_basic_ocat_data(obsid):
+    """
+    Basic ocat read for constructing express approvals.
+    """
+    cmd = f"select {','.join(_BASIC_LIST)} from target INNER JOIN prop_info ON target.ocat_propid = prop_info.ocat_propid \
+    INNER JOIN view_pi ON target.ocat_propid = view_pi.ocat_propid where target.obsid={obsid}"
+
+    result = get_value_from_sybase(cmd)
+    if len(result) == 0:
+        raise NoResultFound(f"No query result for {obsid}")
+    elif len(result) >= 2:
+        raise MultipleResultsFound(f"Multiple query result for {obsid}")
+    else:
+        p_dict = convert_astropy_to_native(result[0])
+    return p_dict
 
 def read_ocat_data(obsid):
     """
