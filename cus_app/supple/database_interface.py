@@ -22,7 +22,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original
 from flask_login import current_user
-from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS
+from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
@@ -322,7 +322,6 @@ def find_next_rev_no(obsid):
     else:
         return max(revision_numbers) + 1
 
-
 def is_approved(obsid):
     """
     Check whether an obsid is listed as approved in the usint database
@@ -336,6 +335,18 @@ def is_approved(obsid):
         elif rev.kind == 'remove':
             is_approved = False
     return is_approved
+
+def has_open_revision(obsid):
+    """
+    Check database for whether there is an open revision for the approval process
+    """
+    result = db.session.execute(select(Revision, Signoff).join(Revision.signoff).where(Revision.obsid == obsid)).all()
+    has_open_revision = False
+    for revs, signs in result:
+        if is_open(signs):
+            has_open_revision = True
+            break
+    return has_open_revision
 
 def _to_epoch(time):
     """
