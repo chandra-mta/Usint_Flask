@@ -52,6 +52,7 @@ _ACISWIN_PARAM_LIST = ['chip', 'start_row', 'start_column', 'width', 'height',\
 _BASIC_LIST = ['target.obsid',
                'target.seq_nbr',
                'target.status',
+               'target.targname',
                'target.ocat_propid',
                'prop_info.prop_num',
                'prop_info.title',

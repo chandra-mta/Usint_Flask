@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{%block title %}Express Approval Page{% endblock %}
+{%block main_title %}Express Approval Page{% endblock %}
+
+
+{% block app_content %}
+
+    <form  method="POST">        
+        <h3>The following observations will be marked for approval:</h3>
+        <p>If an observation is marked by 
+            <span style='background-color:rgb(255, 185, 0, 0.6);'>yellow</span>, another POC has submitted revisions
+            for this observation.
+            Please make sure that you did not accidentally include 
+            it in the list.
+        </p>
+        <table border=1 cellpadding=3 cellspacing=3>
+            <tr>
+            <th class='cent'><span style='padding-left:5px; padding-right:5px;'>ObsID</span></th>
+            <th class='cent'>Prop ID</th>
+            <th class='cent'>
+                <span style='padding-left:5px; padding-right:5px;'>
+                    Sequence Number 
+                </span>
+            </th>
+            <th class='cent'>Title</th>
+            <th class='cent'>Target</th>
+            <th class='cent'>PI</th>
+            <th class='cent'>Note</th>
+            </tr>
+            {% if to_approve | length > 0 %}
+                {% for obsid,info in to_approve.items() %}
+                    {{ cellset(obsid, info) }}
+                {% endfor %}
+            {% else %}
+                <tr class='cent'>
+                    <th colspan="7">No approvable Obsid's provided.</th>
+                </tr>
+            {% endif %}
+            {% if unapprovable | length > 0 %}
+                <tr class='cent'>
+                    <th  class='cent' colspan="7">The following observations marked in <span style='background-color:rgb(255, 0, 0, 0.2);'>
+                        red</span> contain some issue which makes them unaffected by this express approval request and will be ignored.
+                        If this is unexpected please contact Admin, Tech, and ArcOps:</th>
+                </tr>
+                {% for obsid, info in unapprovable.items() %}
+                    {{ cellset(obsid, info, True) }}
+                {% endfor %}
+            {% endif %}
+        </table>
+        <hr>
+        <p>
+        If these values are correct, click the Finalize button. Otherwise, use the Previous Page button
+        to go back to the main page.<span style='font-weight:bold;'>
+            Only non-red entries will be approved by clicking the "Finalize" button.
+            </span>
+        </p>
+        {{ confirm_form.previous_page() }} {{ confirm_form.finalize() }}
+    </form>
+{% endblock %}
+
+{% macro cellset(obsid, info, red = False) %}
+    {% if red %}
+    <tr class='cent' style='background-color:rgb(255, 0, 0, 0.2);'>
+    {% elif info.get('has_open_revision')%}
+    <tr class='cent' style='background-color:rgb(255, 185, 0, 0.6);'>
+    {% else %}
+    <tr class='cent'>
+    {% endif %}
+    <th class='cent'>
+        <a href="javascript:WindowOpener({{url_for('ocatdatapage.index', obsid = obsid)}}, 'express_obsid');">
+            {{ obsid }}
+        </a>
+    </th>
+    <td class='cent'>{{ info.get('ocat_propid') }}</td>
+    <td class='cent'>{{ info.get('seq_nbr') }}</td>
+    <td class='cent'>{{ info.get('title') }}</td>
+    <td class='cent'>{{ info.get('targname') }}</td>
+    <td class='cent'>{{ info.get('last') }}</td>
+    {% if info.get('has_open_revision')%}
+        <td class='cent'>Multiple Open Revisions</td>
+    {% elif info.get('status') in ['observed', 'archived', 'canceled', 'discarded'] %}
+        <td class='cent'>Status: {{info.get('status')}} </td>
+    {% elif info.get('is_approved') %}
+        <td class='cent'>Already Approved</td>
+    {% elif info.get('not_in_ocat')%}
+        <td class='cent'>Not in Ocat</td>
+    {% else %}
+        <td>&#160;</td>
+    {% endif %}
+    
+{% endmacro %}
