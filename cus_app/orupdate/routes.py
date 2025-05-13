@@ -9,18 +9,16 @@ Target Parameter Status Page
 
 """
 import os
-import re
 import json
 from datetime import datetime, timedelta
 
-from flask import current_app, render_template, request, flash, session, redirect, url_for, abort
-from flask_login    import current_user
+from flask import render_template, request, session, redirect, url_for
+from flask_login import current_user
 
-from cus_app import db
 from cus_app.models import register_user
 from cus_app.orupdate import bp
 from cus_app.orupdate.forms import SignoffRow, OrderForm
-import cus_app.supple.read_ocat_data as rod
+from cus_app.supple.helper_functions import is_open
 import cus_app.supple.database_interface as dbi
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -32,7 +30,6 @@ with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
 with open(os.path.join(stat_dir, 'color.json')) as f:
     _COLORS = json.load(f)
 
-_SIGNOFF_COLUMNS = ('general', 'acis', 'acis_si', 'hrc_si', 'usint') #: Prefix names for the columns of Signoff
 _36_HOURS_AGO = (datetime.now() - timedelta(days=1.5)).timestamp()
 
 @bp.before_app_request
@@ -114,14 +111,3 @@ def index():
 def perform_signoff(id,kind):
     dbi.perform_signoff(id, kind)
     return redirect(url_for('orupdate.index'))
-
-def is_open(signoff_obj):
-    """
-    Returns boolean if the signoff entry still needs a signature.
-    """
-    is_open = False
-    for attr in _SIGNOFF_COLUMNS:
-        if getattr(signoff_obj, f"{attr}_status") == 'Pending':
-            is_open = True
-            break
-    return is_open

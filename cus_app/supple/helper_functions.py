@@ -97,6 +97,7 @@ TIME_RANK_PARAMS = {'window_constraint', 'tstart', 'tstop'}
 ROLL_RANK_PARAMS = {'roll_constraint', 'roll_180', 'roll', 'roll_tolerance'}
 WINDOW_RANK_PARAMS = {'chip', 'start_row', 'start_column', 'width', 'height', 'lower_threshold', 'pha_range', 'sample'}
 ALL_RANK_PARAMS = TIME_RANK_PARAMS.union(ROLL_RANK_PARAMS).union(WINDOW_RANK_PARAMS)
+_SIGNOFF_COLUMNS = ('general', 'acis', 'acis_si', 'hrc_si', 'usint') #: Prefix names for the columns of Signoff
 
 #
 # --- Coercion section. Converting the strings text to the correct data types.
@@ -394,3 +395,14 @@ def rank_ordr(ranks):
     elif isinstance(ranks, dict):
         #: Columns orientation
         return max([len(v) for v in ranks.values()])
+
+def is_open(signoff_obj):
+    """
+    Returns boolean if the signoff entry still needs a signature.
+    """
+    is_open = False
+    for attr in _SIGNOFF_COLUMNS:
+        if getattr(signoff_obj, f"{attr}_status") == 'Pending':
+            is_open = True
+            break
+    return is_open

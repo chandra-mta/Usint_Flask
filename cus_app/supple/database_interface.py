@@ -28,7 +28,7 @@ stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'stati
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
 
-def construct_revision(obsid,ocat_data,kind,org_dict,req_dict):
+def construct_revision(obsid,ocat_data,kind,org_dict = {},req_dict = {}):
     """
     Generate a Revision ORM object based on the provided obsid information
     """
