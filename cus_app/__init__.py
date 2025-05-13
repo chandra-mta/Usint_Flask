@@ -117,6 +117,13 @@ def create_app(_configuration_name):
     app.register_blueprint(exp_bp, url_prefix="/express")
 
     #
+    # --- chkupdata page
+    #
+    from cus_app.chkupdata import bp as cup_bp
+
+    app.register_blueprint(cup_bp, url_prefix="/chkupdata")
+
+    #
     # --- Main Usint Page
     #
     @app.route("/")
