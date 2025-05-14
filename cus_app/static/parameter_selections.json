@@ -158,6 +158,7 @@
         "window_flag",
         "window_constraint",
         "tstart",
+        "tstop",
         "roll_flag",
         "roll_constraint",
         "roll_180",
