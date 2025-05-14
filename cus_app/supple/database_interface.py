@@ -17,7 +17,7 @@ import os
 from datetime import datetime
 import json
 from math import sqrt
-from sqlalchemy import select, desc, case
+from sqlalchemy import select, desc, case, text
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original
@@ -256,7 +256,7 @@ def pull_param(param):
 
     return result
 
-def pull_revision(**kwargs):
+def pull_revision(order_by = {'id': 'asc'}, **kwargs):
     """
     Fetch list of recent revisions based on kwarg criteria
     """
@@ -286,9 +286,10 @@ def pull_revision(**kwargs):
     #
     query = query.filter_by(**kwargs)
     
-    #: Order the query by descending Revision ID number so that the end result order
+    #: By default, order the query by descending Revision ID number so that the end result order
     #: contains a suborder of returning the most recently made revisions first.
-    query = query.order_by(desc(Revision.id))
+    ordering = ",".join([f"{k} {v}" for k,v in order_by.items()])
+    query = query.order_by(text(ordering))
     return db.session.execute(query).scalars().all()
 
 def pull_status(limit = 200, **kwargs):

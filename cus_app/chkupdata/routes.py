@@ -41,7 +41,22 @@ def index(obsidrev):
         flash(f"Ill-formatted Obsid.Rev. {obsidrev}")
         return redirect(url_for('chkupdata.provide_obsidrev'))
     
-    return f"<p>{obsid} {rev}</p>"
+    revision_list = dbi.pull_revision(order_by={'revision_number': 'asc'}, obsid = obsid)
+    #: Pop out the revision we are interested in, then use the rest to construct related links for the webpage.
+    revision = None
+    for i in range(len(revision_list)):
+        if revision_list[i].revision_number == rev:
+            revision = revision_list.pop(i)
+            break
+    if revision is None and revision_list == []:
+        flash(f"No revisions found for obsid = {obsid}.")
+        return redirect(url_for('chkupdata.provide_obsidrev'))
+    elif revision is None and revision_list != []:
+        flash(f"Could not find obsid.rev = {obsidrev}. Returning most recent revision instead.")
+        revision = revision_list.pop(-1)
+
+    links = [url_for('chkupdata.index',obsidrev= f"{r.obsid}.{r.revision_number:>03}") for r in revision_list]
+    return f"<p>{revision}</p><p>{links}</p>"
 
 @bp.route('/', methods=['GET', 'POST'])
 @bp.route('/index', methods=['GET', 'POST'])
