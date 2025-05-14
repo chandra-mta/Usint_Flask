@@ -15,70 +15,86 @@ from astropy.coordinates import Angle
 # --- Classes
 #
 class IterateRecords:
-    """Iterating through a records oriented object"""
-    def __init__(self,list1, list2):
-        self.list1 = list1
-        self.list2 = list2
-        self.top_level_iterator = enumerate(itertools.zip_longest(self.list1 or [],self.list2 or [],fillvalue={}))
+    """Iterating through a set of records oriented object"""
+    def __init__(self,*args):
+        self.list_set = []
+        self.num_lists = len(args)
+        for arg in args:
+            if not isinstance(arg,list):
+                self.list_set.append([])
+            else:
+                self.list_set.append(arg)
+        self.top_level_iterator = enumerate(itertools.zip_longest(*self.list_set,fillvalue={}))
         _ = next(self.top_level_iterator)
         self.order = _[0]
-        self.inner_iterator = itertools.zip_longest(_[1][0].keys() or _[1][1].keys(),
-                                                                   _[1][0].values(),
-                                                                   _[1][1].values(),
-                                                                  fillvalue=None)
+        self.keys = set()
+        for i in _[1]:
+            self.keys = self.keys.union(set(i.keys()))
+        #: Iterate over the keys in the record
+        self.inner_iterator = iter(self.keys)
+        self.inner_level = _[1]
+    
     def __iter__(self):
         return self
 
     
     def __next__(self):
         try:
-            param, org, req = next(self.inner_iterator)
-            return self.order, param, org, req
+            curr_param = next(self.inner_iterator)
+            curr_values = [x.get(curr_param) for x in self.inner_level]
+            return self.order, curr_param, tuple(curr_values)
         except StopIteration:
             _ = next(self.top_level_iterator)
             self.order = _[0]
-            self.inner_iterator = itertools.zip_longest(_[1][0].keys() or _[1][1].keys(),
-                                                                       _[1][0].values(),
-                                                                       _[1][1].values(),
-                                                                      fillvalue=None)
+            self.keys = set()
+            for i in _[1]:
+                self.keys = self.keys.union(set(i.keys()))
+            #: Iterate over the keys in the record
+            self.inner_iterator = iter(self.keys)
+            self.inner_level = _[1]
             
         return self.__next__()
 
 class IterateColumns:
     """Iterating through a columns oriented object"""
     
-    def __get_more__(self,obj,key):
+    @staticmethod
+    def get_col(obj,key):
         if obj == None:
-            return None
+            return []
         else:
-            return obj[key]
+            return obj.get(key) or []
     
-    def __init__(self,dict1, dict2):
-        self.dict1 = dict1
-        self.dict2 = dict2
-        self.top_level_iterator = iter(self.dict1.keys() or self.dict2.keys())
+    def __init__(self,*args):
+        self.dict_set = []
+        self.num_dict = len(args)
+        for arg in args:
+            if not isinstance(arg,dict):
+                self.dict_set.append({})
+            else:
+                self.dict_set.append(arg)
+        self.keys = set()
+        for i in self.dict_set:
+            self.keys = self.keys.union(set(i.keys()))
+
+        self.top_level_iterator = iter(self.keys)
         _ = next(self.top_level_iterator)
         self.parameter = _
-        self.inner_iterator = enumerate(itertools.zip_longest(get_more(self.dict1, _) or [],
-                                                                 get_more(self.dict2, _) or [],
-                                                                 fillvalue=None
-                                                                ))
+        self.inner_level = [self.get_col(x,_) for x in self.dict_set]
+        self.inner_iterator = enumerate(itertools.zip_longest(*self.inner_level,fillvalue=None))
+        
     def __iter__(self):
         return self
-
     
     def __next__(self):
         try:
-            i, (org, req) = next(self.inner_iterator)
-            return i, self.parameter, org, req
+            ordr, curr_values = next(self.inner_iterator)
+            return ordr, self.parameter, tuple(curr_values)
         except StopIteration:
             _ = next(self.top_level_iterator)
-            self.parameter = _
-            self.inner_iterator = enumerate(itertools.zip_longest(get_more(self.dict1, _) or [],
-                                                                 get_more(self.dict2, _) or [],
-                                                                 fillvalue=None
-                                                                ))
-            
+        self.parameter = _
+        self.inner_level = [self.get_col(x,_) for x in self.dict_set]
+        self.inner_iterator = enumerate(itertools.zip_longest(*self.inner_level,fillvalue=None))
         return self.__next__()
 
 #
