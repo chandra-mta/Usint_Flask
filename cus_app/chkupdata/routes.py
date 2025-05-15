@@ -64,6 +64,19 @@ def index(obsidrev):
     #
     ocat_data = rod.read_ocat_data(obsid)
 
+    #: Since this is to check data comparisons, provide a columns orientation for ranks as well.
+    time_columns = reorient_rank(ocat_data.get('time_ranks'), 'columns')
+    time_records = reorient_rank(ocat_data.get('time_ranks'), 'records')
+    ocat_data.update({'time_ordr': rank_ordr(ocat_data.get('time_ranks')), 'time_columns': time_columns, 'time_records': time_records})
+
+    roll_columns = reorient_rank(ocat_data.get('roll_ranks'), 'columns')
+    roll_records = reorient_rank(ocat_data.get('roll_ranks'), 'records')
+    ocat_data.update({'roll_ordr': rank_ordr(ocat_data.get('roll_ranks')), 'roll_columns': roll_columns, 'roll_records': roll_records})
+    
+    window_columns = reorient_rank(ocat_data.get('window_ranks'), 'columns')
+    window_records = reorient_rank(ocat_data.get('window_ranks'), 'records')
+    ocat_data.update({'window_ordr': rank_ordr(ocat_data.get('window_ranks')), 'window_columns': window_columns, 'window_records': window_records})
+    
     originals = revision.original
     if revision.kind == 'norm':
         requests = revision.request

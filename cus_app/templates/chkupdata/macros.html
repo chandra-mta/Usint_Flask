@@ -76,6 +76,47 @@
     {% endfor %}
     </table>
 {% endmacro %}
+
+##
+##---  table for ordered cases
+##
+
+{% macro ordr_block(org_dict, req_dict, ocat_data, p_list, title) %}
+
+    <div style='padding-top:10px;'></div>
+    <table border=1 width=100%>
+    <col style='width:25%' span="4">
+    <tr><th colspan=4 style='background-color:rgb(255,204, 255,0.5);'>{{ title }}</th></tr>
+    {{ table_header() }}
+    {% if org_dict.get()%}
+    {% if data[tparam][0][0] in null_list and data[tparam][1][0] in null_list 
+            and data[tparam][2][0] in null_list %}
+        <tr><th>{{ oparam }}</th>
+        <td>0</td><td>0</td><td>0</td>
+        </tr>
+    {% else %}
+        <tr>
+            <th>{{ oparam }}</th>
+            <td>{{ data[oparam][0] }}</td>
+            <td>{{ data[oparam][1] }}</td>
+            {{ color_coded(data[oparam][2], data[oparam][3]) }}
+        </tr>
+        {% set top =([data[oparam][0], data[oparam][1], data[oparam][2]]|max) %}
+        {% for k in range(0, top) %}
+            {% for param in p_list %}
+                <tr>
+                    <th>{{ param }} order={{ k + 1 }} </th>
+    
+                    <td>{{ data[param][0][k] }}</td>
+                    <td>{{ data[param][1][k] }}</td>
+                    {{ color_coded(data[param][2][k], data[param][3][k]) }}
+                </tr>
+            {% endfor %}
+        {% endfor %}
+    {% endif %}
+    </table>
+{% endmacro %}
+
 ###
 ###--- changed param table 
 ###

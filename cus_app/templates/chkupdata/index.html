@@ -115,9 +115,15 @@
 <!-- -->
 <!-- time constaint list -->
 <!-- -->
+
+{{ ordr_block(org_dict, req_dict, ocat_data, _PARAM_SELECTION['time_columns'], 'Time Constraint Parameters') }}
+
 <!-- -->
 <!-- roll constaint list -->
 <!-- -->
+
+{{ ordr_block(data, 'ROLL_ORDR',  ['ROLL_CONSTRAINT', 'ROLL_180', 'ROLL', 'ROLL_TOLERANCE'], 'Roll Constraint Parameters', 'ROLL_CONSTRAINT') }}
+
 <!-- -->
 <!-- constraint parameter list -->
 <!-- -->
@@ -135,6 +141,11 @@
 <!-- -->
 <!-- acis window constaint list -->
 <!-- -->
+
+{% if org_dict.get('instrument') in ('ACIS-I', 'ACIS-S') or req_dict.get('instrument') in ('ACIS-I', 'ACIS-S') or ocat_data.get('instrument') in ('ACIS-I', 'ACIS-S')  %}
+    {{ ordr_block(data, 'AW_ORDR',  ['CHIP', 'START_ROW', 'START_COLUMN', 'HEIGHT', 'WIDTH', 'LOWER_THRESHOLD', 'PHA_RANGE', 'SAMPLE'], 'ACIS Window Constraint Parameters', 'CHIP') }}
+{% endif %}
+
 <!-- -->
 <!-- HRC parameter list -->
 <!-- -->
