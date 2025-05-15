@@ -73,7 +73,7 @@
     <div style='margin-left:30px; margin-right:60px;'>
     {{ check_two_entries('remarks', org_dict, req_dict, ocat_data, _LABELS) }}
 <hr>
-    {{ check_two_entries('comment', org_dict, req_dict, ocat_data, _LABELS) }}
+    {{ check_two_entries('comments', org_dict, req_dict, ocat_data, _LABELS) }}
     </div>
 
 <hr>
@@ -116,13 +116,13 @@
 <!-- time constaint list -->
 <!-- -->
 
-{{ ordr_block(org_dict, req_dict, ocat_data, _PARAM_SELECTION['time_columns'], 'Time Constraint Parameters') }}
+{{ ordr_block(org_dict, req_dict, ocat_data, 'time_ordr', 'time_ranks', 'Time Constraint Parameters') }}
 
 <!-- -->
 <!-- roll constaint list -->
 <!-- -->
 
-{{ ordr_block(data, 'ROLL_ORDR',  ['ROLL_CONSTRAINT', 'ROLL_180', 'ROLL', 'ROLL_TOLERANCE'], 'Roll Constraint Parameters', 'ROLL_CONSTRAINT') }}
+{{ ordr_block(org_dict, req_dict, ocat_data, 'roll_ordr', 'roll_ranks', 'Roll Constraint Parameters') }}
 
 <!-- -->
 <!-- constraint parameter list -->
@@ -143,7 +143,7 @@
 <!-- -->
 
 {% if org_dict.get('instrument') in ('ACIS-I', 'ACIS-S') or req_dict.get('instrument') in ('ACIS-I', 'ACIS-S') or ocat_data.get('instrument') in ('ACIS-I', 'ACIS-S')  %}
-    {{ ordr_block(data, 'AW_ORDR',  ['CHIP', 'START_ROW', 'START_COLUMN', 'HEIGHT', 'WIDTH', 'LOWER_THRESHOLD', 'PHA_RANGE', 'SAMPLE'], 'ACIS Window Constraint Parameters', 'CHIP') }}
+    {{ ordr_block(org_dict, req_dict, ocat_data, 'window_ordr', 'window_ranks', 'ACIS Window Constraint Parameters') }}
 {% endif %}
 
 <!-- -->

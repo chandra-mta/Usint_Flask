@@ -20,7 +20,7 @@ from cus_app.chkupdata import bp
 from cus_app.chkupdata.forms import ObsidRevForm
 import cus_app.supple.database_interface as dbi
 import cus_app.supple.read_ocat_data as rod
-from cus_app.supple.helper_functions import reorient_rank , rank_ordr, IterateRecords, IterateColumns
+from cus_app.supple.helper_functions import reorient_rank , rank_ordr, coerce, OCAT_DATETIME_FORMAT
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'labels.json')) as f:
@@ -68,7 +68,7 @@ def index(obsidrev):
     #
     # --- Fetch state information of this obsid
     #
-    ocat_data = rod.read_ocat_data(obsid)
+    ocat_data = coerce(rod.read_ocat_data(obsid), output_time_format=OCAT_DATETIME_FORMAT)
     #: If the obsid has rank-order parameters, then it would be in records orientation.
     ocat_data.update({'time_ordr': rank_ordr(ocat_data.get('time_ranks')),
                       'roll_ordr': rank_ordr(ocat_data.get('roll_ranks')),
@@ -81,11 +81,16 @@ def index(obsidrev):
         requests = [] #: If revision wasn't norm this would be the fetch result regardless, but assigning it on the python side is quicker
     org_dict = {}
     for org in originals:
-        org_dict[org.parameter.name] = json.loads(org.value)
+        org_dict[org.parameter.name] = coerce(json.loads(org.value), output_time_format=OCAT_DATETIME_FORMAT)
     req_dict = {}
     for req in requests:
-        req_dict[req.parameter.name] = json.loads(req.value)
+        req_dict[req.parameter.name] = coerce(json.loads(req.value), output_time_format=OCAT_DATETIME_FORMAT)
     #: Add record-orientation of rank information if present
+
+    for flag, rank_name, columns, order in _FLAG_RANK_COLUMN_ORDR:
+        org_records, req_records = generate_ranks_display(flag, rank_name, columns, order, org_dict, req_dict)
+        org_dict.update(org_records)
+        req_dict.update(req_records)
 
     #: Add unchanging ocat information from the ocat to the original state record so that the display indicates information without indicating an impossible change
     compare_but_uneditable = {}
@@ -139,8 +144,18 @@ def generate_ranks_display(flag, rank_name, columns, order, org_dict, req_dict):
             org_collection = None
             req_collection = None
         else:
-            #: Original state contains data, and request might contain data. IterateColumns and None values should just be org.
-            pass
-
-
-    tmp_org_collection = {}
+            #: Original state contains data, and request might contain data.
+            org_collection = {}
+            req_collection = {}
+            for col in _PARAM_SELECTIONS[columns]:
+                original_column = org_dict.get(col)
+                request_column = req_dict.get(col)
+                #: If not present in the request, then retain the original column
+                if request_column is None:
+                    request_column = original_column
+                org_collection[col] = original_column
+                req_collection[col] = request_column
+            org_collection = reorient_rank(org_collection, 'records')
+            req_collection = reorient_rank(req_collection, 'records')
+    
+    return {order: rank_ordr(org_collection), rank_name: org_collection}, {order: rank_ordr(req_collection), rank_name: req_collection}

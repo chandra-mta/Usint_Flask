@@ -81,7 +81,7 @@
 ##---  table for ordered cases
 ##
 
-{% macro ordr_block(org_dict, req_dict, ocat_data, order_param, p_list, title) %}
+{% macro ordr_block(org_dict, req_dict, ocat_data, order_param, rank_name, title) %}
 
     <div style='padding-top:10px;'></div>
     <table border=1 width=100%>
@@ -94,22 +94,19 @@
         </tr>
     {% else %}
         <tr>
-            <th>{{ oparam }}</th>
-            <td>{{ data[oparam][0] }}</td>
-            <td>{{ data[oparam][1] }}</td>
-            {{ color_coded(data[oparam][2], data[oparam][3]) }}
+            <th>{{ order_param.upper() }}</th>
+            <td>{{ org_dict.get(order_param) }}</td>
+            <td>{{ req_dict.get(order_param) }}</td>
+            {{ color_coded(org_dict.get(order_param), req_dict.get(order_param), ocat_data.get(order_param), org_dict.get(order_param) != req_dict.get(order_param)) }}
         </tr>
-        {% set top =([data[oparam][0], data[oparam][1], data[oparam][2]]|max) %}
-        {% for k in range(0, top) %}
-            {% for param in p_list %}
-                <tr>
-                    <th>{{ param }} order={{ k + 1 }} </th>
-    
-                    <td>{{ data[param][0][k] }}</td>
-                    <td>{{ data[param][1][k] }}</td>
-                    {{ color_coded(data[param][2][k], data[param][3][k]) }}
-                </tr>
-            {% endfor %}
+        {% for ordr, param, (org,req,ocat) in IterateRecords(org_dict.get(rank_name),req_dict.get(rank_name),ocat_data.get(rank_name)) %}
+            <tr>
+                <th>{{ param.upper() }} order={{ ordr + 1 }} </th>
+
+                <td>{{ org }}</td>
+                <td>{{ req }}</td>
+                {{ color_coded(org, req, ocat, org != req) }}
+            </tr>
         {% endfor %}
     {% endif %}
     </table>

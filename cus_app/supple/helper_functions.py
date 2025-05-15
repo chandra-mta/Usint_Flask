@@ -138,14 +138,14 @@ def coerce_number(val):
                 pass
     return val
 
-def coerce_time(val):
+def coerce_time(val, output_time_format = STORAGE_FORMAT):
     """Parse a variety of different time formats across CXC tools and data sources"""
     if isinstance(val, str):
         x = val.replace('::', ':')
         x = x.split('.')[0]
         for format in DATETIME_FORMATS:
             try:
-                return datetime.strptime(x,format).strftime(STORAGE_FORMAT)
+                return datetime.strptime(x,format).strftime(output_time_format)
             except ValueError:
                 pass
     return val
@@ -165,11 +165,11 @@ def coerce_json(val):
     else:
         return json.dumps(val)
 
-def coerce(val):
+def coerce(val, output_time_format = STORAGE_FORMAT):
     if isinstance(val, (list, tuple)):
-        return [coerce(x) for x in val]
+        return [coerce(x, output_time_format) for x in val]
     elif isinstance(val, dict):
-        return {k:coerce(v) for k,v in val.items()}
+        return {k:coerce(v, output_time_format) for k,v in val.items()}
     #: Null section
     elif val in NULL_LIST:
         return None
@@ -178,7 +178,7 @@ def coerce(val):
     if isinstance(val,(int,float)):
         return val
     #: Time section if applicable
-    val = coerce_time(val)
+    val = coerce_time(val, output_time_format)
     #: Regular string
     return val
 #
