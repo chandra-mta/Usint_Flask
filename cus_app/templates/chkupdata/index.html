@@ -28,7 +28,7 @@
     <tr>
         <th>Obsid.Rev:  </th><td class='cent'>{{ revision.obsid }}.{{ str(revision.revision_number).zfill(3) }}</td>
         <td style='padding:5px;'></td>
-        <th>Sequence #: </th><td class='cent'>{{ ocat_data.('seq_nbr') }}</td>
+        <th>Sequence #: </th><td class='cent'>{{ ocat_data.get('seq_nbr') }}</td>
         <td style='padding:5px;'></td>
         <th>Proposal #: </th><td class='cent'>{{ ocat_data.get('proposal_number') }}</td>
     </tr>
@@ -60,10 +60,8 @@
         <h3>Other Revision Available</h3>
     {% endif %}
     <ul>
-        {% for rev in other_rev %}
-            {% if rev %}
-                <li><a href='{{ rev }}'>{{ rev }}</a></li>
-            {% endif %}
+        {% for rev, link in other_rev.items() %}
+            <li><a href='{{ link }}'>{{ rev }}</a></li>
         {% endfor %}
     </ul>
 {% endif %}
@@ -87,9 +85,9 @@
 {% if req_dict.keys() %}
     <h3>Change Requested Parameters</h3>
 
-    {{ changed_param(org_dict, req_dict, _LABELS, _PARAM_SELECTION['general_signoff_params'], "General Changes") }}
-    {{ changed_param(org_dict, req_dict, _LABELS, set(_PARAM_SELECTION['acis_signoff_params']) - set(_PARAM_SELECTION['window_columns']), "ACIS Changes") }}
-    {{ changed_param(org_dict, req_dict, _LABELS, _PARAM_SELECTION['window_columns'], "ACIS Window Changes") }}
+    {{ changed_param(org_dict, req_dict, _LABELS, _PARAM_SELECTIONS['general_signoff_params'], "General Changes") }}
+    {{ changed_param(org_dict, req_dict, _LABELS, set(_PARAM_SELECTIONS['acis_signoff_params']) - set(_PARAM_SELECTIONS['window_columns']), "ACIS Changes") }}
+    {{ changed_param(org_dict, req_dict, _LABELS, _PARAM_SELECTIONS['window_columns'], "ACIS Window Changes") }}
     
     <hr>
 {% endif %}

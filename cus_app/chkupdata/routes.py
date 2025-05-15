@@ -58,7 +58,7 @@ def index(obsidrev):
     elif revision is None and revision_list != []:
         flash(f"Could not find obsid.rev = {obsidrev}. Returning most recent revision instead.")
         revision = revision_list.pop(-1)
-    other_rev = [url_for('chkupdata.index',obsidrev= f"{r.obsid}.{r.revision_number:>03}") for r in revision_list]
+    other_rev = {f"{r.obsid}.{r.revision_number:>03}" : url_for('chkupdata.index',obsidrev= f"{r.obsid}.{r.revision_number:>03}") for r in revision_list}
     #
     # --- Fetch state information of this obsid
     #
@@ -71,10 +71,10 @@ def index(obsidrev):
         requests = [] #: If revision wasn't norm this would be the fetch result regardless, but assigning it on the python side is quicker
     org_dict = {}
     for org in originals:
-        org_dict[org.parameter.name] = json.dumps(org.value)
+        org_dict[org.parameter.name] = json.loads(org.value)
     req_dict = {}
     for req in requests:
-        req_dict[req.parameter.name] = json.dumps(req.value)
+        req_dict[req.parameter.name] = json.loads(req.value)
 
     return render_template('chkupdata/index.html',
                            revision = revision,
