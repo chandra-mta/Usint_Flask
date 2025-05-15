@@ -19,8 +19,12 @@ from cus_app.models import register_user
 from cus_app.chkupdata import bp
 from cus_app.chkupdata.forms import ObsidRevForm
 import cus_app.supple.database_interface as dbi
+import cus_app.supple.read_ocat_data as rod
+from cus_app.supple.helper_functions import reorient_rank , rank_ordr
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
+with open(os.path.join(stat_dir, 'labels.json')) as f:
+    _LABELS = json.load(f)
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
 
@@ -54,9 +58,33 @@ def index(obsidrev):
     elif revision is None and revision_list != []:
         flash(f"Could not find obsid.rev = {obsidrev}. Returning most recent revision instead.")
         revision = revision_list.pop(-1)
+    other_rev = [url_for('chkupdata.index',obsidrev= f"{r.obsid}.{r.revision_number:>03}") for r in revision_list]
+    #
+    # --- Fetch state information of this obsid
+    #
+    ocat_data = rod.read_ocat_data(obsid)
 
-    links = [url_for('chkupdata.index',obsidrev= f"{r.obsid}.{r.revision_number:>03}") for r in revision_list]
-    return f"<p>{revision}</p><p>{links}</p>"
+    originals = revision.original
+    if revision.kind == 'norm':
+        requests = revision.request
+    else:
+        requests = [] #: If revision wasn't norm this would be the fetch result regardless, but assigning it on the python side is quicker
+    org_dict = {}
+    for org in originals:
+        org_dict[org.parameter.name] = json.dumps(org.value)
+    req_dict = {}
+    for req in requests:
+        req_dict[req.parameter.name] = json.dumps(req.value)
+
+    return render_template('chkupdata/index.html',
+                           revision = revision,
+                           ocat_data = ocat_data,
+                           org_dict = org_dict,
+                           req_dict = req_dict,
+                           other_rev = other_rev,
+                           _LABELS = _LABELS,
+                           _PARAM_SELECTIONS = _PARAM_SELECTIONS
+                           )
 
 @bp.route('/', methods=['GET', 'POST'])
 @bp.route('/index', methods=['GET', 'POST'])

@@ -1,0 +1,185 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+
+{%block title %}Parameter Check Page{% endblock %}
+{%block main_title %}Parameter Check Page{% endblock %}
+
+{% from 'chkupdata/macros.html' import check_two_entries %}
+{% from 'chkupdata/macros.html' import param_block %}
+{% from 'chkupdata/macros.html' import ordr_block %}
+{% from 'chkupdata/macros.html' import changed_param %}
+{% from 'chkupdata/macros.html' import color_coded %}
+
+{% block app_content %}
+
+<h1>Observation: {{ revision.obsid }}.{{ str(revision.revision_number).zfill(3) }}</h1>
+
+<div style='float: right; padding-top:20px;'>
+   <b> (submitted: {{ datetime.fromtimestamp(revision.time).strftime('%m/%d/%y') }})</b>
+</div>
+<!-- -->
+<!-- General Information about this observation -->
+<!-- -->
+
+<h3>Observation Information</h3>
+<p><em><b>{{ ocat_data.get('proposal_title') }}</b></em></p>
+
+<table border=0>
+    <tr>
+        <th>Obsid.Rev:  </th><td class='cent'>{{ revision.obsid }}.{{ str(revision.revision_number).zfill(3) }}</td>
+        <td style='padding:5px;'></td>
+        <th>Sequence #: </th><td class='cent'>{{ ocat_data.('seq_nbr') }}</td>
+        <td style='padding:5px;'></td>
+        <th>Proposal #: </th><td class='cent'>{{ ocat_data.get('proposal_number') }}</td>
+    </tr>
+    <tr>
+        <th>Target Name: </th><td class='cent'>{{ ocat_data.get('targname') }}</td>
+        <td style='padding:5px;'></td>
+        <th>Group ID:   </th><td class='cent'>{{ ocat_data.get('group_id') }}</td>
+        <td style='padding:5px;'></td>
+        <th>Obs AO:     </th><td class='cent'>{{ ocat_data.get('obs_ao_str') }}</td>
+    </tr>
+    <tr>
+        <th>PI Name:    </th><td class='cent'>{{ ocat_data.get('pi_name') }}</td>
+        <td style='padding:5px;'></td>
+        <th>Submitted As:</th>
+        <td class='cent' style='background-color:rgb(255,0,0,0.2);'>
+            {{ revision.kind.upper() }}     
+        </td>
+    </tr>
+</table>
+
+<!-- -->
+<!-- Listing other revision links -->
+<!-- -->
+
+{% if other_rev %}
+    {% if other_rev|length > 1 %}
+        <h3>Other Revisions Available</h3>
+    {% else %}
+        <h3>Other Revision Available</h3>
+    {% endif %}
+    <ul>
+        {% for rev in other_rev %}
+            {% if rev %}
+                <li><a href='{{ rev }}'>{{ rev }}</a></li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+{% endif %}
+<hr>
+
+<!-- -->
+<!-- Remarks and Comments -->
+<!-- -->
+    <div style='margin-left:30px; margin-right:60px;'>
+    {{ check_two_entries('remarks', org_dict, req_dict, ocat_data, _LABELS) }}
+<hr>
+    {{ check_two_entries('comment', org_dict, req_dict, ocat_data, _LABELS) }}
+    </div>
+
+<hr>
+
+<!-- -->
+<!-- List of changed parmaters -->
+<!-- -->
+
+{% if req_dict.keys() %}
+    <h3>Change Requested Parameters</h3>
+
+    {{ changed_param(org_dict, req_dict, _LABELS, _PARAM_SELECTION['general_signoff_params'], "General Changes") }}
+    {{ changed_param(org_dict, req_dict, _LABELS, set(_PARAM_SELECTION['acis_signoff_params']) - set(_PARAM_SELECTION['window_columns']), "ACIS Changes") }}
+    {{ changed_param(org_dict, req_dict, _LABELS, _PARAM_SELECTION['window_columns'], "ACIS Window Changes") }}
+    
+    <hr>
+{% endif %}
+
+<h3>All Parameters</h3>
+
+<table border=0 style='text-align:left;' >
+<tr><th>Color Coding: </th></tr>
+<tr> <td style='color:lawngreen;'>Requested value is in the database.</td> </tr>
+<tr> <td style='color:orangered;'>Requested value is not in the database yet.</td> </tr>
+<tr> <td style='color:fuchsia;'>  There was no request for the update, but the database value is changed.</td></tr>
+</table>
+
+<!-- -->
+<!-- general parameter list -->
+<!-- -->
+{{ param_block(org_dict, req_dict, ocat_data, ['si_mode', 'instrument', 'grating','type', 'targname', 'approved_exposure_time', 'proposal_joint', 'proposal_hst', 'proposal_noao', 'proposal_xmm', 'proposal_rxte', 'proposal_vla', 'proposal_vlba', 'soe_st_sched_date', 'lts_lt_plan', 'ra', 'dec', 'roll_obsr', 'y_det_offset', 'z_det_offset', 'trans_offset', 'focus_offset', 'raster_scan', 'dither_flag', 'uninterrupt', 'obj_flag', 'object', 'photometry_flag', 'vmagnitude', 'est_cnt_rate', 'forder_cnt_rate', 'spwindow_flag'] ,'General Parameter') }}
+
+<!-- -->
+<!-- dither parameter list -->
+<!-- -->
+
+{{ param_block(org_dict, req_dict, ocat_data, ['y_amp', 'y_freq', 'y_phase', 'z_amp', 'z_freq', 'z_phase'], 'Dither Parameters') }}
+
+<!-- -->
+<!-- time constaint list -->
+<!-- -->
+<!-- -->
+<!-- roll constaint list -->
+<!-- -->
+<!-- -->
+<!-- constraint parameter list -->
+<!-- -->
+
+{{ param_block(org_dict, req_dict, ocat_data, ['constr_in_remarks', 'phase_epoch', 'phase_period', 'phase_start', 'phase_start_margin', 'phase_end', 'phase_end_margin', 'group_id', 'pre_id_group', 'pre_min_lead_group', 'pre_max_lead_group', 'monitor_flag', 'pre_id', 'pre_min_lead', 'pre_max_lead', 'multitelescope', 'observatories', 'multitelescope_interval'], 'Constraints') }}
+
+<!-- -->
+<!-- acis parameter list -->
+<!-- -->
+
+{% if org_dict.get('instrument') in ('ACIS-I', 'ACIS-S') or req_dict.get('instrument') in ('ACIS-I', 'ACIS-S') or ocat_data.get('instrument') in ('ACIS-I', 'ACIS-S')  %}
+    {{ param_block(org_dict, req_dict, ocat_data, ['bep_pack', 'frame_time', 'most_efficient', 'ccdi0_on', 'ccdi1_on', 'ccdi2_on', 'ccdi3_on', 'ccds0_on', 'ccds1_on', 'ccds2_on', 'ccds3_on', 'ccds4_on', 'ccds5_on', 'subarray', 'subarray_start_row', 'subarray_row_count', 'duty_cycle', 'secondary_exp_count', 'primary_exp_time', 'onchip_sum', 'onchip_row_count', 'onchip_column_count', 'eventfilter', 'eventfilter_lower', 'eventfilter_higher', 'multiple_spectral_lines', 'spectra_max_count', 'dropped_chip_count'], 'ACIS Parameters') }}
+{% endif %}
+
+<!-- -->
+<!-- acis window constaint list -->
+<!-- -->
+<!-- -->
+<!-- HRC parameter list -->
+<!-- -->
+
+{% if org_dict.get('instrument') in ('HRC-I', 'HRC-S') or req_dict.get('instrument') in ('HRC-I', 'HRC-S') or ocat_data.get('instrument') in ('HRC-I', 'HRC-S')  %}
+    {{ param_block(org_dict, req_dict, ocat_data, ['hrc_zero_block', 'hrc_timing_mode', 'hrc_si_mode'], 'HRC Parameters') }} 
+{% endif %}
+
+<!-- -->
+<!-- too parameter list -->
+<!-- -->
+{% if ocat_data.get('tooid') %}
+    {{ param_block(ocat_data, ocat_data, ocat_data, ['too_trig', 'too_type', 'too_start', 'too_stop', 'too_followup', 'too_remarks'], 'TOO Parameters') }} 
+{% endif %}
+<!-- -->
+<!-- remarks and commnts -->
+<!-- -->
+
+<h3>Remarks</h3>
+<table border=1 width=100%>
+<tr><th width=10%>Original  </th><td>{{ org_dict.get('remarks') }}</td></tr>
+{% if 'remarks' in req_dict.keys() %}
+    <tr><th width=10%>Requested </th><td>{{ req_dict.get('remarks') }}</td></tr>
+{% else %}
+    <tr><th width=10%>Requested </th><td>{{ org_dict.get('remarks') }}</td></tr>
+{% endif %}
+<tr><th width=10%>Current DB</th>
+    {{ color_coded(org_dict.get('remarks'), req_dict.get('remarks'), ocat_data.get('remarks'), 'remarks' in req_dict.keys()) }}
+</tr>
+</table>
+
+<h3>Comments</h3>
+<table border=1>
+    <tr><th width=10%>Original  </th><td>{{ org_dict.get('comments') }}</td></tr>
+    {% if 'comments' in req_dict.keys() %}
+        <tr><th width=10%>Requested </th><td>{{ req_dict.get('comments') }}</td></tr>
+    {% else %}
+        <tr><th width=10%>Requested </th><td>{{ org_dict.get('comments') }}</td></tr>
+    {% endif %}
+    <tr><th width=10%>Current DB</th>
+        {{ color_coded(org_dict.get('comments'), req_dict.get('comments'), ocat_data.get('comments'), 'comments' in req_dict.keys()) }}
+    </tr>
+</table>
+
+<div style='padding-bottom:30px;'></div>
+{% endblock %}
