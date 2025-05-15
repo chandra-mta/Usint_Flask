@@ -422,3 +422,26 @@ def is_open(signoff_obj):
             is_open = True
             break
     return is_open
+
+def contains_non_none(obj):
+    """
+    Function for processing a native python container and determining if non-null information is present for use.
+    """
+    if isinstance(obj,(list,tuple)):
+        result = False
+        for i in obj:
+            if contains_non_none(i):
+                result = True
+                break
+        return result
+    elif isinstance(obj,dict):
+        result = False
+        for v in obj.values():
+            if contains_non_none(v):
+                result = True
+                break
+        return result
+    elif obj is not None:
+        return True
+    else:
+        return False
