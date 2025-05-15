@@ -123,6 +123,12 @@ def create_app(_configuration_name):
     from cus_app.chkupdata import bp as cup_bp
 
     app.register_blueprint(cup_bp, url_prefix="/chkupdata")
+    #
+    # --- remove accidental submission page
+    #
+    from cus_app.rm_submission import bp as rmv_bp
+
+    app.register_blueprint(rmv_bp, url_prefix="/rm_submission")
 
     #
     # --- Main Usint Page
