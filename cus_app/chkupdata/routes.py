@@ -76,6 +76,12 @@ def index(obsidrev):
     for req in requests:
         req_dict[req.parameter.name] = json.loads(req.value)
 
+    #: Add unchanging ocat information from the ocat to the original state record so that the display indicates information without indicating an impossible change
+    compare_but_uneditable = {}
+    for param in _PARAM_SELECTIONS['compare_but_uneditable']:
+        compare_but_uneditable[param] = ocat_data.get(param)
+    org_dict.update(compare_but_uneditable)
+
     return render_template('chkupdata/index.html',
                            revision = revision,
                            ocat_data = ocat_data,

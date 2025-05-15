@@ -263,5 +263,35 @@
     ],
     "hrc_si_signoff_params": [
         "hrc_si_mode"
+    ],
+    "compare_but_uneditable": [
+        "aca_mode",
+        "approved_exposure_time",
+        "dropped_chip_count",
+        "group_id",
+        "group_obsid",
+        "lts_lt_plan",
+        "monitor_series",
+        "obs_ao_str",
+        "observer",
+        "obsid",
+        "phase_constraint_flag",
+        "pi_name",
+        "planned_roll",
+        "proposal_hst",
+        "proposal_joint",
+        "proposal_noao",
+        "proposal_number",
+        "proposal_rxte",
+        "proposal_title",
+        "proposal_vla",
+        "proposal_vlba",
+        "proposal_xmm",
+        "raster_scan",
+        "rem_exp_time",
+        "si_mode",
+        "soe_roll",
+        "soe_st_sched_date",
+        "status"
     ]
 }
