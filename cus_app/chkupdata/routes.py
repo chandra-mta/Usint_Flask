@@ -20,13 +20,19 @@ from cus_app.chkupdata import bp
 from cus_app.chkupdata.forms import ObsidRevForm
 import cus_app.supple.database_interface as dbi
 import cus_app.supple.read_ocat_data as rod
-from cus_app.supple.helper_functions import reorient_rank , rank_ordr
+from cus_app.supple.helper_functions import reorient_rank , rank_ordr, IterateRecords, IterateColumns
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'labels.json')) as f:
     _LABELS = json.load(f)
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
+
+_FLAG_RANK_COLUMN_ORDR = (
+    ('window_flag', 'time_ranks', 'time_columns', 'time_ordr'),
+    ('roll_flag', 'roll_ranks', 'roll_columns', 'roll_ordr'),
+    ('spwindow_flag', 'window_ranks', 'window_columns', 'window_ordr')
+)
 
 @bp.before_app_request
 def before_request():
@@ -63,19 +69,10 @@ def index(obsidrev):
     # --- Fetch state information of this obsid
     #
     ocat_data = rod.read_ocat_data(obsid)
-
-    #: Since this is to check data comparisons, provide a columns orientation for ranks as well.
-    time_columns = reorient_rank(ocat_data.get('time_ranks'), 'columns')
-    time_records = reorient_rank(ocat_data.get('time_ranks'), 'records')
-    ocat_data.update({'time_ordr': rank_ordr(ocat_data.get('time_ranks')), 'time_columns': time_columns, 'time_records': time_records})
-
-    roll_columns = reorient_rank(ocat_data.get('roll_ranks'), 'columns')
-    roll_records = reorient_rank(ocat_data.get('roll_ranks'), 'records')
-    ocat_data.update({'roll_ordr': rank_ordr(ocat_data.get('roll_ranks')), 'roll_columns': roll_columns, 'roll_records': roll_records})
-    
-    window_columns = reorient_rank(ocat_data.get('window_ranks'), 'columns')
-    window_records = reorient_rank(ocat_data.get('window_ranks'), 'records')
-    ocat_data.update({'window_ordr': rank_ordr(ocat_data.get('window_ranks')), 'window_columns': window_columns, 'window_records': window_records})
+    #: If the obsid has rank-order parameters, then it would be in records orientation.
+    ocat_data.update({'time_ordr': rank_ordr(ocat_data.get('time_ranks')),
+                      'roll_ordr': rank_ordr(ocat_data.get('roll_ranks')),
+                      'window_ordr': rank_ordr(ocat_data.get('window_ranks'))})
     
     originals = revision.original
     if revision.kind == 'norm':
@@ -88,6 +85,7 @@ def index(obsidrev):
     req_dict = {}
     for req in requests:
         req_dict[req.parameter.name] = json.loads(req.value)
+    #: Add record-orientation of rank information if present
 
     #: Add unchanging ocat information from the ocat to the original state record so that the display indicates information without indicating an impossible change
     compare_but_uneditable = {}
@@ -114,3 +112,35 @@ def provide_obsidrev():
     return render_template('chkupdata/provide_obsidrev.html',
                            obsidrev_form = obsidrev_form
                            )
+
+def generate_ranks_display(flag, rank_name, columns, order, org_dict, req_dict):
+    """
+    Generate the rank-order displays based on the state of original or requested information.
+    Note that this algorithm is based on the axiom that the originals table records the non-null rank information as individual columns,
+    and that the request table records the desired create, changed, or nullified variables.
+
+    Output is a formatted copy of the rank-ordered parameters in records orientation.
+    Then in the chkupdata page, we iterate over these formatted copies with the records orientation of ocat_data in order to display the full change.
+    """
+    if flag in req_dict.keys():
+        #: Change case
+        if org_dict.get(flag) in ('Y', 'P') and req_dict.get(flag) in ('N', None):
+            #: Nullification of originally present data.
+            org_collection = reorient_rank({k: org_dict.get(k) for k in _PARAM_SELECTIONS[columns]}, 'records')
+            req_collection = None
+        elif org_dict.get(flag) in ('N', None) and req_dict.get(flag) in ('Y', 'P'):
+            #: Creation of rank-ordered values
+            org_collection = None
+            req_collection = reorient_rank({k: req_dict.get(k) for k in _PARAM_SELECTIONS[columns]}, 'records')
+    else:
+        #: No flag change, so either nothing or a change to existing data.
+        if org_dict.get(flag) in ('N', None):
+            #: Still Null
+            org_collection = None
+            req_collection = None
+        else:
+            #: Original state contains data, and request might contain data. IterateColumns and None values should just be org.
+            pass
+
+
+    tmp_org_collection = {}

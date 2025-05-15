@@ -81,17 +81,15 @@
 ##---  table for ordered cases
 ##
 
-{% macro ordr_block(org_dict, req_dict, ocat_data, p_list, title) %}
+{% macro ordr_block(org_dict, req_dict, ocat_data, order_param, p_list, title) %}
 
     <div style='padding-top:10px;'></div>
     <table border=1 width=100%>
     <col style='width:25%' span="4">
     <tr><th colspan=4 style='background-color:rgb(255,204, 255,0.5);'>{{ title }}</th></tr>
     {{ table_header() }}
-    {% if org_dict.get()%}
-    {% if data[tparam][0][0] in null_list and data[tparam][1][0] in null_list 
-            and data[tparam][2][0] in null_list %}
-        <tr><th>{{ oparam }}</th>
+    {% if org_dict.get(order_param) == 0 and req_dict.get(order_param) == 0 and ocat_data.get(order_param) == 0 %}
+        <tr><th>{{ order_param }}</th>
         <td>0</td><td>0</td><td>0</td>
         </tr>
     {% else %}
