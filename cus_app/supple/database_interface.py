@@ -17,7 +17,7 @@ import os
 from datetime import datetime
 import json
 from math import sqrt
-from sqlalchemy import select, desc, case, text
+from sqlalchemy import select, desc, case, text, or_
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original
@@ -293,7 +293,8 @@ def pull_revision(order_by = {'id': 'asc'}, **kwargs):
     return db.session.execute(query).scalars().all()
 
 def pull_status(limit = 200, **kwargs):
-    """Special version of the pull_revision function tailored for the target parameter status page.
+    """
+    Pull Revisions and Signoffs in specific ordering.
 
     :param limit: _description_, defaults to 200
     :type limit: int, optional
@@ -308,6 +309,17 @@ def pull_status(limit = 200, **kwargs):
         #: Special case in which we must first subquery the most recent LIMIT number of revisions, then sort by obsid
         subquery = select(Revision.id).order_by(desc(Revision.id)).limit(limit).subquery()
         query = select(Revision, Signoff).join(Revision.signoff).select_from(Revision, subquery).where(Revision.id == subquery.c.id).order_by(Revision.obsid).order_by(desc(Revision.revision_number))
+    elif 'user' in kwargs.keys():
+        #Pull only the signoffs and revisions involving this user
+        user_id = int(kwargs.get('user'))
+        user_wheres = or_(Revision.user_id == user_id,
+                  Signoff.general_signoff_id == user_id,
+                  Signoff.acis_signoff_id == user_id,
+                  Signoff.acis_si_signoff_id == user_id,
+                  Signoff.hrc_si_signoff_id == user_id,
+                  Signoff.usint_signoff_id == user_id
+                 )
+        query = select(Revision, Signoff).join(Revision.signoff).filter(user_wheres).order_by(desc(Revision.id)).limit(limit)
     else:
         #: Default descending order
         query = select(Revision, Signoff).join(Revision.signoff).order_by(desc(Revision.id)).limit(limit)
