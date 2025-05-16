@@ -362,6 +362,9 @@ def has_open_revision(obsid):
     return has_open_revision
 
 def remove(revision_id, signoff_id, column):
+    """
+    Remove table entires with the remove submission page
+    """
     if column == 'revision':
         db.session.execute(delete(Revision).where(Revision.id == revision_id))
     else:
