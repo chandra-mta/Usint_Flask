@@ -1,0 +1,43 @@
+{% macro create_row(rev,sign,reversible,form, _SIGNOFF_COLUMNS) %}
+    <tr>
+        <!-- All signoff's can be reversed at any time. But a revision can only be removed if there are no other reversible signoff's present-->
+        {{ revision_cell(rev, form, ['revision'] == reversible) }}
+        {% for sign_col in _SIGNOFF_COLUMNS %}
+            {{ signoff_cell(sign, form, sign_col, sign_col in reversible) }}
+        {% endfor %}
+    </tr>
+{% endmacro %}
+
+{% macro revision_cell(revision, form, can_remove)%}
+    <th class='cent'>
+        {% set obsidrev = str(revision.obsid) + '.' + str(revision.revision_number).zfill(3) %}
+        <!-- make link to chkupdata -->
+        <a onclick="javascript:window.open('{{url_for('chkupdata.index', obsidrev=obsidrev )}}', 'Chkupdata{{ obsidrev }}')", style="cursor:pointer">
+        <u>{{ obsidrev }}</u></a>
+        <br>
+        {{ revision.sequence_number }}<br>
+        {{ datetime.fromtimestamp(revision.time).strftime('%m/%d/%y') }}<br>
+        {% if can_remove %}
+            {{ form.revision() }}
+        {% else %}
+            {{ revision.user.username }}
+        {% endif %}
+    </th>
+{% endmacro %}
+
+{% macro signoff_cell(sign, form, sign_col, can_remove)%}
+    {% set status = sign_col + '_status' %}
+    {% set signoff = sign_col + '_signoff' %}
+    {% set time = sign_col + '_time' %}
+    <td>
+    {% if can_remove %}
+        {{ form[sign_col]() }}
+    {% else %}
+        {% if sign[status] == 'Signed' %}
+            {{ sign[signoff].username }} {{ datetime.fromtimestamp(sign[time]).strftime('%m/%d/%y') }}
+        {% else %}
+            {{ sign[status] }}
+        {% endif %}
+    {% endif%}
+    </td>
+{% endmacro%}

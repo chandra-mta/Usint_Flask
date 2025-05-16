@@ -1,6 +1,73 @@
 {% extends 'base.html' %}
 {% import 'bootstrap/wtf.html' as wtf %}
+{%  from 'rm_submission/macros.html' import create_row%}
+
 {%block title %}Remove Accidental Submission Page{% endblock %}
 {%block main_title %}Remove Accidental Submission Page{% endblock %}
 {% block app_content %}
-{% enndblock %}
+
+{% if can_remove_submission %}
+    <p style='font-weight:bold; font-size:120%;'>
+        You can reverse the submission status of any entries marked by "Remove". 
+        If you find an entry that you want to reverse without the "Remove" button, 
+        it is because either other submissions were already made on that 
+        &lt;obsid&gt;.&lt;rev&gt;, or the submission was made more than a day ago.
+    </p>
+    <p style='font-weight:bold; font-size:120%;'>
+        Note: If you submitted a change with the "<em>Sign-off & Approve</em>" button on
+        the <em>Target Parameter Status Page</em>, the process would create two entries. 
+        You need to reverse the "verified by" column of the latest revision entry, 
+        and then that of the revision number one before, to go back to the original status. 
+    </p>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            {% for message in messages %}
+                <p style='color:red; font-size:100%;'>
+                    {{ message }}
+                </p>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <table border=1 class='cent wide' style='margin-left:auto;margin-right:auto;'>
+            <tr>
+                <th class='cent'>ObsID.Rev#</th>
+                <th class='cent'>General Sign Off</th>
+                <th class='cent'>ACIS Sign Off</th>
+                <th class='cent'>ACIS SI Mode Sign Off</th>
+                <th class='cent'>HRC SI Mode Sign Off</th>
+                <th class='cent'>Verified by</th>
+            </tr>
+            {% for (rev,sign,reversible), form in zip_longest(put_on_page, removal_forms, fillvalue=None) %}
+                {{ create_row(rev,sign,reversible,form, _SIGNOFF_COLUMNS) }}
+            {% endfor %}
+        </table>
+    </form>
+{% else %}
+    <h3> There is no entry that you can reverse the sign-off status.  </h3>
+
+    <p style='font-weight:bold;'> You can reverse the sign-off, if:</p>
+    <ul>
+        <li> The sign-off was done by you.</li>
+        <li> The sign-off was done in the past one day.</li>
+        <li> No other sign-off was made either by you or another POC.</li>
+    </ul>
+
+    <table border=1 class='cent wide' style='margin-left:auto;margin-right:auto;'>
+        <tr>
+            <th class='cent'>ObsID.Rev#</th>
+            <th class='cent'>General Sign Off</th>
+            <th class='cent'>ACIS Sign Off</th>
+            <th class='cent'>ACIS SI Mode Sign Off</th>
+            <th class='cent'> HRC SI Mode Sign Off</th>
+            <th class='cent'> Verified by</th>
+        </tr>
+        {% for (rev,sign,reversible), form in zip_longest(put_on_page, removal_forms, fillvalue=None) %}
+            {{ create_row(rev,sign,reversible,form, _SIGNOFF_COLUMNS) }}
+        {% endfor %}
+    </table>
+
+{% endif %}
+{% endblock %}
