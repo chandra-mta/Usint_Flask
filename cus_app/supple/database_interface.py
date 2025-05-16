@@ -17,7 +17,7 @@ import os
 from datetime import datetime
 import json
 from math import sqrt
-from sqlalchemy import select, desc, case, text, or_
+from sqlalchemy import select, desc, case, text, or_, delete
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original
@@ -360,6 +360,17 @@ def has_open_revision(obsid):
             has_open_revision = True
             break
     return has_open_revision
+
+def remove(revision_id, signoff_id, column):
+    if column == 'revision':
+        db.session.execute(delete(Revision).where(Revision.id == revision_id))
+    else:
+        signoff = db.session.execute(select(Signoff).where(Signoff.id == signoff_id)).scalar_one()
+        setattr(signoff, f"{column}_status", 'Pending')
+        setattr(signoff, f"{column}_signoff_id", None)
+        setattr(signoff, f"{column}_time", None)
+        db.session.add(signoff)
+    db.session.commit()
 
 def _to_epoch(time):
     """
