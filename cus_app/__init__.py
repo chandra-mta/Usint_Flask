@@ -129,6 +129,12 @@ def create_app(_configuration_name):
     from cus_app.rm_submission import bp as rmv_bp
 
     app.register_blueprint(rmv_bp, url_prefix="/rm_submission")
+    #
+    # --- poc duty sign up page
+    #
+    from cus_app.scheduler import bp as sch_bp
+
+    app.register_blueprint(sch_bp, url_prefix="/scheduler")
 
     #
     # --- Main Usint Page
