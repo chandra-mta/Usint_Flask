@@ -16,6 +16,7 @@ from flask import session, request
 from flask_login import UserMixin, login_user
 from cus_app import db, login
 from typing import Optional, List #: Allows for Mapper to determine nullability of the table column.
+from datetime import datetime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -192,6 +193,19 @@ class Original(db.Model):
         
     def __repr__(self) -> str:
         return f"Original(id={self.id!r}, revision_id={self.revision_id!r}, parameter_id={self.parameter_id!r}, value={self.value!r})"
+
+class Schedule(db.Model):
+    __tablename__ = 'schedules'
+    __table_args__ = {'extend_existing': True}
+    
+    id: Mapped[int] = mapped_column(primary_key = True, autoincrement=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = True)
+    user: Mapped["User"] = relationship(back_populates='schedules', foreign_keys=user_id)
+    start: Mapped[datetime] = mapped_column(nullable = False)
+    stop: Mapped[datetime] = mapped_column(nullable = False)
+        
+    def __repr__(self) -> str:
+        return f"Schedule(id={self.id!r}, user_id={self.user_id!r}, start={self.start!r}, stop={self.stop!r})"
 
 
 def register_user():
