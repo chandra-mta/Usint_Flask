@@ -40,8 +40,8 @@
             <th class='shifted'>Month</th><th class='shifted'>Day</th><th class='shifted'>Year</th>
             <th colspan=2>&#160;</th>
         </tr>
-        {% for schedule in schedule_list %}
-            {{ schedule_row(schedule) }}
+        {% for schedule, form in zip(schedule_list,schedule_forms) %}
+            {{ schedule_row(schedule, form) }}
         {% endfor %}
     </table>
 </form>

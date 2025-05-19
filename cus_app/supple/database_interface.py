@@ -404,3 +404,10 @@ def pull_schedule(begin = datetime.now() - timedelta(days=30)):
     query = select(Schedule).where(Schedule.start > begin)
     return db.session.execute(query).scalars().all()
 
+def unlock_schedule(schedule_id):
+    """
+    Undo signup for a TOO scheduled time duration entry
+    """
+    sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
+    sched.user_id = None
+    db.session.commit()
