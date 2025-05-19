@@ -14,13 +14,13 @@ before instantiation if the relationship mapped key has the NON NULL constraint.
 for web interface transactions. 
 """
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from math import sqrt
 from sqlalchemy import select, desc, case, text, or_, delete
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
-from cus_app.models import User, Revision, Signoff, Parameter, Request, Original
+from cus_app.models import User, Revision, Signoff, Parameter, Request, Original, Schedule
 from flask_login import current_user
 from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open
 
@@ -393,3 +393,14 @@ def _to_epoch(time):
                 return datetime.strptime(x,format).timestamp()
             except ValueError:
                 pass
+
+#
+# --- Scheduler Specific Convenience Functions
+#
+def pull_schedule(begin = datetime.now() - timedelta(days=30)):
+    """
+    Pull TOO schedule information from the schedules table
+    """
+    query = select(Schedule).where(Schedule.start > begin)
+    return db.session.execute(query).scalars().all()
+

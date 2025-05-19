@@ -1,0 +1,19 @@
+{% macro schedule_row(schedule) %}
+    <tr>
+        {% if schedule.user_id != None %}
+            <td><b>{{ schedule.user.full_name }}</b></td>
+        {% else %}
+            <td><b>TBD</b></td>
+        {% endif %}
+        {{ display_time_cell(schedule.start) }}
+        {{ display_time_cell(schedule.stop) }}
+        <td>unlock/update</td>
+        <td>split,delete</td>
+    </tr>
+{% endmacro %}
+
+{% macro display_time_cell(datetime_obj) %}
+    <td>{{ datetime_obj.strftime('%B') }}</td>
+    <td>{{ datetime_obj.strftime('%d') }}</td>
+    <td>{{ datetime_obj.strftime('%y') }}</td>
+{% endmacro %}

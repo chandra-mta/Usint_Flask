@@ -37,6 +37,7 @@ class User(db.Model, UserMixin):
     acis_si: Mapped[List["Signoff"]] = relationship(back_populates='acis_si_signoff', foreign_keys="Signoff.acis_si_signoff_id")
     hrc_si: Mapped[List["Signoff"]] = relationship(back_populates='hrc_si_signoff', foreign_keys="Signoff.hrc_si_signoff_id")
     usint: Mapped[List["Signoff"]] = relationship(back_populates='usint_signoff', foreign_keys="Signoff.usint_signoff_id")
+    schedules: Mapped[List["Schedule"]] = relationship(back_populates='user', foreign_keys="Schedule.user_id")
 
     def __repr__(self) -> str:
          return f"User(id={self.id!r}, username={self.username!r}, email={self.email!r}, groups={self.groups!r}, full_name={self.full_name!r})"

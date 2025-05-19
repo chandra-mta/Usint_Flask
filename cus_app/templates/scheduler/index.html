@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+{% import 'bootstrap/wtf.html' as wtf %}
+{% from 'scheduler/macros.html' import schedule_row %}
+{% block title %}POC Duty Scheduler{% endblock %}
+{% block main_title %}POC Duty Scheduler{% endblock %}
+
+{% block app_content %}
+
+{% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <p style='color:red; font-size:160%;'> 
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+
+<p style="padding-bottom:20px">
+    To sign up for a week, choose your name in the "Contact" column and then click "Update."
+    To withdraw from a week, click "Unlock."
+    <br>
+    See <a href="javascript:WindowOpener('../static/scheduler/usage_note.html', 'schedule_help', x=1000, y=600)">
+        <b>Scheduler Usage Note</b>
+        </a>
+    for full instructions, such as how to sign up for a partial week.
+</p>
+
+<form method="POST">
+    <table border=1 cellspacing=2 cellpadding=2>
+        <tr>
+            <th class='cent'>Contact</th>
+            <th class='cent' colspan=3>Start Date (start of day..)</th>
+            <th class='cent' colspan=3>Finish Date (..to end of day)</th>
+            <th class='cent' colspan=2>Status</th>
+        </tr>
+        <tr>
+            <th>&#160;</th>
+            <th class='shifted'>Month</th><th class='shifted'>Day</th><th class='shifted'>Year</th>
+            <th class='shifted'>Month</th><th class='shifted'>Day</th><th class='shifted'>Year</th>
+            <th colspan=2>&#160;</th>
+        </tr>
+        {% for schedule in schedule_list %}
+            {{ schedule_row(schedule) }}
+        {% endfor %}
+    </table>
+</form>
+
+{% endblock %}
