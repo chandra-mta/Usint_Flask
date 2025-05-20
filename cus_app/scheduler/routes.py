@@ -11,7 +11,7 @@ TOO Schedule Page
 from flask import render_template, request, redirect, url_for
 from flask_login import current_user
 
-from cus_app.models import Schedule, register_user
+from cus_app.models import register_user
 from cus_app.scheduler import bp
 from cus_app.scheduler.forms import ScheduleRow
 import cus_app.supple.database_interface as dbi

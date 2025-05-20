@@ -1,14 +1,28 @@
 {% macro schedule_row(schedule, form) %}
-    {% set locked = schedule.user_id != None %}
-    <tr>
-        {% if locked %}
+    {% if schedule.start < datetime.now() %}
+        {% set lock_status = 'closed' %}
+    {% elif schedule.user_id == None %}
+        {% set lock_status = 'unlocked' %}
+    {% else %}
+        {% set lock_status = 'locked' %}
+    {% endif %}
+
+    {% if lock_status  == 'closed' %}
+        <tr style="background-color:rgb(223,132,112,0.3);">
             <td><b>{{ schedule.user.full_name }}</b></td>
-        {% else %}
+    {% elif lock_status == 'locked' %}
+        <tr style="background-color:rgb(241,207,141,0.5);">
+            <td><b>{{ schedule.user.full_name }}</b></td>
+    {% else %}
+        <tr>
             <td><b>{{ form.user() }}</b></td>
-        {% endif %}
-        {{ display_time_cell(form, 'start', locked) }}
-        {{ display_time_cell(form, 'stop', locked) }}
-        {% if locked %}
+    {% endif %}
+        {{ display_time_cell(form, 'start', lock_status) }}
+        {{ display_time_cell(form, 'stop', lock_status) }}
+        {% if lock_status == 'closed' %}
+            <td>Closed</td>
+            <td colspan=2>&#160;</td>
+        {% elif lock_status == 'locked' %}
             <td>{{ form.unlock() }}</td>
             <td colspan=2>&#160;</td>
         {% else %}
@@ -18,8 +32,8 @@
     </tr>
 {% endmacro %}
 
-{% macro display_time_cell(form, set, locked) %}
-    {% if locked %}
+{% macro display_time_cell(form, set, lock_status) %}
+    {% if lock_status == 'locked' or lock_status == 'closed' %}
         {% for col in ('month', 'day', 'year')%}
             <td>{{ form[set + '_' + col].data }}</td>
         {% endfor %}
