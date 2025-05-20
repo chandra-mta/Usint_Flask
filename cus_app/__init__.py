@@ -61,6 +61,36 @@ function_dict = {
     'IterateRecords': IterateRecords
 }
 def create_app(_configuration_name):
+    """
+    Function for instantiating the entire application.
+
+    :NOTE: The call for the app.app_context().push() makes the application context available for the later steps of registering webpage blueprints.
+    This is done to make the database available for the scheduler to fetch TOO users, but will make the context available for all webpages.
+    Therefore in future development, it's possible for functional inclusion to be made which require the application context, but the developer is not aware.
+    Be mindful of editing or removing this function call and verify that which web pages require the application context in order to be registered
+        - Scheduler Page
+    https://flask.palletsprojects.com/en/stable/appcontext/
+
+    :NOTE: The Usint database interface is supported by a set of interworking interfaces which require an understanding of PRG design approaches.
+    This ensures that database writes are formatted successfully and not repeated upon new or refreshed requests.
+        - PRG: https://en.wikipedia.org/wiki/Post/Redirect/Get
+        - ACA Team Sybase Interface: https://github.com/sot/ska_dbi/blob/master/ska_dbi/sqsh.py
+    
+    The SQLite database interface libraries share a single "database" session per web request so that all users operate with the same data.
+    This differs from a "web" session which stores data for the user in between web requests where common usage means they submit multiple web requests in a single sitting.
+
+    Flask-Session commits to the usint database following every edit of the server-side cookie, which will also commit any pending transaction in the 
+    SQLAlchemy database interface used for recording ocat revision information. This has the benefit of ensuring all web application processes are cleanly
+    applied on the user side, at the expense of requiring careful monitoring of development work to ensure SQLAlchemy transactions and Flask-Session cookie updates
+    occur separately during processing.
+        - https://flask-session.readthedocs.io/en/latest/
+        - https://flask-sqlalchemy.readthedocs.io/en/stable/
+        - https://flask.palletsprojects.com/en/stable/api/#flask.session
+    
+    :NOTE: When testing the application, refreshing the web browser can sometimes retain previous form selections in rendering the webpage, even if the FlaskForm
+    is altered to render the webpage differently or display different starting data in the form. It's most reliable to close the webpage entirely and reopen to test changes.
+
+    """
     app = Flask(__name__)
     app.jinja_env.globals.update(function_dict)
     app.config.from_object(_CONFIG_DICT[_configuration_name])
@@ -69,9 +99,10 @@ def create_app(_configuration_name):
     db.init_app(app)
     sess.init_app(app)
     login.init_app(app)
+    app.app_context().push()
 
     #
-    #--- Available handler for processing in the event of keyboard interrupts (localhost testing)
+    # --- Available handler for processing in the event of keyboard interrupts (localhost testing)
     #
     def graceful_shutdown(signal, frame):
         """
