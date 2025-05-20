@@ -20,10 +20,9 @@ from datetime import datetime
 _TOO_USERS = db.session.execute(select(User).where(User.groups.like('%too%'))).scalars().all()
 _USER_CHOICE = [(None, 'TBD')] + [(user.id, user.full_name) for user in _TOO_USERS]
 #: Iterated over to match
-_MONTH_CHOICE = [(i+1, name) for i, name in enumerate(month_name[1:])]
-_DAY_CHOICE = [(i,i) for i in range(1,32)]
-_YEAR_CHOICE = [(i,i) for i in range(datetime.now().year - 1, datetime.now().year + 3)]
-
+_MONTH_CHOICE = [(name, name) for name in list(month_name[1:])]
+_DAY_CHOICE = [(f"{i:>02}", f"{i:>02}") for i in range(1,32)]
+_YEAR_CHOICE = [(str(i),str(i)) for i in range(datetime.now().year - 1, datetime.now().year + 3)]
 
 class ScheduleRow(FlaskForm):
     """

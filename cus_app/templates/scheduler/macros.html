@@ -1,19 +1,31 @@
 {% macro schedule_row(schedule, form) %}
+    {% set locked = schedule.user_id != None %}
     <tr>
-        {% if schedule.user_id != None %}
+        {% if locked %}
             <td><b>{{ schedule.user.full_name }}</b></td>
         {% else %}
-            <td><b>TBD</b></td>
+            <td><b>{{ form.user() }}</b></td>
         {% endif %}
-        {{ display_time_cell(schedule.start) }}
-        {{ display_time_cell(schedule.stop) }}
-        <td>{{ form.unlock() }}</td>
-        <td>split,delete</td>
+        {{ display_time_cell(form, 'start', locked) }}
+        {{ display_time_cell(form, 'stop', locked) }}
+        {% if locked %}
+            <td>{{ form.unlock() }}</td>
+            <td colspan=2>&#160;</td>
+        {% else %}
+            <td>{{ form.update() }}</td>
+            <td colspan=2>{{ form.split() }} {{ form.delete() }}</td>
+        {% endif %}
     </tr>
 {% endmacro %}
 
-{% macro display_time_cell(datetime_obj) %}
-    <td>{{ datetime_obj.strftime('%B') }}</td>
-    <td>{{ datetime_obj.strftime('%d') }}</td>
-    <td>{{ datetime_obj.strftime('%y') }}</td>
+{% macro display_time_cell(form, set, locked) %}
+    {% if locked %}
+        {% for col in ('month', 'day', 'year')%}
+            <td>{{ form[set + '_' + col].data }}</td>
+        {% endfor %}
+    {% else %}
+        {% for col in ('month', 'day', 'year')%}
+            <td>{{ form[set + '_' + col]() }}</td>
+        {% endfor %}
+    {% endif%}
 {% endmacro %}

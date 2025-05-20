@@ -30,6 +30,7 @@ def index():
     """
     #: Process POST request before displaying schedule data
     if request.method == 'POST':
+        #: Since some form select elements will be left in their initial state, we iterate and search for specific submit types.
         for k,v in request.form.to_dict().items():
             if 'Unlock' in v:
                 schedule_id = k.split('-')[0]
@@ -40,7 +41,7 @@ def index():
     schedule_list = dbi.pull_schedule()
     schedule_forms = []
     for entry in schedule_list:
-        schedule_forms.append(ScheduleRow(prefix=f"{entry.id}"))
+        schedule_forms.append(ScheduleRow(**_prep_form(entry)))
     return render_template('scheduler/index.html',
                            schedule_list = schedule_list,
                            schedule_forms = schedule_forms
@@ -51,3 +52,20 @@ def index():
 def unlock(schedule_id):
     dbi.unlock_schedule(schedule_id = schedule_id)
     return redirect(url_for('scheduler.index'))
+
+def _prep_form(entry):
+    """
+    Prepare form starting data for the particular entry
+    """
+    kwarg = {'prefix': str(entry.id)}
+    data = {'user': entry.user_id,
+            'start_month': entry.start.strftime('%B'),
+            'start_day': entry.start.strftime('%d'),
+            'start_year': entry.start.strftime('%Y'),
+            'stop_month': entry.stop.strftime('%B'),
+            'stop_day': entry.stop.strftime('%d'),
+            'stop_year': entry.stop.strftime('%Y'),
+            }
+    kwarg['data'] = data
+    return kwarg
+

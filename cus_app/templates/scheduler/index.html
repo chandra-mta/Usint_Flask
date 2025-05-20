@@ -32,13 +32,13 @@
             <th class='cent'>Contact</th>
             <th class='cent' colspan=3>Start Date (start of day..)</th>
             <th class='cent' colspan=3>Finish Date (..to end of day)</th>
-            <th class='cent' colspan=2>Status</th>
+            <th class='cent' colspan=3>Status</th>
         </tr>
         <tr>
             <th>&#160;</th>
             <th class='shifted'>Month</th><th class='shifted'>Day</th><th class='shifted'>Year</th>
             <th class='shifted'>Month</th><th class='shifted'>Day</th><th class='shifted'>Year</th>
-            <th colspan=2>&#160;</th>
+            <th colspan=3>&#160;</th>
         </tr>
         {% for schedule, form in zip(schedule_list,schedule_forms) %}
             {{ schedule_row(schedule, form) }}
