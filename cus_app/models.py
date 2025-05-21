@@ -212,13 +212,17 @@ class Original(db.Model):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self) -> str:
-        return f"Original(id={self.id!r}, revision_id={self.revision_id!r}, parameter_id={self.parameter_id!r}, value={self.value!r})"
+        return f"Original(order_id={self.order_id!r}, revision_id={self.revision_id!r}, parameter_id={self.parameter_id!r}, value={self.value!r})"
 
 class Schedule(db.Model):
     __tablename__ = 'schedules'
     __table_args__ = {'extend_existing': True}
     
     id: Mapped[int] = mapped_column(primary_key = True, autoincrement=True)
+    #
+    # --- order_id acts as changeable identification of the schedule order for easy fetching of adjacent time period entires
+    #
+    order_id: Mapped[int] = mapped_column(nullable = True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable = True)
     user: Mapped["User"] = relationship(back_populates='schedules', foreign_keys=user_id)
     start: Mapped[datetime] = mapped_column(nullable = False)
@@ -226,10 +230,9 @@ class Schedule(db.Model):
     
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
-
+    
     def __repr__(self) -> str:
         return f"Schedule(id={self.id!r}, user_id={self.user_id!r}, start={self.start!r}, stop={self.stop!r})"
-
 
 def register_user():
     session.clear()
