@@ -30,12 +30,23 @@ def index():
     """
     #: Process POST request before displaying schedule data
     if request.method == 'POST':
-        #: Since some form select elements will be left in their initial state, we iterate and search for specific submit types.
+        #
+        # --- Only one submit button will be present per request, so iterate and find it
+        #
         for k,v in request.form.to_dict().items():
             if 'Unlock' in v:
                 schedule_id = k.split('-')[0]
                 #: Unlock requested. Following the PRG design pattern, perform redirect then come back.
                 return redirect(url_for('scheduler.unlock', schedule_id = schedule_id))
+            if 'Update' in v:
+                schedule_id = k.split('-')[0]
+                #: Find provided user id, and make sure the 
+                user_id = request.form.to_dict()[f'{schedule_id}-user']
+                dbi.update_schedule(schedule_id, user_id)
+            if 'Split' in v:
+                pass
+            if 'Delete' in v:
+                pass
 
 
     schedule_list = dbi.pull_schedule()

@@ -411,3 +411,11 @@ def unlock_schedule(schedule_id):
     sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
     sched.user_id = None
     db.session.commit()
+
+def update_schedule(schedule_id, user_id):
+    """
+    Perform signup for a TOO scheduled time duration entry
+    """
+    sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
+    sched.user_id = user_id
+    db.session.commit()
