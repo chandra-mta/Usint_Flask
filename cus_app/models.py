@@ -39,6 +39,9 @@ class User(db.Model, UserMixin):
     usint: Mapped[List["Signoff"]] = relationship(back_populates='usint_signoff', foreign_keys="Signoff.usint_signoff_id")
     schedules: Mapped[List["Schedule"]] = relationship(back_populates='user', foreign_keys="Schedule.user_id")
 
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self) -> str:
          return f"User(id={self.id!r}, username={self.username!r}, email={self.email!r}, groups={self.groups!r}, full_name={self.full_name!r})"
 
@@ -78,6 +81,9 @@ class Revision(db.Model):
     request: Mapped[List["Request"]] = relationship(back_populates='revision', foreign_keys="Request.revision_id", cascade="all, delete, delete-orphan", passive_deletes=True)
     original: Mapped[List["Original"]] = relationship(back_populates='revision', foreign_keys="Original.revision_id", cascade="all, delete, delete-orphan", passive_deletes=True)
         
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self) -> str:
         return f"Revision(id={self.id!r}, user_id={self.user_id!r}, obsid={self.obsid!r}, revision_number={self.revision_number!r}, kind={self.kind!r})"
 
@@ -140,6 +146,9 @@ class Signoff(db.Model):
     usint_signoff: Mapped[Optional["User"]] = relationship(back_populates='usint', foreign_keys=usint_signoff_id)
     usint_time: Mapped[Optional[int]]
     
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self) -> str:
         return f"Signoff(id={self.id!r}, revision={self.revision!r}, usint_signoff_id={self.usint_signoff_id!r})"
 
@@ -155,7 +164,10 @@ class Parameter(db.Model):
     is_modifiable : Mapped[bool] = mapped_column(nullable = False)
     data_type: Mapped[str] = mapped_column(nullable=False)
     description: Mapped[str] = mapped_column(nullable=False)
-        
+    
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self) -> str:
         return f"Parameter(id={self.id!r}, name={self.name!r}, data_type={self.data_type!r})"
 
@@ -171,6 +183,10 @@ class Request(db.Model):
     parameter: Mapped["Parameter"] = relationship(back_populates="request", foreign_keys=parameter_id)
     
     value: Mapped[str] = mapped_column(nullable=True)
+
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self) -> str:
         return f"Request(id={self.id!r}, revision_id={self.revision_id!r}, parameter_id={self.parameter_id!r}, value={self.value!r})"
 
@@ -191,7 +207,10 @@ class Original(db.Model):
     #--- Nevertheless, the value column can take NULL values to future-proof edge cases.
     #
     value: Mapped[str] = mapped_column(nullable=True)
-        
+    
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self) -> str:
         return f"Original(id={self.id!r}, revision_id={self.revision_id!r}, parameter_id={self.parameter_id!r}, value={self.value!r})"
 
@@ -204,7 +223,10 @@ class Schedule(db.Model):
     user: Mapped["User"] = relationship(back_populates='schedules', foreign_keys=user_id)
     start: Mapped[datetime] = mapped_column(nullable = False)
     stop: Mapped[datetime] = mapped_column(nullable = False)
-        
+    
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+
     def __repr__(self) -> str:
         return f"Schedule(id={self.id!r}, user_id={self.user_id!r}, start={self.start!r}, stop={self.stop!r})"
 
