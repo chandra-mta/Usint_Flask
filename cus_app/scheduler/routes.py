@@ -33,18 +33,22 @@ def index():
         #
         # --- Only one submit button will be present per request, so iterate and find it
         #
-        for k,v in request.form.to_dict().items():
+        form_dict = request.form.to_dict()
+        for k,v in form_dict.items():
             if 'Unlock' in v:
                 schedule_id = k.split('-')[0]
                 #: Unlock requested. Following the PRG design pattern, perform redirect then come back.
                 return redirect(url_for('scheduler.unlock', schedule_id = schedule_id))
             if 'Update' in v:
                 schedule_id = k.split('-')[0]
-                #: Find provided user id, and make sure the 
-                user_id = request.form.to_dict()[f'{schedule_id}-user']
-                dbi.update_schedule(schedule_id, user_id)
+                user_id = form_dict[f'{schedule_id}-user']
+                start_string = form_dict[f"{schedule_id}-start_month"] + "/" + form_dict[f"{schedule_id}-start_day"] + "/" + form_dict[f"{schedule_id}-start_year"]
+                stop_string = form_dict[f"{schedule_id}-stop_month"] + "/" + form_dict[f"{schedule_id}-stop_day"] + "/" + form_dict[f"{schedule_id}-stop_year"]
+                #: Update requested. Following the PRG design pattern, perform redirect then come back.
+                return redirect(url_for('scheduler.update', schedule_id = schedule_id, user_id = user_id, start_string = start_string, stop_string = stop_string))
             if 'Split' in v:
-                pass
+                schedule_id = k.split('-')[0]
+                return redirect(url_for('scheduler.split', schedule_id = schedule_id))
             if 'Delete' in v:
                 pass
 
@@ -52,7 +56,8 @@ def index():
     schedule_list = dbi.pull_schedule()
     schedule_forms = []
     for entry in schedule_list:
-        schedule_forms.append(ScheduleRow(**_prep_form(entry)))
+        form = ScheduleRow(formdata=None, **_prep_form(entry)) #:Set form data to None so that undesirable selections are ignored.
+        schedule_forms.append(form)
     return render_template('scheduler/index.html',
                            schedule_list = schedule_list,
                            schedule_forms = schedule_forms
@@ -62,6 +67,16 @@ def index():
 @bp.route('/unlock/<schedule_id>', methods=['GET'])
 def unlock(schedule_id):
     dbi.unlock_schedule(schedule_id = schedule_id)
+    return redirect(url_for('scheduler.index'))
+
+@bp.route('/update/<schedule_id>/<user_id>/<start_string>/<stop_string>', methods=['GET'])
+def update(schedule_id, user_id, start_string, stop_string):
+    dbi.update_schedule(schedule_id, user_id, start_string, stop_string)
+    return redirect(url_for('scheduler.index'))
+
+@bp.route('/split/<schedule_id>', methods=['GET'])
+def split(schedule_id):
+    dbi.split_schedule_entry(schedule_id)
     return redirect(url_for('scheduler.index'))
 
 def _prep_form(entry):

@@ -21,6 +21,7 @@ from sqlalchemy import select, desc, case, text, or_, delete
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original, Schedule
+from flask import flash
 from flask_login import current_user
 from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open
 
@@ -401,7 +402,7 @@ def pull_schedule(begin = datetime.now() - timedelta(days=30)):
     """
     Pull TOO schedule information from the schedules table
     """
-    query = select(Schedule).where(Schedule.start > begin)
+    query = select(Schedule).where(Schedule.start > begin).order_by(Schedule.start)
     return db.session.execute(query).scalars().all()
 
 def unlock_schedule(schedule_id):
@@ -412,10 +413,64 @@ def unlock_schedule(schedule_id):
     sched.user_id = None
     db.session.commit()
 
-def update_schedule(schedule_id, user_id):
+def split_schedule_entry(schedule_id):
     """
-    Perform signup for a TOO scheduled time duration entry
+    Add a new time period entry to the table and adjusting the order and start / stop time as necessary.
     """
     sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
-    sched.user_id = user_id
+    old_start = sched.start
+    old_stop = sched.stop
+    diff = (old_stop - old_start).total_seconds()
+    if diff <=  172800:
+        flash("Sorry there is not enough time to split the row you specified.")
+        return None
+    #
+    # --- Find the start and stop times for both the second split entry
+    #
+    day_diff = (0.5 * diff) // 86400
+    new_stop = sched.start + timedelta(days = day_diff)
+    second_start = new_stop + timedelta(days = 1)
+    #
+    # --- adjust existing orms to make room for new entry.
+    #
+    sched.stop = new_stop
+    result = db.session.execute(select(Schedule).where(Schedule.order_id > sched.order_id)).scalars().all()
+    for entry in result:
+        entry.order_id += 1
+    #
+    # --- Insert the new split entry
+    #
+    new_entry = Schedule(user_id=None,
+                         order_id = sched.order_id + 1,
+                         start = second_start,
+                         stop = old_stop
+                         )
+    db.session.add(new_entry)
+    db.session.commit()
+
+
+def update_schedule(schedule_id, user_id, start_string, stop_string):
+    """
+    Perform signup for a TOO scheduled time duration entry
+
+    Ensures that the time duration entry does not exceed a seven day period
+    but calculates difference as less than or equal to six days since the default datetime value puts the stop as
+    the start of the day, whereas we reference the end of the day.
+    """
+    start = datetime.strptime(start_string, "%B/%d/%Y")
+    stop = datetime.strptime(stop_string, "%B/%d/%Y")
+    diff = (stop - start).total_seconds()
+    if diff > 518401:
+        flash("Updated entry exceeds typical week duration. Please Correct.")
+        return None
+    elif diff < 518399:
+        #: Update to schedule with a partial split. Verify adjacently split values.
+        pass
+    else:
+        #: Regular signup duration. no need to edit and verify smaller time periods of adjacent entries.
+        sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
+        sched.user_id = user_id
+    
+    #: TODO, when assigning a person make the assigner column have the current users id.
+
     db.session.commit()
