@@ -227,12 +227,13 @@ class Schedule(db.Model):
     user: Mapped["User"] = relationship(back_populates='schedules', foreign_keys=user_id)
     start: Mapped[datetime] = mapped_column(nullable = False)
     stop: Mapped[datetime] = mapped_column(nullable = False)
+    assigner_id: Mapped[int] = mapped_column(nullable = True)
     
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
     
     def __repr__(self) -> str:
-        return f"Schedule(id={self.id!r}, user_id={self.user_id!r}, start={self.start!r}, stop={self.stop!r})"
+        return f"Schedule(order_id={self.order_id!r}, user_id={self.user_id!r}, start={self.start!r}, stop={self.stop!r})"
 
 def register_user():
     session.clear()
