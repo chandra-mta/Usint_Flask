@@ -50,7 +50,8 @@ def index():
                 schedule_id = k.split('-')[0]
                 return redirect(url_for('scheduler.split', schedule_id = schedule_id))
             if 'Delete' in v:
-                pass
+                schedule_id = k.split('-')[0]
+                return redirect(url_for('scheduler.delete', schedule_id = schedule_id))
 
 
     schedule_list = dbi.pull_schedule()
@@ -66,17 +67,22 @@ def index():
 
 @bp.route('/unlock/<schedule_id>', methods=['GET'])
 def unlock(schedule_id):
-    dbi.unlock_schedule(schedule_id = schedule_id)
+    dbi.unlock_schedule_entry(schedule_id = schedule_id)
     return redirect(url_for('scheduler.index'))
 
 @bp.route('/update/<schedule_id>/<user_id>/<start_string>/<stop_string>', methods=['GET'])
 def update(schedule_id, user_id, start_string, stop_string):
-    dbi.update_schedule(schedule_id, user_id, start_string, stop_string)
+    dbi.update_schedule_entry(schedule_id, user_id, start_string, stop_string)
     return redirect(url_for('scheduler.index'))
 
 @bp.route('/split/<schedule_id>', methods=['GET'])
 def split(schedule_id):
     dbi.split_schedule_entry(schedule_id)
+    return redirect(url_for('scheduler.index'))
+
+@bp.route('/delete/<schedule_id>', methods=['GET'])
+def delete(schedule_id):
+    dbi.delete_schedule_entry(schedule_id)
     return redirect(url_for('scheduler.index'))
 
 def _prep_form(entry):

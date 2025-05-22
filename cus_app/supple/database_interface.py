@@ -405,7 +405,7 @@ def pull_schedule(begin = datetime.now() - timedelta(days=30)):
     query = select(Schedule).where(Schedule.start > begin).order_by(Schedule.start)
     return db.session.execute(query).scalars().all()
 
-def unlock_schedule(schedule_id):
+def unlock_schedule_entry(schedule_id):
     """
     Undo signup for a TOO scheduled time duration entry
     """
@@ -448,8 +448,13 @@ def split_schedule_entry(schedule_id):
     db.session.add(new_entry)
     db.session.commit()
 
+def delete_schedule_entry(schedule_id):
+    """
+    Remove the time period entry from the table, editing the unlocked adjacent entires to fill in the gaps.
+    """
+    pass
 
-def update_schedule(schedule_id, user_id, start_string, stop_string):
+def update_schedule_entry(schedule_id, user_id, start_string, stop_string):
     """
     Perform signup for a TOO scheduled time duration entry
 
