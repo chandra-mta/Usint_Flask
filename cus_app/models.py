@@ -244,7 +244,6 @@ def register_user():
     
     user = db.session.execute(db.select(User).where(User.username == username)).scalar()
     login_user(user)
-    #current_app.logger.info(f"Login User: {username}") #: TODO implement logger
 
 @login.user_loader
 def load_user(id):
