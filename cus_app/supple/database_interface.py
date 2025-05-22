@@ -477,6 +477,7 @@ def delete_schedule_entry(schedule_id):
                 entry.order_id -= 1
             db.session.execute(delete(Schedule).where(Schedule.id == sched.id))
             db.session.commit()
+            flash("Row Removed. Fit duration into previous entry")
             return None
 
     if can_edit_next:
@@ -488,7 +489,22 @@ def delete_schedule_entry(schedule_id):
                 entry.order_id -= 1
             db.session.execute(delete(Schedule).where(Schedule.id == sched.id))
             db.session.commit()
+            flash("Row Removed. Fit duration into next entry")
             return None
+    
+    if can_edit_prev and can_edit_next:
+        if prev_duration + duration + next_duration <= 2 * 518400:
+            #: Rare edge case in which are removing an entry that is spread between the monday to sunday cycle.
+            prev_sched.stop = get_next_weekday(SUNDAY,sched.start)
+            next_sched.start = get_next_weekday(MONDAY,prev_sched.stop)
+            result = db.session.execute(select(Schedule).where(Schedule.order_id > sched.order_id)).scalars().all()
+            for entry in result:
+                entry.order_id -= 1
+            db.session.execute(delete(Schedule).where(Schedule.id == sched.id))
+            db.session.commit()
+            flash("Row Removed. Fit duration between previous and next entry with changeover at start of workweek.")
+            return None
+
     #: Reaching this point means we cannot fit time period into the schedule
     flash("Cannot remove specified row. Cannot fit deleted time duration into adjacent entry.")
 
