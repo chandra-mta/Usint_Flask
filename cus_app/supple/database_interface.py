@@ -23,7 +23,7 @@ from cus_app import db
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original, Schedule
 from flask import flash
 from flask_login import current_user
-from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open, get_next_weekday
+from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open, get_next_weekday, coerce
 from calendar import MONDAY, SUNDAY
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -517,20 +517,50 @@ def update_schedule_entry(schedule_id, user_id, start_string, stop_string):
     but calculates difference as less than or equal to six days since the default datetime value puts the stop as
     the start of the day, whereas we reference the end of the day.
     """
-    start = datetime.strptime(start_string, "%B/%d/%Y")
-    stop = datetime.strptime(stop_string, "%B/%d/%Y")
-    diff = (stop - start).total_seconds()
-    if diff > 518401:
+    sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
+    user_id = coerce(user_id)
+    #: Cannot record the start and stop strings in the url as back slashes since the browser interprets that as a different page.
+    start = datetime.strptime(start_string, "%B-%d-%Y")
+    stop = datetime.strptime(stop_string, "%B-%d-%Y")
+    duration = (stop - start).total_seconds()
+    if duration > 518400:
         flash("Updated entry exceeds typical week duration. Please Correct.")
         return None
-    elif diff < 518399:
+    elif duration < 518400:
         #: Update to schedule with a partial split. Verify adjacently split values.
-        pass
-    else:
-        #: Regular signup duration. no need to edit and verify smaller time periods of adjacent entries.
+        prev_sched = db.session.execute(select(Schedule).where(Schedule.order_id == sched.order_id - 1)).scalar_one()
+        next_sched = db.session.execute(select(Schedule).where(Schedule.order_id == sched.order_id + 1)).scalar_one()
+
+        prev_duration = (prev_sched.stop - prev_sched.start).total_seconds()
+        next_duration = (next_sched.stop - next_sched.start).total_seconds()
+
+        can_edit_prev = prev_sched.user is None and prev_duration < 518400
+        can_edit_next = next_sched.user is None and next_duration < 518400
+
+        if not can_edit_prev and not can_edit_next:
+            flash("Updated entry less that typical week duration and cannot fit into adjacent entries. Please Correct.")
+            return None
+        
+        if prev_duration < next_duration:
+            if can_edit_prev:
+                prev_sched.stop = start - timedelta(days=1)
+            elif can_edit_next:
+                next_sched.start = stop + timedelta(days=1)
+        else:
+            if can_edit_next:
+                next_sched.start = stop + timedelta(days=1)
+            elif can_edit_prev:
+                prev_sched.stop = start - timedelta(days=1)
+    
+    #: Ensure the time period entry matches those listed on the form
+    sched.start = start
+    sched.stop = stop
+    #: Editing the entry possible. Change the listed user
+    if user_id is not None:
         sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
         sched.user_id = user_id
-    
-    #: TODO, when assigning a person make the assigner column have the current users id.
+        sched.assigner_id = current_user.id
+    else:
+        flash("No user selected. Only time period(s) adjusted.")
 
     db.session.commit()

@@ -42,8 +42,9 @@ def index():
             if 'Update' in v:
                 schedule_id = k.split('-')[0]
                 user_id = form_dict[f'{schedule_id}-user']
-                start_string = form_dict[f"{schedule_id}-start_month"] + "/" + form_dict[f"{schedule_id}-start_day"] + "/" + form_dict[f"{schedule_id}-start_year"]
-                stop_string = form_dict[f"{schedule_id}-stop_month"] + "/" + form_dict[f"{schedule_id}-stop_day"] + "/" + form_dict[f"{schedule_id}-stop_year"]
+                #: Cannot record the start and stop strings in the url as back slashes since the browser interprets that as a different page.
+                start_string = form_dict[f"{schedule_id}-start_month"] + "-" + form_dict[f"{schedule_id}-start_day"] + "-" + form_dict[f"{schedule_id}-start_year"]
+                stop_string = form_dict[f"{schedule_id}-stop_month"] + "-" + form_dict[f"{schedule_id}-stop_day"] + "-" + form_dict[f"{schedule_id}-stop_year"]
                 #: Update requested. Following the PRG design pattern, perform redirect then come back.
                 return redirect(url_for('scheduler.update', schedule_id = schedule_id, user_id = user_id, start_string = start_string, stop_string = stop_string))
             if 'Split' in v:
