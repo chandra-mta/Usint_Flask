@@ -23,7 +23,8 @@ from cus_app import db
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original, Schedule
 from flask import flash
 from flask_login import current_user
-from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open
+from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open, get_next_weekday
+from calendar import MONDAY, SUNDAY
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
@@ -411,6 +412,7 @@ def unlock_schedule_entry(schedule_id):
     """
     sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
     sched.user_id = None
+    sched.assigner_id = None
     db.session.commit()
 
 def split_schedule_entry(schedule_id):

@@ -8,7 +8,7 @@
 import re
 import json
 import itertools
-from datetime import datetime
+from datetime import datetime, timedelta
 import astropy.table
 from astropy.coordinates import Angle
 #
@@ -445,3 +445,12 @@ def contains_non_none(obj):
         return True
     else:
         return False
+    
+
+def get_next_weekday(weekday_num, dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)):
+    """Returns the datetime object for the next target weekday."""
+    days_until_target = (weekday_num - dt.weekday()) % 7
+    if days_until_target == 0:
+        days_until_target = 7
+    target = dt + timedelta(days=days_until_target)
+    return target
