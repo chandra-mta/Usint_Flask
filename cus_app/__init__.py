@@ -5,12 +5,15 @@
 :Last Updated: Mar 13, 2025
 
 """
+import logging.handlers
+import os
 import sys
 import signal
 import traceback
 from datetime import datetime
 from itertools import zip_longest
 import json
+import logging
 
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap
@@ -111,7 +114,7 @@ def create_app(_configuration_name):
         with app.app_context():
             print("Running graceful shutdown")
             try:
-                pass
+                pass #: Locate shutdown functions here.
             except Exception:
                 traceback.print_exc()
             finally:
@@ -173,4 +176,28 @@ def create_app(_configuration_name):
     @app.route("/")
     def index():
         return render_template("index.html")
+    #
+    # --- Setup file logger for UsintErrorHandler if not using the Werkzeug Browser Debugger
+    #
+    if not app.debug:
+        #
+        # --- keep last 10 error logs
+        #
+        if not os.path.exists(app.config["LOG_DIR"]):
+            os.mkdir(app.config["LOG_DIR"])
+        file_handler = logging.handlers.RotatingFileHandler(
+            os.path.join(app.config["LOG_DIR"], "ocat.log"),
+            maxBytes=102400,
+            backupCount=10,
+        )
+        file_handler.name = "Error-Info"
+        file_handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)s: %(message)s " "[in %(pathname)s:%(lineno)d]"
+            )
+        )
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
+
     return app
