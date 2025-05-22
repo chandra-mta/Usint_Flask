@@ -454,7 +454,44 @@ def delete_schedule_entry(schedule_id):
     """
     Remove the time period entry from the table, editing the unlocked adjacent entires to fill in the gaps.
     """
-    pass
+    sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
+    duration = (sched.stop - sched.start).total_seconds()
+
+    prev_sched = db.session.execute(select(Schedule).where(Schedule.order_id == sched.order_id - 1)).scalar_one()
+    next_sched = db.session.execute(select(Schedule).where(Schedule.order_id == sched.order_id + 1)).scalar_one()
+
+    #: First check the adjacent periods for determining how we can edit them
+    can_edit_prev = prev_sched.user is None
+    can_edit_next = next_sched.user is None
+    if not can_edit_prev and not can_edit_next:
+        flash("Cannot remove specified row. Both adjacent rows locked and uneditable.")
+    prev_duration = (prev_sched.stop - prev_sched.start).total_seconds()
+    next_duration = (next_sched.stop - next_sched.start).total_seconds()
+    #: Try editing only previous entry first
+    if can_edit_prev:
+        if prev_duration + duration <= 518400:
+            #: Able to only edit previous entry
+            prev_sched.stop = sched.stop
+            result = db.session.execute(select(Schedule).where(Schedule.order_id > sched.order_id)).scalars().all()
+            for entry in result:
+                entry.order_id -= 1
+            db.session.execute(delete(Schedule).where(Schedule.id == sched.id))
+            db.session.commit()
+            return None
+
+    if can_edit_next:
+        if next_duration + duration <= 518400:
+            #: Able to only edit next entry
+            next_sched.start = sched.start
+            result = db.session.execute(select(Schedule).where(Schedule.order_id > sched.order_id)).scalars().all()
+            for entry in result:
+                entry.order_id -= 1
+            db.session.execute(delete(Schedule).where(Schedule.id == sched.id))
+            db.session.commit()
+            return None
+    #: Reaching this point means we cannot fit time period into the schedule
+    flash("Cannot remove specified row. Cannot fit deleted time duration into adjacent entry.")
+
 
 def update_schedule_entry(schedule_id, user_id, start_string, stop_string):
     """
