@@ -20,7 +20,11 @@
 
 <form method="POST">
 <!-- TODO asis, remove, clone case. Either here or separate confirmation page?-->
-    {{ form.previous_page() }} {{ form.finalize() }}
+    {% if able_to_finalize %}
+        {{ form.previous_page() }} {{ form.finalize() }}
+    {% else %}
+        {{ form.previous_page() }}
+    {% endif %}
     {% if kind == 'norm' %}
         <div style='padding-bottom:20px;'></div>
         <h3>You have submitted the following value updates on Obsid {{ obsid }}.</h3>
@@ -189,7 +193,11 @@
     If these values are correct, click the Finalize button. Otherwise, use the Previous Page button
     to go back to the main page. 
     </p>
-    {{ form.previous_page() }} {{ form.finalize() }}
+    {% if able_to_finalize %}
+        {{ form.previous_page() }} {{ form.finalize() }}
+    {% else %}
+        {{ form.previous_page() }}
+    {% endif %}
 </form>
 <div style='padding-bottom:30px;'></div>
 

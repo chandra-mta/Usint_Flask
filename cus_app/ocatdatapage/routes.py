@@ -112,6 +112,13 @@ def confirm(obsid=None):
     or_dict = check_obsid_in_or_list([int(obsid)] + multi_obsid)
     is_approved = dbi.is_approved(obsid)
     kind = ocat_form_dict.get("submit_choice")
+    able_to_finalize = True
+    #
+    # --- Specific criteria which prevents the finalize button from being rendered
+    #
+    if kind == 'clone' and 'comments' not in req_dict:
+        flash("Cannot clone obsid without providing comment to explain why.")
+        able_to_finalize = False
     if request.method == "POST" and form.is_submitted(): #: no validators
         if form.previous_page.data:
             #: Go back and edit
@@ -177,6 +184,7 @@ def confirm(obsid=None):
             session[f'multi_dict_{obsid}'] = multi_dict
             return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
     return render_template('ocatdatapage/confirm.html',
+                           able_to_finalize = able_to_finalize,
                             form = form,
                             obsid = obsid,
                             multi_obsid = multi_obsid,
