@@ -121,7 +121,7 @@ def confirm(obsid=None):
             try:
                 #: Identify Notes
                 if kind == 'norm':
-                    notes = construct_notes(org_dict, req_dict)
+                    notes = construct_notes(ocat_data, org_dict, req_dict)
                 else:
                     notes = None
                 #: Change for the directly-edited obsid
@@ -161,7 +161,7 @@ def confirm(obsid=None):
                     multi_dict['requested'].append(additional_obsid)
                     #: Identify Notes
                     if kind == 'norm':
-                        notes = construct_notes(additional_org_dict, additional_req_dict)
+                        notes = construct_notes(ocat_data, additional_org_dict, additional_req_dict)
                     else:
                         notes = None
                     write_to_database(additional_obsid, additional_ocat_data, kind, notes, additional_org_dict, additional_req_dict)

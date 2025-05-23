@@ -12,6 +12,7 @@ from math import sqrt
 from datetime import datetime, timedelta
 import astropy.table
 from astropy.coordinates import Angle
+from cus_app.supple.read_ocat_data import check_obsid_in_or_list
 #
 # --- Classes
 #
@@ -237,11 +238,24 @@ def approx_equals(first,second):
     else:
         return first == second
 
-def construct_notes(org_dict, req_dict):
+def construct_notes(ocat_data, org_dict, req_dict):
     """
     Construct notes json based on change requests
     """
     notes = {}
+    #
+    # -- Ocat Data Specific Warnings
+    #
+    scheduled_obs_time = ocat_data.get('soe_st_sched_date') or ocat_data.get('lts_lt_plan')
+    if scheduled_obs_time is not None:
+        if (datetime.strptime(coerce_time(scheduled_obs_time), STORAGE_FORMAT) - datetime.now()).total_seconds() < 10 * 86400:
+            notes.update({'obsdate_under10': True})
+    or_check = check_obsid_in_or_list([ocat_data.get('obsid')])
+    if or_check[ocat_data.get('obsid')]:
+        notes.update({'on_or_list': True})
+    #
+    # --- Change Request Specific Warnings
+    #
     ra = None
     dec = None
     ora = None
