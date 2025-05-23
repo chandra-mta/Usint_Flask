@@ -8,6 +8,7 @@
 import re
 import json
 import itertools
+from math import sqrt
 from datetime import datetime, timedelta
 import astropy.table
 from astropy.coordinates import Angle
@@ -235,6 +236,54 @@ def approx_equals(first,second):
         return _result
     else:
         return first == second
+
+def construct_notes(org_dict, req_dict):
+    """
+    Construct notes json based on change requests
+    """
+    notes = {}
+    ra = None
+    dec = None
+    ora = None
+    odec = None
+    for param, val in req_dict.items():
+        if param == 'targname':
+            notes.update({'target_name_change':True})
+        elif param == 'comments':
+            notes.update({'comment_change': True})
+        elif param == 'instrument':
+            notes.update({'instrument_change': True})
+        elif param == 'grating':
+            notes.update({'grating_change': True})
+        elif param in ('dither_flag', 'window_flag', 'roll_flag', 'spwindow_flag'):
+            notes.update({'flag_change': True})
+        elif param == 'ra':
+            ra = val
+        elif param == 'dec':
+            dec = val
+    if ra is not None or dec is not None:
+        ora = org_dict.get('ra')
+        if ra is None:
+            ra = ora
+        odec = org_dict.get('dec')
+        if dec is None:
+            dec = odec
+        if ora != 0 and odec != 0 and is_large_coord_shift(ra,dec, ora, odec):
+                notes.update({'large_coordinate_change': True})
+    
+    if len(notes) > 0:
+        return json.dumps(notes)
+    else:
+        return None
+
+def is_large_coord_shift(ra,dec, ora, odec):
+    if ora is None or odec is None:
+        return False
+    diff = sqrt((ora -ra)**2 + (odec - dec)**2)
+    if diff > 0.1333:
+        return True
+    else:
+        return False
 
 #
 #--- Conversion Functions

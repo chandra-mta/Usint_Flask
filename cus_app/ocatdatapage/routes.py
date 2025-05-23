@@ -38,7 +38,7 @@ from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
 import cus_app.supple.database_interface as dbi
 import cus_app.ocatdatapage.format_ocat_data as fod
-from cus_app.supple.helper_functions import create_obsid_list
+from cus_app.supple.helper_functions import create_obsid_list, construct_notes
 
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -119,8 +119,13 @@ def confirm(obsid=None):
             #: Write changes to the database files
             multi_dict = {'requested': [], 'cannot_request': [], 'unaffected': []}
             try:
+                #: Identify Notes
+                if kind == 'norm':
+                    notes = construct_notes(org_dict, req_dict)
+                else:
+                    notes = None
                 #: Change for the directly-edited obsid
-                write_to_database(obsid, ocat_data, kind, org_dict, req_dict)
+                write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict)
                 #: Changes to the obsids listed in the multi_obsid
                 for additional_obsid in multi_obsid:
                     additional_ocat_data = rod.read_ocat_data(additional_obsid)
@@ -154,7 +159,12 @@ def confirm(obsid=None):
                         continue
 
                     multi_dict['requested'].append(additional_obsid)
-                    write_to_database(additional_obsid, additional_ocat_data, kind, additional_org_dict, additional_req_dict)
+                    #: Identify Notes
+                    if kind == 'norm':
+                        notes = construct_notes(additional_org_dict, additional_req_dict)
+                    else:
+                        notes = None
+                    write_to_database(additional_obsid, additional_ocat_data, kind, notes, additional_org_dict, additional_req_dict)
             except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
@@ -243,11 +253,11 @@ def fetch_session_data(obsid):
 
     return ocat_data, warning, orient_maps, ocat_form_dict
 
-def write_to_database(obsid, ocat_data, kind, org_dict, req_dict={}):
+def write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict={}):
     """
     Perform a set of database injections into the relevant usint.db tables for changes made in the ocatdatapage
     """
-    rev = dbi.construct_revision(obsid,ocat_data,kind,org_dict,req_dict)
+    rev = dbi.construct_revision(obsid,ocat_data,kind,notes)
     db.session.add(rev)
     sign = dbi.construct_signoff(rev,req_dict)
     db.session.add(sign)
