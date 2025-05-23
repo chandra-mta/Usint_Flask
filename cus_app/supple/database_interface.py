@@ -19,10 +19,12 @@ import json
 from sqlalchemy import select, desc, case, text, or_, delete
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
+import cus_app.emailing as mail
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original, Schedule
 from flask import flash
 from flask_login import current_user
 from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open, get_next_weekday, coerce
+from cus_app.supple.read_ocat_data import read_basic_ocat_data
 from calendar import MONDAY, SUNDAY
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -123,18 +125,27 @@ def perform_signoff(signoff_id, signoff_kind):
         signoff_obj.usint_signoff_id = current_user.id
         signoff_obj.usint_time = curr_epoch
         if signoff_kind == 'approve':
-            #: Additionally create an approval revision and signoff.
-            matching_rev = signoff_obj.revision
-            new_revision = Revision(obsid = matching_rev.obsid,
-                                    revision_number = find_next_rev_no(matching_rev.obsid),
-                                    kind = 'asis',
-                                    sequence_number = matching_rev.sequence_number,
-                                    time = curr_epoch,
-                                    user_id = current_user.id
-            )
-            new_signoff = construct_auto_signoff(new_revision)
-            db.session.add(new_revision)
-            db.session.add(new_signoff)
+            if not is_approved(signoff_obj.revision.obsid):
+                #: Additionally create an approval revision and signoff.
+                matching_rev = signoff_obj.revision
+                new_revision = Revision(obsid = matching_rev.obsid,
+                                        revision_number = find_next_rev_no(matching_rev.obsid),
+                                        kind = 'asis',
+                                        sequence_number = matching_rev.sequence_number,
+                                        time = curr_epoch,
+                                        user_id = current_user.id
+                )
+                new_signoff = construct_auto_signoff(new_revision)
+                db.session.add(new_revision)
+                db.session.add(new_signoff)
+                #: Also send notification email if performing this special approval signoff
+                ocat_data = read_basic_ocat_data(new_revision.obsid)
+                obsidrev = f"{new_revision.obsid}.{new_revision.revision_number:>03}"
+                kind = new_revision.kind
+                msg = mail.quick_approval_state_email(ocat_data, obsidrev, kind)
+                mail.send_msg(msg)
+            else:
+                flash(f"Obsid {signoff_obj.revision.obsid} already approved. Performing only Usint Signoff.")
     db.session.commit()
 
 def construct_requests(rev_obj, req_dict):
