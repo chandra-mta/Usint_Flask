@@ -188,7 +188,7 @@ def create_app(_configuration_name):
             os.mkdir(log_dir)
         file_handler = logging.handlers.RotatingFileHandler(
             os.path.join(log_dir, "ocat.log"),
-            maxBytes=102400,
+            maxBytes=51200,
             backupCount=10,
         )
         file_handler.name = "Error-Info"

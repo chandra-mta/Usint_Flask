@@ -50,17 +50,15 @@ def send_error_email(e=None,logline=None):
         #Once the log path is found, must search the file to send email contents
         with open(file_path,'r') as f:
             content = f.read()
-        userinfo = []
-        for k,v in current_user.__dict__.items():
-            if k not in ['_sa_instance_state']:
-                userinfo.append(f"({k} : {v})")
+        content = f"User: {current_user}\n\nocat.log:\n{content}"
+        msg = EmailMessage()
+        msg.set_content(content)
+        msg['Subject'] = f"Usint Error-[{datetime.now().strftime('%c')}]"
+        msg['To'] = current_app.config['ADMINS']
+        msg['From'] = "UsintErrorHandler"
+        p = Popen(["/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
+        (out, error) = p.communicate(msg.as_bytes())
         
-        content = f"User: {' - '.join(userinfo)} \n\n ocat.log:\n{content}"
-        send_error_email(content = content,
-                         subject = f"Usint Error-[{datetime.now().strftime('%c')}]",
-                         to = current_app.config['ADMINS'],
-                         sender =  "UsintErrorHandler"
-                         )
     else:
         if e is not None:
             #
