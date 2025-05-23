@@ -171,7 +171,8 @@ def confirm(obsid=None):
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
                 db.session.rollback()
                 raise e #: TODO replace with abort(500)
-            mail.send_msg(main_msg)
+            if main_msg is not None:
+                mail.send_msg(main_msg)
             session[f'kind_{obsid}'] = kind
             session[f'multi_dict_{obsid}'] = multi_dict
             return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
