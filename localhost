@@ -58,5 +58,5 @@ setenv REMOTE_USER $USER
 
 #This will source the flask module found in path set by the above ska_envs.csh call.
 #Note: Running in --debug will activate the in-browser Werkzeug debugger and turn off UsintErrorHandler emails
-#/data/mta4/CUS/ska3-cus-r2d2-v/bin/flask run --no-reload
+#/data/mta4/CUS/web-r2d2-python/bin/flask run --no-reload
 /data/mta4/CUS/web-r2d2-python/bin/flask run --no-reload --debug
