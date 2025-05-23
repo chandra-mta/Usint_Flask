@@ -28,7 +28,6 @@ class BaseConfig(object):
     #
     # --- Directory Pathing
     #
-    LOG_DIR = os.path.join(os.path.dirname(__file__), "logs")
     OBS_SS = "/data/mta4/obs_ss/"
 
 class LocalHostConfig(BaseConfig):

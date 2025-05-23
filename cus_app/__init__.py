@@ -183,10 +183,11 @@ def create_app(_configuration_name):
         #
         # --- keep last 10 error logs
         #
-        if not os.path.exists(app.config["LOG_DIR"]):
-            os.mkdir(app.config["LOG_DIR"])
+        log_dir = app.config.get("LOG_DIR") or os.path.join(app.instance_path, 'logs')
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
         file_handler = logging.handlers.RotatingFileHandler(
-            os.path.join(app.config["LOG_DIR"], "ocat.log"),
+            os.path.join(log_dir, "ocat.log"),
             maxBytes=102400,
             backupCount=10,
         )
