@@ -24,7 +24,7 @@ stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
 with open(os.path.join(stat_dir, 'labels.json')) as f:
     _LABELS = json.load(f)
 
-def construct_msg(content, subject, to, sender = None, cc = []):
+def construct_msg(content, subject, to, sender = None, cc = None):
     """
     Construct Email Instance
     """
@@ -34,7 +34,13 @@ def construct_msg(content, subject, to, sender = None, cc = []):
     msg['To'] = to
     if sender is not None:
         msg['From'] = sender
-    msg['CC'] = [CUS] + cc
+    if cc is not None:
+        if isinstance(cc,list):
+            msg['CC'] = [CUS] + cc
+        else:
+            msg['CC'] = [CUS] + [cc]
+    else:
+        msg['CC'] = CUS
     return msg
 
 def send_msg(msg):
@@ -77,8 +83,8 @@ def quick_approval_state_email(ocat_data, obsidrev, kind):
         subject = f"Parameter Change Log: {obsidrev} (Removed)"
         content += "VERIFIED REMOVED\n"
 
-    content += f"PAST COMMENTS = \n {ocat_data.get('comments') or ''}\n\n"
-    content += f"PAST REMARKS = \n {ocat_data.get('remarks') or ''}\n\n"
+    content += f"PAST COMMENTS = \n{ocat_data.get('comments') or ''}\n\n"
+    content += f"PAST REMARKS = \n{ocat_data.get('remarks') or ''}\n\n"
     content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
     content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev=obsidrev)}\n"
     return construct_msg(content, subject, current_user.email)

@@ -294,11 +294,23 @@ def determine_msg(ocat_data, rev):
     """
     Determine parameter change notification message from input
     """
+    obsidrev = f"{rev.obsid}.{rev.revision_number:>03}"
     if rev.kind in ('asis, remove'):
         #: Only send to the usint user and CUS email archive when changing the approval state
-        obsidrev = f"{rev.obsid}.{rev.revision_number:>03}"
         return mail.quick_approval_state_email(ocat_data, obsidrev, rev.kind)
     elif rev.kind == 'clone':
-        pass
+        #: Notification edge case.
+        subject = f"Parameter Change Log: {obsidrev} (Split Request)"
+        content = ""
+        for param in ('obsid', 'seq_nbr', 'targname'):
+            content += f"{_LABELS.get(param)} = {ocat_data.get(param)}\n"
+        content += f"User = {current_user.username}\nVERIFIED CLONE\n"
+        content += f"PAST COMMENTS = \n{ocat_data.get('comments') or ''}\n\n"
+        content += f"NEW COMMENTS = \n{json.loads(rev.request[0].value)}\n\n"
+        content += f"PAST REMARKS = \n{ocat_data.get('remarks') or ''}\n\n"
+        content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+        content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev=obsidrev)}\n"
+        return mail.construct_msg(content, subject, current_user.email, cc =mail.ARCOPS)
+        
     elif rev.kind == 'norm':
         pass
