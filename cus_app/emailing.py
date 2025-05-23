@@ -6,15 +6,23 @@
 
 """
 
-import sys
+import json
 import os
 from datetime import datetime
-from flask          import current_app, flash
+from flask          import current_app, flash, url_for
 from flask_login    import current_user
 from email.message import EmailMessage
 from subprocess import Popen, PIPE
 
 CUS  = 'cus@cfa.harvard.edu'
+ARCOPS = 'arcops@cfa.harvard.edu'
+MP = 'mp@cfa.harvard.edu'
+HRC = 'hrcdude@cfa.harvard.edu'
+ACIS = 'acisdude@cfa.harvard.edu'
+
+stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)), 'static')
+with open(os.path.join(stat_dir, 'labels.json')) as f:
+    _LABELS = json.load(f)
 
 def construct_msg(content, subject, to, sender = None, cc = []):
     """
@@ -53,7 +61,27 @@ def send_email(content, subject, to, sender = None, cc = []):
     """
     msg = construct_msg(content, subject, to, sender = None, cc = [])
     send_msg(msg)
-    
+
+def quick_approval_state_email(ocat_data, obsidrev, kind):
+    """
+    Convenient function for approval state emails.
+    """
+    content = ""
+    for param in ('obsid', 'seq_nbr', 'targname'):
+        content += f"{_LABELS.get(param)} = {ocat_data.get(param)}\n"
+    content += f"User = {current_user.username}\n"
+    if kind == 'asis':
+        subject = f"Parameter Change Log: {obsidrev} (Approved)"
+        content += "VERIFIED OK AS IS\n"
+    elif kind == 'remove':
+        subject = f"Parameter Change Log: {obsidrev} (Removed)"
+        content += "VERIFIED REMOVED\n"
+
+    content += f"PAST COMMENTS = \n {ocat_data.get('comments') or ''}\n\n"
+    content += f"PAST REMARKS = \n {ocat_data.get('remarks') or ''}\n\n"
+    content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+    content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev=obsidrev)}\n"
+    return construct_msg(content, subject, current_user.email)
 
 def send_error_email(e=None,logline=None):
     if not current_app.debug:
