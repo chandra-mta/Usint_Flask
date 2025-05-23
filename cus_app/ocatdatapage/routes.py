@@ -32,13 +32,14 @@ from flask import current_app, render_template, request, flash, session, redirec
 from flask_login    import current_user
 
 from cus_app import db
+import cus_app.emailing as mail
 from cus_app.models import register_user, User, Revision, Signoff, Parameter, Request, Original
 from cus_app.ocatdatapage import bp
 from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
 import cus_app.supple.database_interface as dbi
 import cus_app.ocatdatapage.format_ocat_data as fod
-from cus_app.supple.helper_functions import create_obsid_list, construct_notes
+from cus_app.supple.helper_functions import create_obsid_list, construct_notes, check_obsid_in_or_list
 
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -108,7 +109,7 @@ def confirm(obsid=None):
     #: An original state dictionary is always created and filled. The change request dictionary could be empty if the change is non-norm.
     org_dict, req_dict = fod.construct_entries(ocat_form_dict, ocat_data)
     multi_obsid = create_obsid_list(ocat_form_dict.get('multiobsid'), obsid)
-    or_dict = rod.check_obsid_in_or_list([int(obsid)] + multi_obsid)
+    or_dict = check_obsid_in_or_list([int(obsid)] + multi_obsid)
     is_approved = dbi.is_approved(obsid)
     kind = ocat_form_dict.get("submit_choice")
     if request.method == "POST" and form.is_submitted(): #: no validators
@@ -125,7 +126,7 @@ def confirm(obsid=None):
                 else:
                     notes = None
                 #: Change for the directly-edited obsid
-                write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict)
+                main_msg = write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict)
                 #: Changes to the obsids listed in the multi_obsid
                 for additional_obsid in multi_obsid:
                     additional_ocat_data = rod.read_ocat_data(additional_obsid)
@@ -170,6 +171,7 @@ def confirm(obsid=None):
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
                 db.session.rollback()
                 raise e #: TODO replace with abort(500)
+            mail.send_msg(main_msg)
             session[f'kind_{obsid}'] = kind
             session[f'multi_dict_{obsid}'] = multi_dict
             return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
@@ -256,6 +258,9 @@ def fetch_session_data(obsid):
 def write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict={}):
     """
     Perform a set of database injections into the relevant usint.db tables for changes made in the ocatdatapage
+
+    :return: Email message for the proposed revision, using sqlalchemy-related ORMs.
+    :rtype: Email Message()
     """
     rev = dbi.construct_revision(obsid,ocat_data,kind,notes)
     db.session.add(rev)
@@ -273,3 +278,18 @@ def write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict={}):
         reqs = dbi.construct_requests(rev, only_comment)
         for req in reqs:
             db.session.add(req)
+    msg = determine_msg(ocat_data, rev)
+    return msg
+
+def determine_msg(ocat_data, rev):
+    """
+    Determine parameter change notification message from input
+    """
+    if rev.kind in ('asis, remove'):
+        #: Only send to the usint user and CUS email archive when changing the approval state
+        obsidrev = f"{rev.obsid}.{rev.revision_number:>03}"
+        return mail.quick_approval_state_email(ocat_data, obsidrev, rev.kind)
+    elif rev.kind == 'clone':
+        pass
+    elif rev.kind == 'norm':
+        pass
