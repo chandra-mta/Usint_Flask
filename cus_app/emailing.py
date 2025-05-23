@@ -16,11 +16,10 @@ from subprocess import Popen, PIPE
 
 CUS  = 'cus@cfa.harvard.edu'
 
-def send_email(content, subject, to, sender = None, cc = []):
+def construct_msg(content, subject, to, sender = None, cc = []):
     """
-    Send Email Notification
+    Construct Email Instance
     """
-
     msg = EmailMessage()
     msg.set_content(content)
     msg['Subject'] = subject
@@ -28,6 +27,12 @@ def send_email(content, subject, to, sender = None, cc = []):
     if sender is not None:
         msg['From'] = sender
     msg['CC'] = [CUS] + cc
+    return msg
+
+def send_msg(msg):
+    """
+    Send Email Instance
+    """
     #: Print message instead of sending it if configured to test notifications
     if current_app.config['TEST_NOTIFICATIONS']:
         print(msg.as_string())
@@ -38,6 +43,17 @@ def send_email(content, subject, to, sender = None, cc = []):
             current_app.logger.error(error)
             flash("Error sending notification email. Check Inbox.")
             send_error_email()
+
+def send_email(content, subject, to, sender = None, cc = []):
+    """
+    Combined send email function.
+
+    :NOTE: This functionality is split only to allow cases in which we'd like to prepare sending emails in bulk before actually sending them.
+    In typical usage, the send_email() function will be used across the board.
+    """
+    msg = construct_msg(content, subject, to, sender = None, cc = [])
+    send_msg(msg)
+    
 
 def send_error_email(e=None,logline=None):
     if not current_app.debug:
