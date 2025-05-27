@@ -139,5 +139,9 @@
     "multiobsid": "Multi-Obsid",
     "submit": "Submit",
     "previous_page": "Previous Page",
-    "finalize": "Finalize"
+    "finalize": "Finalize",
+    "target_name_change": "A target name change was requested for the following obsid(s).",
+    "large_coordinate_change": "A coordinate shift was requested for the following obsid(s).",
+    "obsdate_under10": "A parameter change was requested for the following obsid(s) which are scheduled in less than 10 days.",
+    "on_or_list": "A target name change was requested for the following obsid(s)."
 }
