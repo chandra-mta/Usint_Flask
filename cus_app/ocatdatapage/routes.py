@@ -39,7 +39,7 @@ from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
 import cus_app.supple.database_interface as dbi
 import cus_app.ocatdatapage.format_ocat_data as fod
-from cus_app.supple.helper_functions import create_obsid_list, construct_notes, check_obsid_in_or_list
+from cus_app.supple.helper_functions import coerce_notes, create_obsid_list, construct_notes, check_obsid_in_or_list
 
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -412,4 +412,40 @@ def _multi_obsid_msg(obsid, main_msgs, multi_obsid):
             break
     _content += "\n"+"\n".join(_body[_start:_end])
 
-    return mail.construct_msg(_content, _subject, mail.ARCOPS,)
+    return mail.construct_msg(_content, _subject, mail.ARCOPS)
+
+def _mp_notes_msg(revisions):
+    """
+    Construct notes message for Mission Planning.
+    """
+    if not isinstance(revisions, (list,tuple,set)):
+        revisions = [revisions]
+    
+    relevant_to_mp = False
+    key_to_rev = {
+        'target_name_change': [],
+        'large_coordinate_change': [],
+        'obsdate_under10': [],
+        'on_or_list': []
+    }
+    for rev in revisions:
+        notes = coerce_notes(rev.notes)
+        for key in ('target_name_change', 'large_coordinate_change', 'obsdate_under10', 'on_or_list'):
+            if notes.get(key):
+                key_to_rev[key].append(rev)
+                relevant_to_mp = True
+    
+    if not relevant_to_mp:
+        return None
+    else:
+        subject = f'POC {current_user.username} submitted a request which requires MP attention'
+        content = ''
+        for k,v in key_to_rev.items():
+            if len(v) > 0:
+                content += f"\n{_LABELS.get(k)}\n\n"
+                for rev in v:
+                    obsidrev = f"{rev.obsid}.{rev.revision_number:>03}"
+                    content += f"{rev.obsid}: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = obsidrev)}\n"
+    return mail.construct_msg(content, subject, mail.MP, cc = current_user.email)
+
+
