@@ -61,6 +61,8 @@ class Revision(db.Model):
         - grating_change : Boolean
         - flag_change : Boolean, listed for any change in constraint-specific parameters (dither, time, roll, ACIS window)
         - large_coordinate_change : Boolean, listed for a >8' cumulative shift in RA, DEC coordinates
+        - obsdate_under10: Boolean, listed if the soe_st_sched_date or lts_lt_plan dates are within 10 days of the revision
+        - on_or_list: Boolean, listed if obsid in the revision is in on the active OR list
     """
     __tablename__ = "revisions"
     __table_args__ = {'extend_existing': True}
