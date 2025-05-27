@@ -173,7 +173,7 @@ def confirm(obsid=None):
                         notes = construct_notes(ocat_data, additional_org_dict, additional_req_dict)
                     else:
                         notes = None
-                    multi_obsid[additional_obsid] = write_to_database(additional_obsid, additional_ocat_data, kind, notes, additional_org_dict, additional_req_dict)
+                    multi_msgs[additional_obsid] = write_to_database(additional_obsid, additional_ocat_data, kind, notes, additional_org_dict, additional_req_dict)
             except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
