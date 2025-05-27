@@ -134,8 +134,12 @@ def confirm(obsid=None):
                     notes = None
                 #: Change for the directly-edited obsid
                 main_msgs = write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict)
-                #: Changes to the obsids listed in the multi_obsid
+                #: intermediary variables for multi_obsid emails
                 multi_msgs = {k:None for k in multi_obsid}
+                multiple_norm_msg = None
+                if len(multi_obsid) > 0 and kind == 'norm':
+                    multiple_norm_msg = _multi_obsid_msg(obsid, main_msgs, multi_obsid)
+                #: Changes to the obsids listed in the multi_obsid
                 for additional_obsid in multi_obsid:
                     additional_ocat_data = rod.read_ocat_data(additional_obsid)
 
@@ -181,6 +185,8 @@ def confirm(obsid=None):
                 raise e #: TODO replace with abort(500)
             if main_msgs is not None or main_msgs != []:
                 mail.send_msg(main_msgs)
+            if multiple_norm_msg is not None:
+                mail.send_msg(multiple_norm_msg)
             session[f'kind_{obsid}'] = kind
             session[f'multi_dict_{obsid}'] = multi_dict
             return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
@@ -382,3 +388,28 @@ def determine_msgs(ocat_data, rev):
         if rev.signoff.hrc_si_status == "Pending":
             cc.add(mail.HRC)
         return [mail.construct_msg(content, subject, current_user.email, cc=cc)]
+    
+def _multi_obsid_msg(obsid, main_msgs, multi_obsid):
+    """
+    Parse the main obsid message to create the multi obsid norm change notification.
+    """
+    _subject = 'Multiple Obsids Are Submitted for Parameter Changes'
+    _content = f"Usint User {current_user.username} submitted parameter change requests to multiple obsids: \n\n"
+    for _obsid in [obsid] + multi_obsid:
+        _obsidrev = f"{_obsid}.{dbi.find_next_rev_no(_obsid):>03}"
+        _content += f"{_obsid} : {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = _obsidrev)}\n"
+    _content += f"\nUpdated parameters for {obsid} are:\n\n"
+    _body = [x for x in main_msgs[0].get_content().split('\n') if x != '']
+    _start = 0
+    _end = len(_body)
+    for i in range(len(_body)):
+        if _body[i] in ("GENERAL CHANGES:", "ACIS CHANGES:", "ACIS WINDOW CHANGES:"):
+            _start = i
+            break
+    for i in range(_start, len(_body)):
+        if "Parameter Check Page" in _body[i]:
+            _end = i
+            break
+    _content += "\n"+"\n".join(_body[_start:_end])
+
+    return mail.construct_msg(_content, _subject, mail.ARCOPS,)
