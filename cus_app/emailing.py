@@ -47,16 +47,20 @@ def send_msg(msg):
     """
     Send Email Instance
     """
-    #: Print message instead of sending it if configured to test notifications
-    if current_app.config['TEST_NOTIFICATIONS']:
-        print(msg.as_string())
+    if isinstance(msg, (list,tuple)):
+        for entry in msg:
+            send_msg(entry)
     else:
-        p = Popen(["/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
-        (out, error) = p.communicate(msg.as_bytes())
-        if error is not None:
-            current_app.logger.error(error)
-            flash("Error sending notification email. Check Inbox.")
-            send_error_email()
+        #: Print message instead of sending it if configured to test notifications
+        if current_app.config['TEST_NOTIFICATIONS']:
+            print(msg.as_string())
+        else:
+            p = Popen(["/sbin/sendmail", "-t", "-oi"], stdin=PIPE)
+            (out, error) = p.communicate(msg.as_bytes())
+            if error is not None:
+                current_app.logger.error(error)
+                flash("Error sending notification email. Check Inbox.")
+                send_error_email()
 
 def send_email(content, subject, to, sender = None, cc = []):
     """

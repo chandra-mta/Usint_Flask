@@ -133,8 +133,9 @@ def confirm(obsid=None):
                 else:
                     notes = None
                 #: Change for the directly-edited obsid
-                main_msg = write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict)
+                main_msgs = write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict)
                 #: Changes to the obsids listed in the multi_obsid
+                multi_msgs = {k:None for k in multi_obsid}
                 for additional_obsid in multi_obsid:
                     additional_ocat_data = rod.read_ocat_data(additional_obsid)
 
@@ -172,14 +173,14 @@ def confirm(obsid=None):
                         notes = construct_notes(ocat_data, additional_org_dict, additional_req_dict)
                     else:
                         notes = None
-                    write_to_database(additional_obsid, additional_ocat_data, kind, notes, additional_org_dict, additional_req_dict)
+                    multi_obsid[additional_obsid] = write_to_database(additional_obsid, additional_ocat_data, kind, notes, additional_org_dict, additional_req_dict)
             except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
                 db.session.rollback()
                 raise e #: TODO replace with abort(500)
-            if main_msg is not None:
-                mail.send_msg(main_msg)
+            if main_msgs is not None or main_msgs != []:
+                mail.send_msg(main_msgs)
             session[f'kind_{obsid}'] = kind
             session[f'multi_dict_{obsid}'] = multi_dict
             return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
@@ -268,8 +269,17 @@ def write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict={}):
     """
     Perform a set of database injections into the relevant usint.db tables for changes made in the ocatdatapage
 
-    :return: Email message for the proposed revision, using sqlalchemy-related ORMs.
-    :rtype: Email Message()
+    :NOTE: Since the style / info / recipients of the notification messages largely depend on information and checks
+    performed in the database write setup, we construct the EmailMessage() instances in this algorithmic step and return them upon
+    function completion, marking a successfully constructed database transition in the Python SQLAlchemy handling stage.
+
+    Then once the database transactions have all be constructed, we commit them and if we encounter no SQLite level errors, the python code
+    continues and uses the EmailMessage() instances to send emails. In this way, we prepare all relevant information but do not accidentally inform
+    users of a revision if a transaction error has occurred. The database is also rolled back if a transaction error occurs, which prevents mistakes
+    such as writing a revision entry but not writing an accompanying signoff entry.
+
+    :return: Email messages for the proposed revision, using sqlalchemy-related ORMs.
+    :rtype: list(EmailMessage())
     """
     rev = dbi.construct_revision(obsid,ocat_data,kind,notes)
     db.session.add(rev)
@@ -287,17 +297,22 @@ def write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict={}):
         reqs = dbi.construct_requests(rev, only_comment)
         for req in reqs:
             db.session.add(req)
-    msg = determine_msg(ocat_data, rev)
-    return msg
+    msgs = determine_msgs(ocat_data, rev)
+    return msgs
 
-def determine_msg(ocat_data, rev):
+def determine_msgs(ocat_data, rev):
     """
-    Determine parameter change notification message from input
+    Determine parameter change notification message from input.
+    Returns as a list of messages incase multiple are required for a specific revision.
+
+    :return: Email messages for the proposed revision, using sqlalchemy-related ORMs.
+    :rtype: list(EmailMessage())
+
     """
     obsidrev = f"{rev.obsid}.{rev.revision_number:>03}"
     if rev.kind in ('asis, remove'):
         #: Only send to the usint user and CUS email archive when changing the approval state
-        return mail.quick_approval_state_email(ocat_data, obsidrev, rev.kind)
+        return [mail.quick_approval_state_email(ocat_data, obsidrev, rev.kind)]
     elif rev.kind == 'clone':
         #: Notification edge case.
         subject = f"Parameter Change Log: {obsidrev} (Split Request)"
@@ -310,7 +325,7 @@ def determine_msg(ocat_data, rev):
         content += f"PAST REMARKS = \n{ocat_data.get('remarks') or ''}\n\n"
         content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
         content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev=obsidrev)}\n"
-        return mail.construct_msg(content, subject, current_user.email, cc =mail.ARCOPS)
+        return [mail.construct_msg(content, subject, current_user.email, cc =mail.ARCOPS)]
         
     elif rev.kind == 'norm':
-        pass
+        return []
