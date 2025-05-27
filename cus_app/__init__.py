@@ -21,7 +21,7 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import _CONFIG_DICT
-from cus_app.supple.helper_functions import rank_ordr, approx_equals, get_more, IterateRecords
+from cus_app.supple.helper_functions import rank_ordr, approx_equals, get_more, IterateRecords, coerce_notes
 
 #
 # --- SQLAlchemy event handler to turn on Foreign Key Constraints for every engine connection.
@@ -35,12 +35,6 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
-
-def loadnotes(notes):
-    if notes is None:
-        return {}
-    else:
-        return json.loads(notes)
 
 #
 # --- Flask Additions
@@ -59,7 +53,7 @@ function_dict = {
     'approx_equals': approx_equals,
     'zip': zip,
     'datetime': datetime,
-    'loadnotes': loadnotes,
+    'coerce_notes': coerce_notes,
     'get_more': get_more,
     'IterateRecords': IterateRecords
 }

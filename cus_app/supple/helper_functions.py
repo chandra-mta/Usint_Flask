@@ -184,6 +184,16 @@ def coerce(val, output_time_format = STORAGE_FORMAT):
     val = coerce_time(val, output_time_format)
     #: Regular string
     return val
+
+def coerce_notes(notes):
+    """
+    Coercion for JSON-formatting strings dictating a revision's notes dictionary.
+    """
+    if notes is None:
+        return {}
+    else:
+        return json.loads(notes)
+
 #
 # --- Fetching Functions
 #
