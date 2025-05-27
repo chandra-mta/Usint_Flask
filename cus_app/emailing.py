@@ -37,6 +37,8 @@ def construct_msg(content, subject, to, sender = None, cc = None):
     if cc is not None:
         if isinstance(cc,list):
             msg['CC'] = [CUS] + cc
+        elif isinstance(cc, set):
+            msg['CC'] = [CUS] + list(cc)
         else:
             msg['CC'] = [CUS] + [cc]
     else:

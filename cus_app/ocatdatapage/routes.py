@@ -328,4 +328,57 @@ def determine_msgs(ocat_data, rev):
         return [mail.construct_msg(content, subject, current_user.email, cc =mail.ARCOPS)]
         
     elif rev.kind == 'norm':
-        return []
+        #: Most common type of notification.
+        subject = f"Parameter Change Log: {obsidrev}"
+        content = ""
+        for param in ('obsid', 'seq_nbr', 'targname'):
+            content += f"{_LABELS.get(param)} = {ocat_data.get(param)}\n"
+        content += f"User = {current_user.username}\nVERIFIED NORM\n"
+        #: Prepare formatting for parameter requests, starting with comments and remarks edge case.
+        org_dict = {}
+        req_dict = {}
+        #: Iterate through list of table entries.
+        for entry in rev.original:
+            org_dict[entry.parameter.name] = json.loads(entry.value)
+        for entry in rev.request:
+            req_dict[entry.parameter.name] = json.loads(entry.value)
+
+        content += f"PAST COMMENTS = \n{org_dict.get('comments') or ''}\n\n"
+        if req_dict.get('comments') is not None:
+            content += f"NEW COMMENTS = \n{req_dict.get('comments')}\n\n"
+        content += f"PAST REMARKS = \n{ocat_data.get('remarks') or ''}\n\n"
+        if req_dict.get('remarks') is not None:
+            content += f"NEW REMARKS = \n{req_dict.get('remarks')}\n\n"
+        
+        gen = set(_PARAM_SELECTIONS['general_signoff_params']).intersection(req_dict.keys())
+        acis = (set(_PARAM_SELECTIONS['acis_signoff_params']) - set(_PARAM_SELECTIONS['window_columns'])).intersection(req_dict.keys())
+        acis_win = set(_PARAM_SELECTIONS['window_columns']).intersection(req_dict.keys())
+
+        if len(gen) > 0:
+            content += "\nGENERAL CHANGES:\n"
+            for param in gen:
+                content += f"{param.upper()} ({_LABELS.get(param)}) changed from {org_dict.get(param)} to {req_dict.get(param)}\n"
+        
+        if len(acis) > 0:
+            content += "\nACIS CHANGES:\n"
+            for param in acis:
+                content += f"{param.upper()} ({_LABELS.get(param)}) changed from {org_dict.get(param)} to {req_dict.get(param)}\n"
+        
+        if len(acis_win) > 0:
+            content += "\nACIS WINDOW CHANGES:\n"
+            for param in acis_win:
+                content += f"{param.upper()} ({_LABELS.get(param)}) changed from {org_dict.get(param)} to {req_dict.get(param)}\n"
+
+        content += f"\nParameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+        content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev=obsidrev)}\n"
+        #: Use Signoff to determine CC recipients.
+        cc = set()
+        if rev.signoff.general_status == "Pending":
+            cc.add(mail.ARCOPS)
+        if rev.signoff.acis_status == "Pending":
+            cc.add(mail.ARCOPS)
+        if rev.signoff.acis_si_status == "Pending":
+            cc.add(mail.ACIS)
+        if rev.signoff.hrc_si_status == "Pending":
+            cc.add(mail.HRC)
+        return [mail.construct_msg(content, subject, current_user.email, cc=cc)]
