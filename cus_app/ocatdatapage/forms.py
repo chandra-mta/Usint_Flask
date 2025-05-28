@@ -27,6 +27,7 @@ _CHOICE_INSTRUMENT = [(x,x) for x in ('ACIS-I', 'ACIS-S', 'HRC-I', 'HRC-S')]
 _CHOICE_EVENT = ((None, "NA"),("F","F"),("VF","VF"),("F+B","F+B"),("G","G"))
 _CHOICE_CHIP = [(None, "NA"),('N','NO'), ('Y','YES'), ('O1','OPT1'),('O2','OPT2'), ('O3', 'OPT3'), ('O4','OPT4'), ('O5','OPT5')]
 _CHOICE_WINDOW_CHIP = [(None,'NA')] + [(x, x) for x in ('I0', 'I1',  'I2', 'I3', 'S0', 'S1', 'S2', 'S3', 'S4', 'S5')]
+_CHOICE_SUBARRAY = [(None, "NA"), ("CUSTOM", "CUSTOM")]
 
 _CHOICE_NY   = (('N','NO'), ('Y','YES'))
 _CHOICE_NPY = (('N', 'NO'), ('P','PREFERENCE'), ('Y','YES'))
@@ -204,7 +205,7 @@ class OcatParamForm(FlaskForm):
     #
     # --- ACIS (Subarray)
     #
-    subarray = SelectField(_LABELS.get('subarray'), choices=_CHOICE_NNY)
+    subarray = SelectField(_LABELS.get('subarray'), choices=_CHOICE_SUBARRAY)
     subarray_start_row = IntegerField(_LABELS.get('subarray_start_row'), validators=[Optional(),NumberRange(min=1, max=925)])
     subarray_row_count = IntegerField(_LABELS.get('subarray_row_count'), validators=[Optional(),NumberRange(min=101, max=1024)])
     duty_cycle = SelectField(_LABELS.get('duty_cycle'), choices=_CHOICE_NNY)

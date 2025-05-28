@@ -484,10 +484,10 @@
                 <tr>
                 {{ render_field(form.subarray) }}
                 <td colspan=4>
-                <b>If you select YES, please fill the lowered entries.</b>
+                <b>If you select CUSTOM, please fill the lowered entries.</b>
                 </td>
                 </tr>
-                {% if form.subarray.data == 'Y' %}
+                {% if form.subarray.data == 'CUSTOM' %}
                     <tr id="subarrayTr"style="display: block;">
                 {% else %}
                     <tr id="subarrayTr"style="display: none;">

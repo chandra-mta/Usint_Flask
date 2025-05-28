@@ -24,7 +24,7 @@ jQuery(document).ready(function(){
         };
     });
     jQuery("#subarray").change(function(){
-        if (jQuery(this).val() == 'Y'){
+        if (jQuery(this).val() == 'CUSTOM'){
             jQuery("#subarrayTr").show('fast');
         } else {
             jQuery("#subarrayTr").hide('fast');
