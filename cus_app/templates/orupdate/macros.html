@@ -24,7 +24,7 @@
     {% endif %}
 {% endmacro%}
 
-{% macro notes_cell(rev, multi_revision_info) %}
+{% macro notes_cell(rev, multi_revision_info, is_approved) %}
     {% set multi_state = multi_revision_info.get(rev.obsid) %}
     {% set notes = coerce_notes(rev.notes) %}
     <td>
@@ -43,6 +43,12 @@
         {% if notes.get('comment_change') %}
             <span style='color:darkcyan;'>
             New Comment
+            </span>
+            <br>
+        {% endif %}
+        {% if is_approved %}
+            <span style='color:forestgreen;'>
+            On Approved List
             </span>
             <br>
         {% endif %}
@@ -71,13 +77,13 @@
         {{ signoff_cell(form.gen, sign.general_status, sign.general_signoff, sign.general_time) }}
         {{ signoff_cell(form.acis, sign.acis_status, sign.acis_signoff, sign.acis_time) }}
         {{ signoff_cell(form.acis_si, sign.acis_si_status, sign.acis_si_signoff, sign.acis_si_time) }}
-        {{ signoff_cell(form.hrc_si, sign.hrc_si_status, sign.hrc_si_signoff_id, sign.hrc_si_time) }}
+        {{ signoff_cell(form.hrc_si, sign.hrc_si_status, sign.hrc_si_signoff, sign.hrc_si_time) }}
         {% if is_approved %}
             {{ usint_cell(form.usint, None, sign.usint_status, sign.usint_signoff, sign.usint_time) }}
         {% else %}
             {{ usint_cell(form.usint, form.approve, sign.usint_status, sign.usint_signoff, sign.usint_time) }}
         {% endif %}
-        {{ notes_cell(rev, multi_revision_info)}}
+        {{ notes_cell(rev, multi_revision_info, is_approved)}}
     </tr>
 {% endmacro%}
 
