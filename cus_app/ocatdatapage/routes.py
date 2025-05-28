@@ -336,7 +336,7 @@ def _parameter_change_log_msg(ocat_data,rev):
     """
     if rev.kind in ('asis, remove'):
         #: Only send to the usint user and CUS email archive when changing the approval state
-        return mail.quick_approval_state_email(ocat_data, rev.obsidrev(), rev.kind)
+        return mail.quick_approval_state_email(ocat_data, rev)
     elif rev.kind == 'clone':
         #: Notification edge case.
         subject = f"Parameter Change Log: {rev.obsidrev()} (Split Request)"

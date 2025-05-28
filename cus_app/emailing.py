@@ -13,6 +13,7 @@ from flask          import current_app, flash, url_for
 from flask_login    import current_user
 from email.message import EmailMessage
 from subprocess import Popen, PIPE
+from cus_app.supple.database_interface import pull_revision
 
 CUS  = 'cus@cfa.harvard.edu'
 ARCOPS = 'arcops@cfa.harvard.edu'
@@ -106,7 +107,7 @@ def send_error_email(e=None,logline=None):
 #
 # --- Special case email formatting functions
 #
-def quick_approval_state_email(ocat_data, obsidrev, kind):
+def quick_approval_state_email(ocat_data, rev):
     """
     Convenient function for approval state emails.
     """
@@ -114,18 +115,25 @@ def quick_approval_state_email(ocat_data, obsidrev, kind):
     for param in ('obsid', 'seq_nbr', 'targname'):
         content += f"{_LABELS.get(param)} = {ocat_data.get(param)}\n"
     content += f"User = {current_user.username}\n"
-    if kind == 'asis':
-        subject = f"Parameter Change Log: {obsidrev} (Approved)"
+    to = [current_user.email]
+    if rev.kind == 'asis':
+        subject = f"Parameter Change Log: {rev.obsidrev()} (Approved)"
         content += "VERIFIED OK AS IS\n"
-    elif kind == 'remove':
-        subject = f"Parameter Change Log: {obsidrev} (Removed)"
+    elif rev.kind == 'remove':
+        subject = f"Parameter Change Log: {rev.obsidrev()} (Removed)"
         content += "VERIFIED REMOVED\n"
+        approved_revisions = pull_revision(order_by = {'revision_number': 'desc'}, obsid=ocat_data.get('obsid'), kind='asis')
+        if len(approved_revisions) > 0:
+            #: If undoing a previous approval, also notify the previous approver
+            print(approved_revisions[0])
+            to.append(approved_revisions[0].user.email)
 
     content += f"PAST COMMENTS = \n{ocat_data.get('comments') or ''}\n\n"
     content += f"PAST REMARKS = \n{ocat_data.get('remarks') or ''}\n\n"
     content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
-    content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev=obsidrev)}\n"
-    return construct_msg(content, subject, current_user.email)
+    content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = rev.obsidrev())}\n"
+    print(to)
+    return construct_msg(content, subject, to)
 
 def signoff_notify(ocat_data, rev, sign):
     """
