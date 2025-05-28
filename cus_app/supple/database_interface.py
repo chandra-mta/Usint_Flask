@@ -516,6 +516,14 @@ def update_schedule_entry(schedule_id, user_id, start_string, stop_string):
         sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
         sched.user_id = user_id
         sched.assigner_id = current_user.id
+        subject = 'Update in TOO POC Duty Signup'
+        if sched.user_id == sched.assigner_id:
+            content = f"{sched.user.full_name} ({sched.user.username}) has signed up for POC duty on the following period(s):\n\n"
+        else:
+            content = f"{sched.user.full_name} ({sched.user.username}) has been assigned POC duty by {current_user.full_name} ({current_user.username}) on the following period(s):\nIf this is unexpected. Please contact the assigner.\n\n"
+        content += f"Start: {start.strftime("%B %d %Y")}\nStop:  {stop.strftime("%B %d %Y")}\n"
+        to = [sched.user.email, current_user.email]
+        mail.send_email(content, subject, to)
     else:
         flash("No user selected. Only time period(s) adjusted.")
 
