@@ -104,6 +104,8 @@ def perform_signoff(signoff_id, signoff_kind):
     signoff_id = int(signoff_id)
     curr_epoch = int(datetime.now().timestamp())
     signoff_obj = db.session.execute(select(Signoff).where(Signoff.id == signoff_id)).scalar_one()
+    matching_rev = signoff_obj.revision
+    ocat_data = read_basic_ocat_data(matching_rev.obsid)
     if signoff_kind == 'gen':
         signoff_obj.general_status = 'Signed'
         signoff_obj.general_signoff_id = current_user.id
@@ -125,9 +127,8 @@ def perform_signoff(signoff_id, signoff_kind):
         signoff_obj.usint_signoff_id = current_user.id
         signoff_obj.usint_time = curr_epoch
         if signoff_kind == 'approve':
-            if not is_approved(signoff_obj.revision.obsid):
+            if not is_approved(matching_rev.obsid):
                 #: Additionally create an approval revision and signoff.
-                matching_rev = signoff_obj.revision
                 new_revision = Revision(obsid = matching_rev.obsid,
                                         revision_number = find_next_rev_no(matching_rev.obsid),
                                         kind = 'asis',
@@ -139,12 +140,12 @@ def perform_signoff(signoff_id, signoff_kind):
                 db.session.add(new_revision)
                 db.session.add(new_signoff)
                 #: Also send notification email if performing this special approval signoff
-                ocat_data = read_basic_ocat_data(new_revision.obsid)
                 kind = new_revision.kind
                 msg = mail.quick_approval_state_email(ocat_data, new_revision.obsidrev(), kind)
                 mail.send_msg(msg)
             else:
                 flash(f"Obsid {signoff_obj.revision.obsid} already approved. Performing only Usint Signoff.")
+    mail.signoff_notify(ocat_data, matching_rev, signoff_obj)
     db.session.commit()
 
 def construct_requests(rev_obj, req_dict):

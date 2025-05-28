@@ -74,27 +74,6 @@ def send_email(content, subject, to, sender = None, cc = []):
     msg = construct_msg(content, subject, to, sender = None, cc = [])
     send_msg(msg)
 
-def quick_approval_state_email(ocat_data, obsidrev, kind):
-    """
-    Convenient function for approval state emails.
-    """
-    content = ""
-    for param in ('obsid', 'seq_nbr', 'targname'):
-        content += f"{_LABELS.get(param)} = {ocat_data.get(param)}\n"
-    content += f"User = {current_user.username}\n"
-    if kind == 'asis':
-        subject = f"Parameter Change Log: {obsidrev} (Approved)"
-        content += "VERIFIED OK AS IS\n"
-    elif kind == 'remove':
-        subject = f"Parameter Change Log: {obsidrev} (Removed)"
-        content += "VERIFIED REMOVED\n"
-
-    content += f"PAST COMMENTS = \n{ocat_data.get('comments') or ''}\n\n"
-    content += f"PAST REMARKS = \n{ocat_data.get('remarks') or ''}\n\n"
-    content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
-    content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev=obsidrev)}\n"
-    return construct_msg(content, subject, current_user.email)
-
 def send_error_email(e=None,logline=None):
     if not current_app.debug:
         handler_list = current_app.logger.handlers
@@ -124,3 +103,72 @@ def send_error_email(e=None,logline=None):
             raise e
         if logline is not None:
             print(logline)
+#
+# --- Special case email formatting functions
+#
+def quick_approval_state_email(ocat_data, obsidrev, kind):
+    """
+    Convenient function for approval state emails.
+    """
+    content = ""
+    for param in ('obsid', 'seq_nbr', 'targname'):
+        content += f"{_LABELS.get(param)} = {ocat_data.get(param)}\n"
+    content += f"User = {current_user.username}\n"
+    if kind == 'asis':
+        subject = f"Parameter Change Log: {obsidrev} (Approved)"
+        content += "VERIFIED OK AS IS\n"
+    elif kind == 'remove':
+        subject = f"Parameter Change Log: {obsidrev} (Removed)"
+        content += "VERIFIED REMOVED\n"
+
+    content += f"PAST COMMENTS = \n{ocat_data.get('comments') or ''}\n\n"
+    content += f"PAST REMARKS = \n{ocat_data.get('remarks') or ''}\n\n"
+    content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+    content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev=obsidrev)}\n"
+    return construct_msg(content, subject, current_user.email)
+
+def signoff_notify(ocat_data, rev, sign):
+    """
+    Check the performed signoff for special notification requirements and send those messages.
+    """
+    if ocat_data.get('obs_type') in ('TOO', 'DDT'):
+        #: Notify personnel quickly about updates to a TOO/DDT.
+        finished = {
+            'arcops' : (sign.general_status != 'Pending') and (sign.acis_status != 'Pending'),
+            'instrument' :(sign.acis_si_status != 'Pending') and (sign.hrc_si_status != 'Pending'),
+            'usint' : (sign.usint_status != 'Pending')
+        }
+        if finished['arcops'] and not finished['instrument']:
+            subject = f"{ocat_data.get('obs_type')} SI Mode Sign Off Request: (Obsid: {ocat_data.get('obsid')})"
+
+            content = f"Editing of General/ACIS entries of {rev.obsidrev()} were finished and signed off.\n"
+            content += "Please update SI Mode entries, then sign off.\n"
+            content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+            content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = rev.obsidrev())}\n"
+
+            if ocat_data.get('instrument') in ('HRC-I', 'HRC-S'):
+                to = HRC
+            else:
+                to = ACIS
+        elif not finished['arcops'] and finished['instrument']:
+            subject = f"{ocat_data.get('obs_type')} General/ACIS Sign Off Request: (Obsid: {ocat_data.get('obsid')})"
+
+            content = f"Editing of SI Mode entries of {rev.obsidrev()} were finished and signed off.\n"
+            content += "Please update General/ACIS entries, then sign off.\n"
+            content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+            content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = rev.obsidrev())}\n"
+
+            to = ARCOPS
+        elif finished['arcops'] and finished['instrument'] and not finished['usint']:
+            subject = f"{ocat_data.get('obs_type')} Usint Sign Off Request: (Obsid: {ocat_data.get('obsid')})"
+
+            content = f"Editing of all entries of {rev.obsidrev()} were finished and signed off.\n"
+            content += "Please verify and signoff.\n"
+            content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+            content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = rev.obsidrev())}\n"
+
+            to = [rev.user.email, current_user.email]
+        else:
+            return None #: No email
+        
+        send_email(content, subject, to)
