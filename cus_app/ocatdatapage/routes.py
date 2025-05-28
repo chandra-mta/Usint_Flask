@@ -319,6 +319,12 @@ def determine_msgs(main_ocat_data, main_rev, multi_rev, multi_ocat_data):
     mp_msg = _mp_notes_msg([main_rev] + list(multi_rev.values()))
     if mp_msg is not None:
         msgs.append(mp_msg)
+    
+    #: Fast TOO changes if applicable
+    for ocat_data, rev in zip([main_ocat_data] + list(multi_ocat_data.values()), [main_rev] + list(multi_rev.values())):
+        too_msg = _too_msg(ocat_data, rev)
+        if too_msg is not None:
+            msgs.append(too_msg)
     return msgs
 
 def _parameter_change_log_msg(ocat_data,rev):
@@ -458,5 +464,21 @@ def _mp_notes_msg(revisions):
                 for rev in v:
                     content += f"{rev.obsid}: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = rev.obsidrev())}\n"
         return mail.construct_msg(content, subject, mail.MP, cc = current_user.email)
+
+def _too_msg(ocat_data, revision):
+    """
+    Construct Fast TOO change message for ArcOps
+    """
+    if ocat_data.get('too_type') in ('FAST', '0-5', '0-4') and revision.kind == 'norm':
+        subject = f"{ocat_data.get('obs_type').upper()} observation {ocat_data.get('obsid')} Parameter Change ({revision.obsidrev()})"
+        content = f"{ocat_data.get('obs_type').upper()} observation {ocat_data.get('obsid')} parameter changes were submitted.\n\n"
+        for param in ('tooid', 'too_type', 'too_trig', 'too_remarks'):
+            content += f"{_LABELS.get(param) + ':':<12}{ocat_data.get(param)}\n"
+        
+        content += f"\n\nParameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+        content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = revision.obsidrev())}\n"
+        return mail.construct_msg(content, subject, mail.ARCOPS)
+    else:
+        return None
 
 
