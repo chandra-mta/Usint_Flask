@@ -85,6 +85,9 @@ class Revision(db.Model):
         
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    
+    def obsidrev(self):
+        return f"{self.obsid}.{self.revision_number:>03}"
 
     def __repr__(self) -> str:
         return f"Revision(id={self.id!r}, user_id={self.user_id!r}, obsid={self.obsid!r}, revision_number={self.revision_number!r}, kind={self.kind!r})"

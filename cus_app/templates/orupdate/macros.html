@@ -55,10 +55,9 @@
     {% else %}
     <th class='cent'>
     {% endif %}
-        {% set obsidrev = str(revision.obsid) + '.' + str(revision.revision_number).zfill(3) %}
         <!-- make link to chkupdata -->
-        <a onclick="javascript:window.open('{{url_for('chkupdata.index', obsidrev=obsidrev )}}', 'Chkupdata{{ obsidrev }}')", style="cursor:pointer">
-        <u>{{ obsidrev }}</u></a>
+        <a onclick="javascript:window.open('{{url_for('chkupdata.index', obsidrev=revision.obsidrev() )}}', 'Chkupdata{{ revision.obsidrev() }}')", style="cursor:pointer">
+        <u>{{ revision.obsidrev() }}</u></a>
         <br>
         {{ revision.sequence_number }}<br>
         {{ datetime.fromtimestamp(revision.time).strftime('%m/%d/%y') }}<br>

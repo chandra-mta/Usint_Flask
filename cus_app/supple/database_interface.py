@@ -140,9 +140,8 @@ def perform_signoff(signoff_id, signoff_kind):
                 db.session.add(new_signoff)
                 #: Also send notification email if performing this special approval signoff
                 ocat_data = read_basic_ocat_data(new_revision.obsid)
-                obsidrev = f"{new_revision.obsid}.{new_revision.revision_number:>03}"
                 kind = new_revision.kind
-                msg = mail.quick_approval_state_email(ocat_data, obsidrev, kind)
+                msg = mail.quick_approval_state_email(ocat_data, new_revision.obsidrev(), kind)
                 mail.send_msg(msg)
             else:
                 flash(f"Obsid {signoff_obj.revision.obsid} already approved. Performing only Usint Signoff.")

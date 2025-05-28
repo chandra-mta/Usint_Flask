@@ -548,9 +548,3 @@ def get_next_weekday(weekday_num, dt = datetime.now().replace(hour=0, minute=0, 
         days_until_target = 7
     target = dt + timedelta(days=days_until_target)
     return target
-
-def _obsidrev(rev):
-    """
-    Quickly format the obsid.rev string from the revision ORM
-    """
-    return f"{rev.obsid}.{rev.revision_number:>03}"
