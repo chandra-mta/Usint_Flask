@@ -153,7 +153,7 @@ def coerce_time(val, output_time_format = STORAGE_FORMAT):
                 pass
     return val
 
-def coerce_json(val):
+def coerce_to_json(val):
     """Coercion of python data type to a json-formatted string for data storage"""
     if val in NULL_LIST:
         return None
@@ -167,6 +167,15 @@ def coerce_json(val):
             return json.dumps(val)
     else:
         return json.dumps(val)
+
+def coerce_from_json(val):
+    """
+    Coercion of a JSON-formatting string to a python data type.
+    """
+    if isinstance(val,str):
+        return json.loads(val)
+    else:
+        return val
 
 def coerce(val, output_time_format = STORAGE_FORMAT):
     if isinstance(val, (list, tuple)):
@@ -184,15 +193,6 @@ def coerce(val, output_time_format = STORAGE_FORMAT):
     val = coerce_time(val, output_time_format)
     #: Regular string
     return val
-
-def coerce_notes(notes):
-    """
-    Coercion for JSON-formatting strings dictating a revision's notes dictionary.
-    """
-    if notes is None:
-        return {}
-    else:
-        return json.loads(notes)
 
 #
 # --- Fetching Functions

@@ -23,7 +23,7 @@ import cus_app.emailing as mail
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original, Schedule
 from flask import flash
 from flask_login import current_user
-from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open, get_next_weekday, coerce
+from cus_app.supple.helper_functions import coerce_to_json, DATETIME_FORMATS, is_open, get_next_weekday, coerce
 from cus_app.supple.read_ocat_data import read_basic_ocat_data
 from calendar import MONDAY, SUNDAY
 
@@ -158,7 +158,7 @@ def construct_requests(rev_obj, req_dict):
             param = pull_param(key)
             req = Request(revision_id= rev_obj.id,
                         parameter_id = param.id,
-                        value = coerce_json(value)
+                        value = coerce_to_json(value)
             )
             all_requests.append(req)
     return all_requests
@@ -174,7 +174,7 @@ def construct_originals(rev_obj, org_dict):
                 param = pull_param(key)
                 req = Original(revision_id= rev_obj.id,
                             parameter_id = param.id,
-                            value = coerce_json(value)
+                            value = coerce_to_json(value)
                 )
                 all_originals.append(req)
     return all_originals

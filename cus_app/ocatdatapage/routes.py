@@ -39,7 +39,7 @@ from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
 import cus_app.supple.database_interface as dbi
 import cus_app.ocatdatapage.format_ocat_data as fod
-from cus_app.supple.helper_functions import coerce_notes, create_obsid_list, construct_notes, check_obsid_in_or_list, _obsidrev
+from cus_app.supple.helper_functions import coerce_from_json, create_obsid_list, construct_notes, check_obsid_in_or_list, _obsidrev
 
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -442,7 +442,7 @@ def _mp_notes_msg(revisions):
         'on_or_list': []
     }
     for rev in revisions:
-        notes = coerce_notes(rev.notes)
+        notes = coerce_from_json(rev.notes) or {}
         for key in ('target_name_change', 'large_coordinate_change', 'obsdate_under10', 'on_or_list'):
             if notes.get(key):
                 key_to_rev[key].append(rev)

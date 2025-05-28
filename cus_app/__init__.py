@@ -21,7 +21,7 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import _CONFIG_DICT
-from cus_app.supple.helper_functions import rank_ordr, approx_equals, get_more, IterateRecords, coerce_notes
+from cus_app.supple.helper_functions import rank_ordr, approx_equals, get_more, IterateRecords, coerce_from_json
 
 #
 # --- SQLAlchemy event handler to turn on Foreign Key Constraints for every engine connection.
@@ -53,7 +53,7 @@ function_dict = {
     'approx_equals': approx_equals,
     'zip': zip,
     'datetime': datetime,
-    'coerce_notes': coerce_notes,
+    'coerce_notes': lambda x: coerce_from_json(x) or {},
     'get_more': get_more,
     'IterateRecords': IterateRecords
 }
