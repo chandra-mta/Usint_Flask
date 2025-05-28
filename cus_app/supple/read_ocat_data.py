@@ -53,6 +53,8 @@ _BASIC_LIST = ['target.obsid',
                'target.seq_nbr',
                'target.status',
                'target.targname',
+               'target.type',
+               'target.instrument',
                'target.ocat_propid',
                'prop_info.prop_num',
                'prop_info.title',
@@ -77,8 +79,8 @@ def read_basic_ocat_data(obsid):
         raise MultipleResultsFound(f"Multiple query result for {obsid}")
     else:
         p_dict = convert_astropy_to_native(result[0])
+    p_dict['obs_type'] = p_dict.pop('type')
     return p_dict
-
 def read_ocat_data(obsid):
     """
     extract parameter values for a given obsid
