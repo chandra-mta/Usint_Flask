@@ -4,6 +4,22 @@
 :Author: W. Aaron (william.aaron@cfa.harvard.edu)
 :Last Updated: Apr 28, 2025
 
+
+:NOTE: Rank-ordered parameters are oriented in the usint Flask Application in one of two ways, depending on the desired purpose.
+
+- records orientation: a list of ordered dictionaries in which each dictionary has a column-key and value matching the rank parameters
+    [{'window_constraint': 'Y',
+    'tstart': 'Jan 01 2024 12:00AM',
+    'tstop': 'Dec 31 2024 12:00AM'},
+    {'window_constraint': 'Y',
+    'tstart': 'Jan 01 2025 12:00AM',
+    'tstop': 'Dec 31 2025 12:00AM'}]
+
+- columns orientation: a dictionary of ordered lists where each key-column in the dictionary matches the rank parameters
+    {'window_constraint': ['Y', 'Y'],
+    'tstart': ['Jan 01 2024 12:00AM', 'Jan 01 2025 12:00AM'],
+    'tstop': ['Dec 31 2024 12:00AM', 'Dec 31 2025 12:00AM']}
+
 """
 import os
 import re
@@ -18,7 +34,7 @@ from flask import current_app
 # --- Classes
 #
 class IterateRecords:
-    """Iterating through a set of records oriented object"""
+    """Iterating through a set of records-oriented objects"""
     def __init__(self,*args):
         self.list_set = []
         self.num_lists = len(args)
@@ -59,11 +75,11 @@ class IterateRecords:
         return self.__next__()
 
 class IterateColumns:
-    """Iterating through a columns oriented object"""
+    """Iterating through a columns-oriented objects"""
     
     @staticmethod
     def get_col(obj,key):
-        if obj == None:
+        if obj is None:
             return []
         else:
             return obj.get(key) or []
@@ -119,9 +135,12 @@ ALL_RANK_PARAMS = TIME_RANK_PARAMS.union(ROLL_RANK_PARAMS).union(WINDOW_RANK_PAR
 _SIGNOFF_COLUMNS = ('general', 'acis', 'acis_si', 'hrc_si', 'usint') #: Prefix names for the columns of Signoff
 
 #
-# --- Coercion section. Converting the strings text to the correct data types.
+# --- Coercion section. Converting values to the correct data types.
 #
 def coerce_none(val):
+    """
+    Recursive function to convert containers of NULL_LIST values into the Python native None.
+    """
     if isinstance(val, (list, tuple)):
         return [coerce_none(x) for x in val]
     elif isinstance(val, dict):
@@ -131,6 +150,9 @@ def coerce_none(val):
     return val
 
 def coerce_number(val):
+    """
+    Perform conversion of a numerical data object to a python native integer or float.
+    """
     if not isinstance(val,(int,float)):
         try:
             val = int(val)
@@ -142,7 +164,9 @@ def coerce_number(val):
     return val
 
 def coerce_time(val, output_time_format = STORAGE_FORMAT):
-    """Parse a variety of different time formats across CXC tools and data sources"""
+    """
+    Parse a variety of different time formats across CXC tools and data sources into the output time format
+    """
     if isinstance(val, str):
         x = val.replace('::', ':')
         x = x.split('.')[0]
@@ -154,7 +178,9 @@ def coerce_time(val, output_time_format = STORAGE_FORMAT):
     return val
 
 def coerce_to_json(val):
-    """Coercion of python data type to a json-formatted string for data storage"""
+    """
+    Coercion of python data type to a json-formatted string for data storage
+    """
     if val in NULL_LIST:
         return None
     elif isinstance(val, datetime):
@@ -178,6 +204,9 @@ def coerce_from_json(val):
         return val
 
 def coerce(val, output_time_format = STORAGE_FORMAT):
+    """
+    Recursive function for converting to python native data types
+    """
     if isinstance(val, (list, tuple)):
         return [coerce(x, output_time_format) for x in val]
     elif isinstance(val, dict):
@@ -198,6 +227,9 @@ def coerce(val, output_time_format = STORAGE_FORMAT):
 # --- Fetching Functions
 #
 def get_more(obj,key):
+    """
+    Formatting function to add None handling to .get()
+    """
     if obj is None:
         return None
     else:
@@ -271,7 +303,7 @@ def approx_equals(first,second):
 
 def construct_notes(ocat_data, org_dict, req_dict):
     """
-    Construct notes json based on change requests
+    Construct Revision notes and format into a JSON string
     """
     notes = {}
     #
@@ -322,14 +354,13 @@ def construct_notes(ocat_data, org_dict, req_dict):
         return None
 
 def is_large_coord_shift(ra,dec, ora, odec):
+    """
+    Boolean check for whether a coordinate change exceeds 8 arcminutes.
+    """
     if ora is None or odec is None:
-        return False
+        return False #: Instance of defining a TOO coordinates location. No need to check.
     diff = sqrt((ora -ra)**2 + (odec - dec)**2)
-    if diff > 0.1333:
-        return True
-    else:
-        return False
-
+    return diff > 0.1333
 #
 #--- Conversion Functions
 #
@@ -497,6 +528,9 @@ def convert_ra_dec_format(dra, ddec, oformat):
     return tra,tdec
 
 def rank_ordr(ranks):
+    """
+    Calculate the order of a rank parameter set.
+    """
     if ranks is None:
         return 0
     elif isinstance(ranks, list):
@@ -542,7 +576,9 @@ def contains_non_none(obj):
     
 
 def get_next_weekday(weekday_num, dt = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)):
-    """Returns the datetime object for the next target weekday."""
+    """
+    Returns the datetime object for the next target weekday.
+    """
     days_until_target = (weekday_num - dt.weekday()) % 7
     if days_until_target == 0:
         days_until_target = 7

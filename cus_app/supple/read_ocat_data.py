@@ -4,17 +4,29 @@
 :Author: W. Aaron (william.aaron@cfa.harvard.edu)
 :Last Updated: Mar 5, 2025
 
+:NOTE: Rank-ordered parameters are oriented in the usint Flask Application in one of two ways, depending on the desired purpose.
+
+- records orientation: a list of ordered dictionaries in which each dictionary has a column-key and value matching the rank parameters
+    [{'window_constraint': 'Y',
+    'tstart': 'Jan 01 2024 12:00AM',
+    'tstop': 'Dec 31 2024 12:00AM'},
+    {'window_constraint': 'Y',
+    'tstart': 'Jan 01 2025 12:00AM',
+    'tstop': 'Dec 31 2025 12:00AM'}]
+
+- columns orientation: a dictionary of ordered lists where each key-column in the dictionary matches the rank parameters
+    {'window_constraint': ['Y', 'Y'],
+    'tstart': ['Jan 01 2024 12:00AM', 'Jan 01 2025 12:00AM'],
+    'tstop': ['Dec 31 2024 12:00AM', 'Dec 31 2025 12:00AM']}
+
 """
 import ska_dbi.sqsh as sqsh
 from astropy.table import vstack
 import os
 import numpy as np
 from datetime import datetime
-from cus_app.supple.helper_functions import convert_astropy_to_native, NULL_LIST, OCAT_DATETIME_FORMAT, STORAGE_FORMAT
-
+from cus_app.supple.helper_functions import convert_astropy_to_native, coerce_none, OCAT_DATETIME_FORMAT, STORAGE_FORMAT
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from cus_app import db
-from cus_app.models import register_user, User, Revision, Signoff, Parameter, Request, Original
 from flask import current_app
 #
 #--- Set sqsh Parameters
@@ -61,14 +73,18 @@ _BASIC_LIST = ['target.obsid',
                'view_pi.last'
                ]
 def get_value_from_sybase(cmd):
+    """
+    Ska_DBI interface to fetch Sybase data and format into an astropy table.
+    """
     conn = sqsh.Sqsh(dbi='sybase', server=_SERV, database = _DB, user = _USR, authdir = _AUTHDIR)
     row = conn.fetchall(cmd)
     return row
 
 def read_basic_ocat_data(obsid):
     """
-    Basic ocat read for constructing express approvals.
+    Basic Ocat Data read.
     """
+
     cmd = f"select {','.join(_BASIC_LIST)} from target INNER JOIN prop_info ON target.ocat_propid = prop_info.ocat_propid \
     INNER JOIN view_pi ON target.ocat_propid = view_pi.ocat_propid where target.obsid={obsid}"
 
@@ -83,20 +99,19 @@ def read_basic_ocat_data(obsid):
     return p_dict
 def read_ocat_data(obsid):
     """
-    extract parameter values for a given obsid
+    Extract parameter values for a given obsid
     
     :param obsid: obsid
     :type obsid: int
     :return: p_dict: a dictionary of <param name> <--> <param value>
     :rtype: dict
 
-    :Note: there are several parameter names  different from those in the database:
-                TOO/DDT: 'type','trig','start','stop','followup','remarks']
-                        will be with prefix 'too_'
-                HRC SI Mode: si_mode will be hrc_si_mode to distinguish from ACIS si_mode
-                Joint Prop: 'prop_num', 'title', 'joint' will be:
-                            'proposal_number', 'proposal_title', 'proposal_joint'
-                            see prop_params for others.
+    :NOTE: there are several parameter names  different from those in the database:
+    - General: 'mp_remarks' -> 'comments', 'type' -> 'obs_type
+    - TOO/DDT: 'type','trig','start','stop','followup','remarks'] will be with prefix 'too_'
+    - HRC SI Mode: si_mode will be hrc_si_mode to distinguish from ACIS si_mode
+    - Joint Prop: 'prop_num', 'title', 'joint' will be with prefix 'proposal_' and expanded in name. 'ao_str' -> 'obs_ao_str'
+    - Proposal: 'view_pi.last' -> 'pi_name', 'view_coi.last' -> 'observer'
     """
     p_dict = general_params(obsid)
     
@@ -143,9 +158,7 @@ def read_ocat_data(obsid):
     #
     # --- Assign the variety of tables different null values to python native None
     #
-    for k,v in p_dict.items():
-        if v in NULL_LIST:
-            p_dict[k] = None
+    p_dict = coerce_none(p_dict)
     #
     # --- Planned Roll if it exists (EDGE CASE)
     #
@@ -159,7 +172,6 @@ def read_ocat_data(obsid):
                 return
     except (ValueError, IndexError):
         pass
-
     
     return p_dict
 
@@ -243,9 +255,13 @@ def monitor_params(obsid, pre_id, group_id):
     return p_dict
 
 def find_monitoring_series(obsid):
-    """find all obsids associated with this monitoring series and then list the unobserved ones
+    """
+    Find all obsids associated with this monitoring series, then list the unobserved ones.
     """
     def _reverse(obsid):
+        """
+        Iteratively fetch obsid, pre_id in reverse.
+        """
         cmd = f"select obsid, pre_id, status from target where obsid={obsid}"
         rev = get_value_from_sybase(cmd)
         val = rev[0]['pre_id'].tolist()
@@ -259,6 +275,9 @@ def find_monitoring_series(obsid):
         return rev
     
     def _forward(obsid):
+        """
+        Iteratively fetch obsid, pre_id forward.
+        """
         cmd = f"select obsid, pre_id, status from target where pre_id={obsid}"
         fwd = get_value_from_sybase(cmd)
         if len(fwd) == 0:
@@ -287,7 +306,8 @@ def find_monitoring_series(obsid):
     return sorted(series[sel]['obsid'].tolist())
 
 def roll_params(obsid):
-    """extract roll related parameter data
+    """
+    Extract roll related parameter data
     """
     cmd = f"select roll_constraint,roll_180,roll,roll_tolerance from rollreq where obsid={obsid} order by ordr"
     roll_fetch = get_value_from_sybase(cmd)
@@ -295,7 +315,8 @@ def roll_params(obsid):
     return {'roll_ranks':records, 'roll_ordr': len(records)}
 
 def time_constraint_params(obsid):
-    """extract time constraint related parameter data
+    """
+    Extract time constraint related parameter data
     """
     cmd = f"select window_constraint,tstart,tstop from timereq where obsid={obsid} order by ordr"
     time_fetch = get_value_from_sybase(cmd)
@@ -309,7 +330,8 @@ def time_constraint_params(obsid):
     return {'time_ranks': records, 'time_ordr': len(records)}
 
 def too_ddt_params(tooid):
-    """extract time constraint related parameter data
+    """
+    Extract time constraint related parameter data
     """
     cmd = f"select type,start,stop,followup,trig,remarks from too where tooid={tooid}"
     too_fetch = get_value_from_sybase(cmd)
@@ -320,7 +342,8 @@ def too_ddt_params(tooid):
     return p_dict
 
 def hrc_params(hrcid):
-    """extract hrc related parameter data
+    """
+    Extract hrc related parameter data
     """
     cmd = f"select hrc_zero_block,timing_mode,si_mode from hrcparam where hrcid={hrcid}"
     hrc_fetch = get_value_from_sybase(cmd)
@@ -330,7 +353,8 @@ def hrc_params(hrcid):
     return p_dict
 
 def acis_params(acisid):
-    """extract acis related parameter data
+    """
+    Extract acis related parameter data
     """
     cmd = f"select {','.join(_ACIS_PARAM_LIST)} from acisparam where acisid={acisid}"
     acis_fetch = get_value_from_sybase(cmd)
@@ -338,14 +362,16 @@ def acis_params(acisid):
     return p_dict
 
 def aciswin_params(obsid):
-    """extract acis window related parameter data
+    """
+    Extract acis window related parameter data
     """
     cmd = f"select {','.join(_ACISWIN_PARAM_LIST)} from aciswin where obsid={obsid} order by ordr"
     aciswin_fetch = get_value_from_sybase(cmd)
     records = convert_astropy_to_native(aciswin_fetch, orient = 'records')
     return {'window_ranks': records, 'window_order': len(records)}
 def phase_params(obsid):
-    """extract phase related parameter data
+    """
+    Extract phase related parameter data
     """
     cmd = f"select phase_period,phase_epoch,phase_start,phase_end,phase_start_margin,phase_end_margin from phasereq where obsid={obsid}"
     phase_fetch = get_value_from_sybase(cmd)
@@ -353,7 +379,8 @@ def phase_params(obsid):
     return p_dict
 
 def dither_params(obsid):
-    """extract dither related parameter data
+    """
+    Extract dither related parameter data
     """
     cmd = f"select y_amp,y_freq,y_phase,z_amp,z_freq,z_phase from dither where obsid={obsid}"
     dither_fetch = get_value_from_sybase(cmd)
@@ -361,7 +388,8 @@ def dither_params(obsid):
     return p_dict
 
 def sim_params(obsid):
-    """extract sim related parameter data
+    """
+    Extract sim related parameter data
     """
     cmd = f"select trans_offset,focus_offset from sim where obsid={obsid}"
     sim_fetch = get_value_from_sybase(cmd)
@@ -371,7 +399,8 @@ def sim_params(obsid):
         return {}
     
 def soe_params(obsid):
-    """extract soe data
+    """
+    Extract soe data
     """
     cmd = f"select soe_roll from soe where obsid={obsid} and unscheduled='N'"
     soe_fetch = get_value_from_sybase(cmd)
@@ -381,7 +410,8 @@ def soe_params(obsid):
         return {}
 
 def prop_params(ocat_propid):
-    """extract proposal related parameter data
+    """
+    Extract proposal related parameter data
     """
     cmd = f"select ao_str,prop_num,title,joint from prop_info where ocat_propid={ocat_propid}"
     prop_fetch = get_value_from_sybase(cmd)
