@@ -122,6 +122,9 @@ def create_warning_line(ocat_data):
     return line
 
 def create_orient_maps(ocat_data):
+    """
+    Populate the ocat_data dictionary with links to sky survey images if they exist for the target coordinates
+    """
     #
     #--- Viewing Orientation Maps
     #

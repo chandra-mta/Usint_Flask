@@ -58,7 +58,7 @@ def index():
     schedule_list = dbi.pull_schedule()
     schedule_forms = []
     for entry in schedule_list:
-        form = ScheduleRow(formdata=None, **_prep_form(entry)) #:Set form data to None so that undesirable selections are ignored.
+        form = ScheduleRow(formdata=None, **prep_form(entry)) #:Set form data to None so that undesirable selections are ignored.
         schedule_forms.append(form)
     return render_template('scheduler/index.html',
                            schedule_list = schedule_list,
@@ -68,25 +68,37 @@ def index():
 
 @bp.route('/unlock/<schedule_id>', methods=['GET'])
 def unlock(schedule_id):
+    """
+    PRG page for clearing a time period of its assigned user.
+    """
     dbi.unlock_schedule_entry(schedule_id = schedule_id)
     return redirect(url_for('scheduler.index'))
 
 @bp.route('/update/<schedule_id>/<user_id>/<start_string>/<stop_string>', methods=['GET'])
 def update(schedule_id, user_id, start_string, stop_string):
+    """
+    PRG page for updating a time period entry
+    """
     dbi.update_schedule_entry(schedule_id, user_id, start_string, stop_string)
     return redirect(url_for('scheduler.index'))
 
 @bp.route('/split/<schedule_id>', methods=['GET'])
 def split(schedule_id):
+    """
+    PRG page for creating a new time period entry with a smaller time duration.
+    """
     dbi.split_schedule_entry(schedule_id)
     return redirect(url_for('scheduler.index'))
 
 @bp.route('/delete/<schedule_id>', methods=['GET'])
 def delete(schedule_id):
+    """
+    PRG page for deleting a time period entry and offloading its scheduling time onto unlocked time entries.
+    """
     dbi.delete_schedule_entry(schedule_id)
     return redirect(url_for('scheduler.index'))
 
-def _prep_form(entry):
+def prep_form(entry):
     """
     Prepare form starting data for the particular entry
     """

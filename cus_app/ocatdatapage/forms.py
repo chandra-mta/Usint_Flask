@@ -44,6 +44,9 @@ with open(os.path.join(stat_dir, 'labels.json')) as f:
     _LABELS = json.load(f)
 
 class ButtonWidget(Input):
+    """
+    Python WTForm widget for HTML button
+    """
     input_type='button'
     validation_attrs = ['required', 'disabled']
     def __call__(self, field, **kwargs):
@@ -53,6 +56,9 @@ class ButtonWidget(Input):
         return super().__call__(field, **kwargs)
 
 class ButtonField(Field):
+    """
+    Python WTForm field for HTML button
+    """
     widget = ButtonWidget()
 
     def __init__(self, label=None, validators=None, onclick=None, **kwargs):
@@ -60,6 +66,9 @@ class ButtonField(Field):
         super().__init__(label=None, validators=None,**kwargs)
 
 class TimeRankDateTimeField(DateTimeField):
+    """
+    Custom Python WTForm Field for processing a datetime object or datetime formatted string.
+    """
     def process_data(self, value):
         if isinstance(value, str):
             d_value = None
@@ -75,12 +84,18 @@ class TimeRankDateTimeField(DateTimeField):
             super().process_data(value)
 
 class TimeRank(Form):
+    """
+    Time Constraints Subform
+    """
     window_constraint = SelectField(_LABELS.get('window_constraint'), choices=_CHOICE_CP, default='Y')
     tstart = TimeRankDateTimeField(_LABELS.get('tstart'), format=DATETIME_FORMATS, default=datetime.now())
     tstop = TimeRankDateTimeField(_LABELS.get('tstop'), format=DATETIME_FORMATS, default=datetime.now())
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class RollRank(Form):
+    """
+    Roll Constraints Subform
+    """
     roll_constraint = SelectField(_LABELS.get('roll_constraint'),choices=_CHOICE_CP, default='Y')
     roll_180 = SelectField(_LABELS.get('roll_180'),choices=_CHOICE_NNY, default = 'N')
     roll = FloatField(_LABELS.get('roll'), validators=[Optional(),NumberRange(min=0, max=360)], default = 0.0)
@@ -88,6 +103,9 @@ class RollRank(Form):
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class WindowRank(Form):
+    """
+    ACIS Window Constraints Subform
+    """
     chip = SelectField(_LABELS.get('chip'),choices=_CHOICE_WINDOW_CHIP, default='I0')
     start_row = IntegerField(_LABELS.get('start_row'), validators=[Optional(),NumberRange(min=1,max=1024)], default = 1)
     start_column = IntegerField(_LABELS.get('start_column'), validators=[Optional(),NumberRange(min=1,max=1024)], default = 1)
@@ -100,6 +118,9 @@ class WindowRank(Form):
     remove_rank = ButtonField(_LABELS.get('remove_rank'), render_kw={'class':'removeRow'})
 
 class OcatParamForm(FlaskForm):
+    """
+    Ocat Data Page Python WTForm for altering parameters.
+    """
     #
     # --- General
     #

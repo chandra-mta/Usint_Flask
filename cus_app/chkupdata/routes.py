@@ -10,9 +10,7 @@ Parameter Check Page
 """
 import os
 import json
-from datetime import datetime, timedelta
-
-from flask import render_template, request, session, redirect, url_for, flash
+from flask import render_template, request, redirect, url_for, flash
 from flask_login import current_user
 
 from cus_app.models import register_user
@@ -111,6 +109,9 @@ def index(obsidrev):
 @bp.route('/', methods=['GET', 'POST'])
 @bp.route('/index', methods=['GET', 'POST'])
 def provide_obsidrev():
+    """
+    If the provided obsid.rev is not present in the Usint revision database, display this page to input the correct obsid.rev
+    """
     obsidrev_form = ObsidRevForm(request.form)
     if request.method == "POST" and obsidrev_form.is_submitted():
         return redirect(url_for('chkupdata.index', obsidrev = obsidrev_form.obsidrev.data))

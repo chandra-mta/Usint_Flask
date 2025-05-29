@@ -84,6 +84,9 @@ def confirm():
 
 @bp.route('/finalize', methods=['GET', 'POST'])
 def finalize():
+    """
+    Perform the approvals and display the completion page.
+    """
     to_approve = session.pop('to_approve', {})
     try:
         for obsid, ocat_data in to_approve.items():

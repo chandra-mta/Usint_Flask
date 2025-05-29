@@ -233,11 +233,11 @@ def pull_revision(order_by = {'id': 'asc'}, **kwargs):
     #
     # --- Kwarg processing is ordered by order of execution (WHERE, ORDER_BY, LIMIT)
     #
-    before = _to_epoch(kwargs.pop('before', None))
+    before = to_epoch(kwargs.pop('before', None))
     if before is not None:
         query = query.where(Revision.time <= before)
         
-    after = _to_epoch(kwargs.pop('after', None))
+    after = to_epoch(kwargs.pop('after', None))
     if after is not None:
         query = query.where(Revision.time >= after)
     
@@ -347,7 +347,7 @@ def remove(revision_id, signoff_id, column):
         db.session.add(signoff)
     db.session.commit()
 
-def _to_epoch(time):
+def to_epoch(time):
     """
     Convert variety of time input to epoch time
     """
