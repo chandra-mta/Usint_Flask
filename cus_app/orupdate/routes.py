@@ -12,7 +12,7 @@ import os
 import json
 from datetime import datetime, timedelta
 
-from flask import render_template, request, session, redirect, url_for
+from flask import render_template, request, session, redirect, url_for, flash
 from flask_login import current_user
 
 from cus_app.models import register_user
@@ -65,6 +65,8 @@ def index():
         user = dbi.user_by_name(order_form.username.data)
         if user is not None:
             status_page_order_kwarg = {'order_user': user.id}
+        else:
+            flash("Unknown username. Please verify spelling.")
 
     session['status_page_order_kwarg'] = status_page_order_kwarg
     result = dbi.pull_status(**status_page_order_kwarg)
