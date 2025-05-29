@@ -16,31 +16,27 @@ for web interface transactions.
 import os
 from datetime import datetime, timedelta
 import json
-from math import sqrt
 from sqlalchemy import select, desc, case, text, or_, delete
 from sqlalchemy.orm.exc import NoResultFound
 from cus_app import db
+import cus_app.emailing as mail
 from cus_app.models import User, Revision, Signoff, Parameter, Request, Original, Schedule
 from flask import flash
 from flask_login import current_user
-from cus_app.supple.helper_functions import coerce_json, DATETIME_FORMATS, is_open, get_next_weekday, coerce
+from cus_app.supple.helper_functions import coerce_to_json, DATETIME_FORMATS, is_open, get_next_weekday, coerce
+from cus_app.supple.read_ocat_data import read_basic_ocat_data
 from calendar import MONDAY, SUNDAY
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
     _PARAM_SELECTIONS = json.load(f)
 
-def construct_revision(obsid,ocat_data,kind,org_dict = {},req_dict = {}):
+def construct_revision(obsid,ocat_data,kind,notes = None):
     """
     Generate a Revision ORM object based on the provided obsid information
     """
     rev_no = find_next_rev_no(obsid)
     curr_epoch = int(datetime.now().timestamp())
-    #: Identify Notes
-    if kind == 'norm':
-        notes = construct_notes(org_dict, req_dict)
-    else:
-        notes = None
     revision = Revision(obsid = int(obsid),
                     revision_number = rev_no,
                     kind = kind,
@@ -50,54 +46,6 @@ def construct_revision(obsid,ocat_data,kind,org_dict = {},req_dict = {}):
                     notes = notes
                     )
     return revision
-
-def construct_notes(org_dict, req_dict):
-    """
-    Construct notes json based on change requests
-    """
-    notes = {}
-    ra = None
-    dec = None
-    ora = None
-    odec = None
-    for param, val in req_dict.items():
-        if param == 'targname':
-            notes.update({'target_name_change':True})
-        elif param == 'comments':
-            notes.update({'comment_change': True})
-        elif param == 'instrument':
-            notes.update({'instrument_change': True})
-        elif param == 'grating':
-            notes.update({'grating_change': True})
-        elif param in ('dither_flag', 'window_flag', 'roll_flag', 'spwindow_flag'):
-            notes.update({'flag_change': True})
-        elif param == 'ra':
-            ra = val
-        elif param == 'dec':
-            dec = val
-    if ra is not None or dec is not None:
-        ora = org_dict.get('ra')
-        if ra is None:
-            ra = ora
-        odec = org_dict.get('dec')
-        if dec is None:
-            dec = odec
-        if ora != 0 and odec != 0 and is_large_coord_shift(ra,dec, ora, odec):
-                notes.update({'large_coordinate_change': True})
-    
-    if len(notes) > 0:
-        return json.dumps(notes)
-    else:
-        return None
-
-def is_large_coord_shift(ra,dec, ora, odec):
-    if ora is None or odec is None:
-        return False
-    diff = sqrt((ora -ra)**2 + (odec - dec)**2)
-    if diff > 0.1333:
-        return True
-    else:
-        return False
 
 def construct_signoff(rev_obj, req_dict={}):
     """
@@ -156,6 +104,8 @@ def perform_signoff(signoff_id, signoff_kind):
     signoff_id = int(signoff_id)
     curr_epoch = int(datetime.now().timestamp())
     signoff_obj = db.session.execute(select(Signoff).where(Signoff.id == signoff_id)).scalar_one()
+    matching_rev = signoff_obj.revision
+    ocat_data = read_basic_ocat_data(matching_rev.obsid)
     if signoff_kind == 'gen':
         signoff_obj.general_status = 'Signed'
         signoff_obj.general_signoff_id = current_user.id
@@ -177,18 +127,24 @@ def perform_signoff(signoff_id, signoff_kind):
         signoff_obj.usint_signoff_id = current_user.id
         signoff_obj.usint_time = curr_epoch
         if signoff_kind == 'approve':
-            #: Additionally create an approval revision and signoff.
-            matching_rev = signoff_obj.revision
-            new_revision = Revision(obsid = matching_rev.obsid,
-                                    revision_number = find_next_rev_no(matching_rev.obsid),
-                                    kind = 'asis',
-                                    sequence_number = matching_rev.sequence_number,
-                                    time = curr_epoch,
-                                    user_id = current_user.id
-            )
-            new_signoff = construct_auto_signoff(new_revision)
-            db.session.add(new_revision)
-            db.session.add(new_signoff)
+            if not is_approved(matching_rev.obsid):
+                #: Additionally create an approval revision and signoff.
+                new_revision = Revision(obsid = matching_rev.obsid,
+                                        revision_number = find_next_rev_no(matching_rev.obsid),
+                                        kind = 'asis',
+                                        sequence_number = matching_rev.sequence_number,
+                                        time = curr_epoch,
+                                        user_id = current_user.id
+                )
+                new_signoff = construct_auto_signoff(new_revision)
+                db.session.add(new_revision)
+                db.session.add(new_signoff)
+                #: Also send notification email if performing this special approval signoff
+                msg = mail.quick_approval_state_email(ocat_data, new_revision)
+                mail.send_msg(msg)
+            else:
+                flash(f"Obsid {signoff_obj.revision.obsid} already approved. Performing only Usint Signoff.")
+    mail.signoff_notify(ocat_data, matching_rev, signoff_obj)
     db.session.commit()
 
 def construct_requests(rev_obj, req_dict):
@@ -201,7 +157,7 @@ def construct_requests(rev_obj, req_dict):
             param = pull_param(key)
             req = Request(revision_id= rev_obj.id,
                         parameter_id = param.id,
-                        value = coerce_json(value)
+                        value = coerce_to_json(value)
             )
             all_requests.append(req)
     return all_requests
@@ -217,7 +173,7 @@ def construct_originals(rev_obj, org_dict):
                 param = pull_param(key)
                 req = Original(revision_id= rev_obj.id,
                             parameter_id = param.id,
-                            value = coerce_json(value)
+                            value = coerce_to_json(value)
                 )
                 all_originals.append(req)
     return all_originals
@@ -537,20 +493,22 @@ def update_schedule_entry(schedule_id, user_id, start_string, stop_string):
         can_edit_prev = prev_sched.user is None and prev_duration < 518400
         can_edit_next = next_sched.user is None and next_duration < 518400
 
-        if not can_edit_prev and not can_edit_next:
-            flash("Updated entry less that typical week duration and cannot fit into adjacent entries. Please Correct.")
-            return None
-        
-        if prev_duration < next_duration:
-            if can_edit_prev:
-                prev_sched.stop = start - timedelta(days=1)
-            elif can_edit_next:
-                next_sched.start = stop + timedelta(days=1)
-        else:
-            if can_edit_next:
-                next_sched.start = stop + timedelta(days=1)
-            elif can_edit_prev:
-                prev_sched.stop = start - timedelta(days=1)
+        #: Check if we need to edit the adjacent split values. If so, then runs checks for how to do so.
+        if not ((start - prev_sched.stop).total_seconds() <= 86400 and (next_sched.start - stop).total_seconds() <= 86400 ):
+            if not can_edit_prev and not can_edit_next:
+                flash("Updated entry less that typical week duration and cannot fit into adjacent entries. Please Correct.")
+                return None
+            
+            if prev_duration < next_duration:
+                if can_edit_prev:
+                    prev_sched.stop = start - timedelta(days=1)
+                elif can_edit_next:
+                    next_sched.start = stop + timedelta(days=1)
+            else:
+                if can_edit_next:
+                    next_sched.start = stop + timedelta(days=1)
+                elif can_edit_prev:
+                    prev_sched.stop = start - timedelta(days=1)
     
     #: Ensure the time period entry matches those listed on the form
     sched.start = start
@@ -560,6 +518,14 @@ def update_schedule_entry(schedule_id, user_id, start_string, stop_string):
         sched = db.session.execute(select(Schedule).where(Schedule.id == schedule_id)).scalar_one()
         sched.user_id = user_id
         sched.assigner_id = current_user.id
+        subject = 'Update in TOO POC Duty Signup'
+        if sched.user_id == sched.assigner_id:
+            content = f"{sched.user.full_name} ({sched.user.username}) has signed up for POC duty on the following period(s):\n\n"
+        else:
+            content = f"{sched.user.full_name} ({sched.user.username}) has been assigned POC duty by {current_user.full_name} ({current_user.username}) on the following period(s):\nIf this is unexpected. Please contact the assigner.\n\n"
+        content += f"Start: {start.strftime("%B %d %Y")}\nStop:  {stop.strftime("%B %d %Y")}\n"
+        to = [sched.user.email, current_user.email]
+        mail.send_email(content, subject, to)
     else:
         flash("No user selected. Only time period(s) adjusted.")
 

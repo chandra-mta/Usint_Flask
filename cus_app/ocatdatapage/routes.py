@@ -16,7 +16,7 @@ Session Data
 * orient_maps_<obsid>: Hyperlinks to images of observation aimpoint in the RASS, ROSAT, and DSS surveys.
 * flag_override_<obsid>: Overriding state of the rank-dependent flags so that information is reduced to Y/N. Corrected in post-processing form the fod.format_POST() function when recording revision.
 * ocat_form_dict_<obsid>: Proposed revision of parameters from form edit.
-* multi_obsid_<obsid>: Set of additional obsids to perform the revision request on.
+* multi_obsid_<obsid>: Set of extra obsids to perform the revision request on.
 
 """
 
@@ -32,13 +32,14 @@ from flask import current_app, render_template, request, flash, session, redirec
 from flask_login    import current_user
 
 from cus_app import db
+import cus_app.emailing as mail
 from cus_app.models import register_user, User, Revision, Signoff, Parameter, Request, Original
 from cus_app.ocatdatapage import bp
 from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
 import cus_app.supple.database_interface as dbi
 import cus_app.ocatdatapage.format_ocat_data as fod
-from cus_app.supple.helper_functions import create_obsid_list
+from cus_app.supple.helper_functions import coerce_from_json, create_obsid_list, construct_notes, check_obsid_in_or_list
 
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
@@ -108,9 +109,16 @@ def confirm(obsid=None):
     #: An original state dictionary is always created and filled. The change request dictionary could be empty if the change is non-norm.
     org_dict, req_dict = fod.construct_entries(ocat_form_dict, ocat_data)
     multi_obsid = create_obsid_list(ocat_form_dict.get('multiobsid'), obsid)
-    or_dict = rod.check_obsid_in_or_list([int(obsid)] + multi_obsid)
+    or_dict = check_obsid_in_or_list([int(obsid)] + multi_obsid)
     is_approved = dbi.is_approved(obsid)
     kind = ocat_form_dict.get("submit_choice")
+    able_to_finalize = True
+    #
+    # --- Specific criteria which prevents the finalize button from being rendered
+    #
+    if kind == 'clone' and 'comments' not in req_dict:
+        flash("Cannot clone obsid without providing comment to explain why.")
+        able_to_finalize = False
     if request.method == "POST" and form.is_submitted(): #: no validators
         if form.previous_page.data:
             #: Go back and edit
@@ -119,51 +127,70 @@ def confirm(obsid=None):
             #: Write changes to the database files
             multi_dict = {'requested': [], 'cannot_request': [], 'unaffected': []}
             try:
+                #: Identify Notes
+                if kind == 'norm':
+                    notes = construct_notes(ocat_data, org_dict, req_dict)
+                else:
+                    notes = None
                 #: Change for the directly-edited obsid
-                write_to_database(obsid, ocat_data, kind, org_dict, req_dict)
+                main_rev = write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict)
+                #: intermediary variables for multi_obsid emails
+                multi_rev = {k:None for k in multi_obsid}
+                multi_ocat_data = {k:None for k in multi_obsid}
                 #: Changes to the obsids listed in the multi_obsid
-                for additional_obsid in multi_obsid:
-                    additional_ocat_data = rod.read_ocat_data(additional_obsid)
+                for extra_obsid in multi_obsid:
+                    extra_ocat_data = rod.read_ocat_data(extra_obsid)
+                    multi_ocat_data[extra_obsid] = extra_ocat_data
 
-                    if additional_ocat_data.get('status') in ['scheduled', 'unobserved', 'untriggered']:
-                        multi_dict['cannot_request'].append(additional_obsid)
+                    if extra_ocat_data.get('status') in ['scheduled', 'unobserved', 'untriggered']:
+                        multi_dict['cannot_request'].append(extra_obsid)
                         continue
                     
                     #: Generate form specific copies of ocat data. Added to ocat data to later change comparison.
-                    additional_ocat_data.update(fod.generate_additional(additional_ocat_data))
-                    additional_org_dict, additional_req_dict = fod.construct_entries(ocat_form_dict, additional_ocat_data)
+                    extra_ocat_data.update(fod.generate_additional(extra_ocat_data))
+                    extra_org_dict, extra_req_dict = fod.construct_entries(ocat_form_dict, extra_ocat_data)
 
                     #: Write the database changes for this new obsid, skipping past incompatible parameter changes.
-                    additional_req_dict = {} #: Only want to make changes as confirmed by user. Not infer new ones from construct_entries()
+                    extra_req_dict = {} #: Only want to make changes as confirmed by user. Not infer new ones from construct_entries()
                     if (req_dict.get('instrument') or org_dict.get('instrument')) in ['ACIS-I', 'ACIS-S']:
                         #: Current request involves ACIS
-                        if  additional_org_dict.get('instrument')in ['HRC-I', 'HRC-S']:
-                            additional_req_dict = {k:v for k,v in req_dict.items() if k not in _PARAM_SELECTIONS['acis_signoff_params']}
+                        if  extra_org_dict.get('instrument')in ['HRC-I', 'HRC-S']:
+                            extra_req_dict = {k:v for k,v in req_dict.items() if k not in _PARAM_SELECTIONS['acis_signoff_params']}
                         else:
-                            additional_req_dict = req_dict
+                            extra_req_dict = req_dict
                     
                     if (req_dict.get('instrument') or org_dict.get('instrument')) in ['HRC-I', 'HRC-S']:
                         #: Current request involves ACIS
-                        if  additional_org_dict.get('instrument')in ['ACIS-I', 'ACIS-S']:
-                            additional_req_dict = {k:v for k,v in req_dict.items() if k not in ['hrc_timing_mode', 'hrc_zero_block', 'hrc_si_mode']}
+                        if  extra_org_dict.get('instrument')in ['ACIS-I', 'ACIS-S']:
+                            extra_req_dict = {k:v for k,v in req_dict.items() if k not in ['hrc_timing_mode', 'hrc_zero_block', 'hrc_si_mode']}
                         else:
-                            additional_req_dict = req_dict
+                            extra_req_dict = req_dict
                     
-                    if len(additional_req_dict) == 0:
-                        multi_dict['unaffected'].append(additional_obsid)
+                    if len(extra_req_dict) == 0:
+                        multi_dict['unaffected'].append(extra_obsid)
                         continue
 
-                    multi_dict['requested'].append(additional_obsid)
-                    write_to_database(additional_obsid, additional_ocat_data, kind, additional_org_dict, additional_req_dict)
+                    multi_dict['requested'].append(extra_obsid)
+                    #: Identify Notes
+                    if kind == 'norm':
+                        notes = construct_notes(ocat_data, extra_org_dict, extra_req_dict)
+                    else:
+                        notes = None
+                    multi_rev[extra_obsid] = write_to_database(extra_obsid, extra_ocat_data, kind, notes, extra_org_dict, extra_req_dict)
             except Exception as e:  # noqa: E722
                 #: In the event of an error, roll back the database session to avoid commits instilled by the server-side cookies
                 #: TODO. Do we still clear the session cookies if the database injection failed? I'd assume not...
                 db.session.rollback()
                 raise e #: TODO replace with abort(500)
+            
+            #: SQLAlchemy prepared all database transactions successfully. Now to prepare notifications.
+            msgs = determine_msgs(ocat_data, main_rev, multi_rev, multi_ocat_data)
+            mail.send_msg(msgs)
             session[f'kind_{obsid}'] = kind
             session[f'multi_dict_{obsid}'] = multi_dict
             return redirect(url_for('ocatdatapage.finalize', obsid=obsid))
     return render_template('ocatdatapage/confirm.html',
+                           able_to_finalize = able_to_finalize,
                             form = form,
                             obsid = obsid,
                             multi_obsid = multi_obsid,
@@ -243,11 +270,14 @@ def fetch_session_data(obsid):
 
     return ocat_data, warning, orient_maps, ocat_form_dict
 
-def write_to_database(obsid, ocat_data, kind, org_dict, req_dict={}):
+def write_to_database(obsid, ocat_data, kind, notes, org_dict, req_dict={}):
     """
     Perform a set of database injections into the relevant usint.db tables for changes made in the ocatdatapage
+
+    :return: Revision object generated by the SQLAlchemy constructions
+    :rtype: models.Revision()
     """
-    rev = dbi.construct_revision(obsid,ocat_data,kind,org_dict,req_dict)
+    rev = dbi.construct_revision(obsid,ocat_data,kind,notes)
     db.session.add(rev)
     sign = dbi.construct_signoff(rev,req_dict)
     db.session.add(sign)
@@ -263,3 +293,192 @@ def write_to_database(obsid, ocat_data, kind, org_dict, req_dict={}):
         reqs = dbi.construct_requests(rev, only_comment)
         for req in reqs:
             db.session.add(req)
+    return rev
+
+def determine_msgs(main_ocat_data, main_rev, multi_rev, multi_ocat_data):
+    """
+    Determine parameter change notification message from Revision() table ORMs.
+    Returns a list of messages in case multiple are required for a specific revision.
+
+    :NOTE:
+
+    :return: Email messages for the proposed revision, using sqlalchemy-related ORMs.
+    :rtype: list(EmailMessage())
+
+    """
+    msgs = []
+    #: Main notification email always listed first.
+    msgs.append(_parameter_change_log_msg(main_ocat_data, main_rev))
+    #: Regular Revision Emails
+    for ocat_data, rev in zip(multi_ocat_data.values(), multi_rev.values()):
+        msgs.append(_parameter_change_log_msg(ocat_data, rev))
+    #: Multi Obsid related emails
+    if len(multi_ocat_data) > 0:
+        msgs.append(_multi_obsid_msg(msgs[0], main_rev, multi_rev))
+
+    mp_msg = _mp_notes_msg([main_rev] + list(multi_rev.values()))
+    if mp_msg is not None:
+        msgs.append(mp_msg)
+    
+    #: Fast TOO changes if applicable
+    for ocat_data, rev in zip([main_ocat_data] + list(multi_ocat_data.values()), [main_rev] + list(multi_rev.values())):
+        too_msg = _too_msg(ocat_data, rev)
+        if too_msg is not None:
+            msgs.append(too_msg)
+    return msgs
+
+def _parameter_change_log_msg(ocat_data,rev):
+    """
+    Generate Parameter Change Log Message for the specific kind of revision.
+
+    :return: Parameter Change Log message
+    :rtype: EmailMessage()
+    """
+    if rev.kind in ('asis, remove'):
+        #: Only send to the usint user and CUS email archive when changing the approval state
+        return mail.quick_approval_state_email(ocat_data, rev)
+    elif rev.kind == 'clone':
+        #: Notification edge case.
+        subject = f"Parameter Change Log: {rev.obsidrev()} (Split Request)"
+        content = ""
+        for param in ('obsid', 'seq_nbr', 'targname'):
+            content += f"{_LABELS.get(param)} = {ocat_data.get(param)}\n"
+        content += f"User = {current_user.username}\nVERIFIED CLONE\n"
+        content += f"PAST COMMENTS = \n{ocat_data.get('comments') or ''}\n\n"
+        content += f"NEW COMMENTS = \n{json.loads(rev.request[0].value)}\n\n"
+        content += f"PAST REMARKS = \n{ocat_data.get('remarks') or ''}\n\n"
+        content += f"Parameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+        content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = rev.obsidrev())}\n"
+        return mail.construct_msg(content, subject, current_user.email, cc =mail.ARCOPS)
+        
+    elif rev.kind == 'norm':
+        #: Most common type of notification.
+        subject = f"Parameter Change Log: {rev.obsidrev()}"
+        content = ""
+        for param in ('obsid', 'seq_nbr', 'targname'):
+            content += f"{_LABELS.get(param)} = {ocat_data.get(param)}\n"
+        content += f"User = {current_user.username}\nVERIFIED NORM\n"
+        #: Prepare formatting for parameter requests, starting with comments and remarks edge case.
+        org_dict = {}
+        req_dict = {}
+        #: Iterate through list of table entries.
+        for entry in rev.original:
+            org_dict[entry.parameter.name] = json.loads(entry.value)
+        for entry in rev.request:
+            req_dict[entry.parameter.name] = json.loads(entry.value)
+
+        content += f"PAST COMMENTS = \n{org_dict.get('comments') or ''}\n\n"
+        if req_dict.get('comments') is not None:
+            content += f"NEW COMMENTS = \n{req_dict.get('comments')}\n\n"
+        content += f"PAST REMARKS = \n{ocat_data.get('remarks') or ''}\n\n"
+        if req_dict.get('remarks') is not None:
+            content += f"NEW REMARKS = \n{req_dict.get('remarks')}\n\n"
+        
+        gen = set(_PARAM_SELECTIONS['general_signoff_params']).intersection(req_dict.keys())
+        acis = (set(_PARAM_SELECTIONS['acis_signoff_params']) - set(_PARAM_SELECTIONS['window_columns'])).intersection(req_dict.keys())
+        acis_win = set(_PARAM_SELECTIONS['window_columns']).intersection(req_dict.keys())
+
+        if len(gen) > 0:
+            content += "\nGENERAL CHANGES:\n"
+            for param in gen:
+                content += f"{param.upper()} ({_LABELS.get(param)}) changed from {org_dict.get(param)} to {req_dict.get(param)}\n"
+        
+        if len(acis) > 0:
+            content += "\nACIS CHANGES:\n"
+            for param in acis:
+                content += f"{param.upper()} ({_LABELS.get(param)}) changed from {org_dict.get(param)} to {req_dict.get(param)}\n"
+        
+        if len(acis_win) > 0:
+            content += "\nACIS WINDOW CHANGES:\n"
+            for param in acis_win:
+                content += f"{param.upper()} ({_LABELS.get(param)}) changed from {org_dict.get(param)} to {req_dict.get(param)}\n"
+
+        content += f"\nParameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+        content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = rev.obsidrev())}\n"
+        #: Use Signoff to determine CC recipients.
+        cc = set()
+        if rev.signoff.general_status == "Pending":
+            cc.add(mail.ARCOPS)
+        if rev.signoff.acis_status == "Pending":
+            cc.add(mail.ARCOPS)
+        if rev.signoff.acis_si_status == "Pending":
+            cc.add(mail.ACIS)
+        if rev.signoff.hrc_si_status == "Pending":
+            cc.add(mail.HRC)
+        return mail.construct_msg(content, subject, current_user.email, cc=cc)
+    
+def _multi_obsid_msg(main_msg, main_rev, multi_rev):
+    """
+    Parse the main obsid message to create the multi obsid norm change notification.
+    """
+    _subject = 'Multiple Obsids Are Submitted for Parameter Changes'
+    _content = f"Usint User {current_user.username} submitted parameter change requests to multiple obsids: \n\n"
+    _content += f"{main_rev.obsid} : {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = main_rev.obsidrev())}\n"
+    for _rev in multi_rev.values():
+        _content += f"{_rev.obsid} : {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = _rev.obsidrev())}\n"
+    _content += f"\nUpdated parameters for {main_rev.obsid} are:\n\n"
+    _body = [x for x in main_msg.get_content().split('\n') if x != '']
+    _start = 0
+    _end = len(_body)
+    for i in range(len(_body)):
+        if _body[i] in ("GENERAL CHANGES:", "ACIS CHANGES:", "ACIS WINDOW CHANGES:"):
+            _start = i
+            break
+    for i in range(_start, len(_body)):
+        if "Parameter Check Page" in _body[i]:
+            _end = i
+            break
+    _content += "\n"+"\n".join(_body[_start:_end])
+
+    return mail.construct_msg(_content, _subject, mail.ARCOPS)
+
+def _mp_notes_msg(revisions):
+    """
+    Construct notes message for Mission Planning.
+    """
+    if not isinstance(revisions, (list,tuple,set)):
+        revisions = [revisions]
+    
+    relevant_to_mp = False
+    key_to_rev = {
+        'target_name_change': [],
+        'large_coordinate_change': [],
+        'obsdate_under10': [],
+        'on_or_list': []
+    }
+    for rev in revisions:
+        notes = coerce_from_json(rev.notes) or {}
+        for key in ('target_name_change', 'large_coordinate_change', 'obsdate_under10', 'on_or_list'):
+            if notes.get(key):
+                key_to_rev[key].append(rev)
+                relevant_to_mp = True
+    
+    if not relevant_to_mp:
+        return None
+    else:
+        subject = f'POC {current_user.username} submitted a request which requires MP attention'
+        content = ''
+        for k,v in key_to_rev.items():
+            if len(v) > 0:
+                content += f"\n{_LABELS.get(k)}\n\n"
+                for rev in v:
+                    content += f"{rev.obsid}: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = rev.obsidrev())}\n"
+        return mail.construct_msg(content, subject, mail.MP, cc = current_user.email)
+
+def _too_msg(ocat_data, revision):
+    """
+    Construct Fast TOO change message for ArcOps
+    """
+    if ocat_data.get('too_type') in ('FAST', '0-5', '0-4') and revision.kind == 'norm':
+        subject = f"{ocat_data.get('obs_type').upper()} observation {ocat_data.get('obsid')} Parameter Change ({revision.obsidrev()})"
+        content = f"{ocat_data.get('obs_type').upper()} observation {ocat_data.get('obsid')} parameter changes were submitted.\n\n"
+        for param in ('tooid', 'too_type', 'too_trig', 'too_remarks'):
+            content += f"{_LABELS.get(param) + ':':<12}{ocat_data.get(param)}\n"
+        
+        content += f"\n\nParameter Status Page: {current_app.config['HTTP_ADDRESS']}{url_for('orupdate.index')}\n"
+        content += f"Parameter Check Page: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = revision.obsidrev())}\n"
+        return mail.construct_msg(content, subject, mail.ARCOPS)
+    else:
+        return None
+
+

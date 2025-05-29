@@ -5,12 +5,15 @@
 :Last Updated: Mar 13, 2025
 
 """
+import logging.handlers
+import os
 import sys
 import signal
 import traceback
 from datetime import datetime
 from itertools import zip_longest
 import json
+import logging
 
 from flask import Flask, render_template
 from flask_bootstrap import Bootstrap
@@ -18,7 +21,7 @@ from flask_session import Session
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager
 from config import _CONFIG_DICT
-from cus_app.supple.helper_functions import rank_ordr, approx_equals, get_more, IterateRecords
+from cus_app.supple.helper_functions import rank_ordr, approx_equals, get_more, IterateRecords, coerce_from_json
 
 #
 # --- SQLAlchemy event handler to turn on Foreign Key Constraints for every engine connection.
@@ -32,12 +35,6 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
-
-def loadnotes(notes):
-    if notes is None:
-        return {}
-    else:
-        return json.loads(notes)
 
 #
 # --- Flask Additions
@@ -56,7 +53,7 @@ function_dict = {
     'approx_equals': approx_equals,
     'zip': zip,
     'datetime': datetime,
-    'loadnotes': loadnotes,
+    'coerce_notes': lambda x: coerce_from_json(x) or {},
     'get_more': get_more,
     'IterateRecords': IterateRecords
 }
@@ -111,7 +108,7 @@ def create_app(_configuration_name):
         with app.app_context():
             print("Running graceful shutdown")
             try:
-                pass
+                pass #: Locate shutdown functions here.
             except Exception:
                 traceback.print_exc()
             finally:
@@ -173,4 +170,29 @@ def create_app(_configuration_name):
     @app.route("/")
     def index():
         return render_template("index.html")
+    #
+    # --- Setup file logger for UsintErrorHandler if not using the Werkzeug Browser Debugger
+    #
+    if not app.debug:
+        #
+        # --- keep last 10 error logs
+        #
+        log_dir = app.config.get("LOG_DIR") or os.path.join(app.instance_path, 'logs')
+        if not os.path.exists(log_dir):
+            os.mkdir(log_dir)
+        file_handler = logging.handlers.RotatingFileHandler(
+            os.path.join(log_dir, "ocat.log"),
+            maxBytes=51200,
+            backupCount=10,
+        )
+        file_handler.name = "Error-Info"
+        file_handler.setFormatter(
+            logging.Formatter(
+                "%(asctime)s %(levelname)s: %(message)s " "[in %(pathname)s:%(lineno)d]"
+            )
+        )
+        file_handler.setLevel(logging.INFO)
+        app.logger.addHandler(file_handler)
+        app.logger.setLevel(logging.INFO)
+
     return app

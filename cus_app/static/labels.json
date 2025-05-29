@@ -135,9 +135,20 @@
     "lower_threshold": "Lowest Energy",
     "pha_range": "Energy Range",
     "sample": "Sample Rate",
+    "tooid": "TOO ID",
+    "too_trig": "TOO Trigger",
+    "too_type": "TOO Type",
+    "too_start": "TOO Start",
+    "too_stop": "TOO Stop",
+    "too_followup": "# of Follow-up Observations",
+    "too_remarks": "TOO Remarks",
     "submit_choice": "Submit Options",
     "multiobsid": "Multi-Obsid",
     "submit": "Submit",
     "previous_page": "Previous Page",
-    "finalize": "Finalize"
+    "finalize": "Finalize",
+    "target_name_change": "A target name change was requested for the following obsid(s).",
+    "large_coordinate_change": "A coordinate shift was requested for the following obsid(s).",
+    "obsdate_under10": "A parameter change was requested for the following obsid(s) which are scheduled in less than 10 days.",
+    "on_or_list": "A target name change was requested for the following obsid(s)."
 }

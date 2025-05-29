@@ -61,6 +61,8 @@ class Revision(db.Model):
         - grating_change : Boolean
         - flag_change : Boolean, listed for any change in constraint-specific parameters (dither, time, roll, ACIS window)
         - large_coordinate_change : Boolean, listed for a >8' cumulative shift in RA, DEC coordinates
+        - obsdate_under10: Boolean, listed if the soe_st_sched_date or lts_lt_plan dates are within 10 days of the revision
+        - on_or_list: Boolean, listed if obsid in the revision is in on the active OR list
     """
     __tablename__ = "revisions"
     __table_args__ = {'extend_existing': True}
@@ -83,6 +85,9 @@ class Revision(db.Model):
         
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    
+    def obsidrev(self):
+        return f"{self.obsid}.{self.revision_number:>03}"
 
     def __repr__(self) -> str:
         return f"Revision(id={self.id!r}, user_id={self.user_id!r}, obsid={self.obsid!r}, revision_number={self.revision_number!r}, kind={self.kind!r})"
@@ -244,7 +249,6 @@ def register_user():
     
     user = db.session.execute(db.select(User).where(User.username == username)).scalar()
     login_user(user)
-    #current_app.logger.info(f"Login User: {username}") #: TODO implement logger
 
 @login.user_loader
 def load_user(id):
