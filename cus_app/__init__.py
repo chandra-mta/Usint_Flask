@@ -87,6 +87,8 @@ def create_app(_configuration_name):
     :NOTE: When testing the application, refreshing the web browser can sometimes retain previous form selections in rendering the webpage, even if the FlaskForm
     is altered to render the webpage differently or display different starting data in the form. It's most reliable to close the webpage entirely and reopen to test changes.
 
+    :NOTE: Wherever form input is required, use the PRG design pattern (https://en.wikipedia.org/wiki/Post/Redirect/Get)
+
     """
     app = Flask(__name__)
     app.jinja_env.globals.update(function_dict)
@@ -169,6 +171,9 @@ def create_app(_configuration_name):
     #
     @app.route("/")
     def index():
+        """
+        Render the Default Usint page
+        """
         return render_template("index.html")
     #
     # --- Setup file logger for UsintErrorHandler if not using the Werkzeug Browser Debugger

@@ -21,19 +21,15 @@ Session Data
 """
 
 import os
-import re
 import json
-from datetime import datetime
-import traceback
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
-from wtforms.validators import ValidationError
 
-from flask import current_app, render_template, request, flash, session, redirect, url_for, abort
+from flask import current_app, render_template, request, flash, session, redirect, url_for
 from flask_login    import current_user
 
 from cus_app import db
 import cus_app.emailing as mail
-from cus_app.models import register_user, User, Revision, Signoff, Parameter, Request, Original
+from cus_app.models import register_user
 from cus_app.ocatdatapage import bp
 from cus_app.ocatdatapage.forms import ConfirmForm, OcatParamForm
 import cus_app.supple.read_ocat_data as rod
@@ -58,11 +54,11 @@ def before_request():
 @bp.route("/<obsid>", methods=["GET", "POST"])
 @bp.route("/index/<obsid>", methods=["GET", "POST"])
 def index(obsid=None):
-    #
-    # --- Fetch all relevant ocat data in it's current state and store in session.
-    # --- Note that the 4KB limitation on client-side cookies means we use flask_session to
-    # --- integrate server-side cookie directly into the session table of the usint revision SQL database
-    #
+    """
+    Render the Ocat Data Page with accompanying form. Fetches all relevant ocat data in it's current state and store in session.
+    
+    :NOTE: The 4KB limitation on client-side cookies means we use flask_session to integrate server-side cookie directly into the session table of the usint revision SQL database
+    """
     if obsid is None or not obsid.isdigit():
         return redirect(url_for('ocatdatapage.provide_obsid'))
     try:
@@ -101,6 +97,9 @@ def index(obsid=None):
 
 @bp.route("/confirm/<obsid>", methods=["GET", "POST"])
 def confirm(obsid=None):
+    """
+    Confirm parameter changes
+    """
     #
     # --- Process the selected radio option for the desired change
     #
@@ -221,9 +220,15 @@ def finalize(obsid=None):
 
 @bp.route('/provide_obsid', methods=['GET', 'POST'])
 def provide_obsid():
+    """
+    Render this page if the provided obsid is not present in the Ocat
+    """
     return render_template('ocatdatapage/provide_obsid.html')
 
 def clear_session_data(obsid):
+    """
+    Clear intermediary variables for an observation revision from the server cookie
+    """
     session.pop(f'ocat_data_{obsid}',None)
     session.pop(f'warning_{obsid}',None)
     session.pop(f'orient_maps_{obsid}',None)
@@ -300,34 +305,31 @@ def determine_msgs(main_ocat_data, main_rev, multi_rev, multi_ocat_data):
     Determine parameter change notification message from Revision() table ORMs.
     Returns a list of messages in case multiple are required for a specific revision.
 
-    :NOTE:
-
     :return: Email messages for the proposed revision, using sqlalchemy-related ORMs.
     :rtype: list(EmailMessage())
-
     """
     msgs = []
     #: Main notification email always listed first.
-    msgs.append(_parameter_change_log_msg(main_ocat_data, main_rev))
+    msgs.append(parameter_change_log_msg(main_ocat_data, main_rev))
     #: Regular Revision Emails
     for ocat_data, rev in zip(multi_ocat_data.values(), multi_rev.values()):
-        msgs.append(_parameter_change_log_msg(ocat_data, rev))
+        msgs.append(parameter_change_log_msg(ocat_data, rev))
     #: Multi Obsid related emails
     if len(multi_ocat_data) > 0:
-        msgs.append(_multi_obsid_msg(msgs[0], main_rev, multi_rev))
+        msgs.append(multi_obsid_msg(msgs[0], main_rev, multi_rev))
 
-    mp_msg = _mp_notes_msg([main_rev] + list(multi_rev.values()))
+    mp_msg = mp_notes_msg([main_rev] + list(multi_rev.values()))
     if mp_msg is not None:
         msgs.append(mp_msg)
     
     #: Fast TOO changes if applicable
     for ocat_data, rev in zip([main_ocat_data] + list(multi_ocat_data.values()), [main_rev] + list(multi_rev.values())):
-        too_msg = _too_msg(ocat_data, rev)
-        if too_msg is not None:
-            msgs.append(too_msg)
+        _msg = too_msg(ocat_data, rev)
+        if _msg is not None:
+            msgs.append(_msg)
     return msgs
 
-def _parameter_change_log_msg(ocat_data,rev):
+def parameter_change_log_msg(ocat_data,rev):
     """
     Generate Parameter Change Log Message for the specific kind of revision.
 
@@ -407,7 +409,7 @@ def _parameter_change_log_msg(ocat_data,rev):
             cc.add(mail.HRC)
         return mail.construct_msg(content, subject, current_user.email, cc=cc)
     
-def _multi_obsid_msg(main_msg, main_rev, multi_rev):
+def multi_obsid_msg(main_msg, main_rev, multi_rev):
     """
     Parse the main obsid message to create the multi obsid norm change notification.
     """
@@ -432,7 +434,7 @@ def _multi_obsid_msg(main_msg, main_rev, multi_rev):
 
     return mail.construct_msg(_content, _subject, mail.ARCOPS)
 
-def _mp_notes_msg(revisions):
+def mp_notes_msg(revisions):
     """
     Construct notes message for Mission Planning.
     """
@@ -465,7 +467,7 @@ def _mp_notes_msg(revisions):
                     content += f"{rev.obsid}: {current_app.config['HTTP_ADDRESS']}{url_for('chkupdata.index',obsidrev = rev.obsidrev())}\n"
         return mail.construct_msg(content, subject, mail.MP, cc = current_user.email)
 
-def _too_msg(ocat_data, revision):
+def too_msg(ocat_data, revision):
     """
     Construct Fast TOO change message for ArcOps
     """

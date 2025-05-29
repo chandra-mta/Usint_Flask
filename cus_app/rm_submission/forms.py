@@ -9,6 +9,9 @@ from flask_wtf import FlaskForm
 from wtforms import SubmitField
 
 class RemoveRow(FlaskForm):
+    """
+    Form for selecting signoff column for removal.
+    """
     revision = SubmitField("Remove")
     general = SubmitField("Remove")
     acis = SubmitField("Remove")

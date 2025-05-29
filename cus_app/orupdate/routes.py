@@ -12,7 +12,7 @@ import os
 import json
 from datetime import datetime, timedelta
 
-from flask import render_template, request, session, redirect, url_for
+from flask import render_template, request, session, redirect, url_for, flash
 from flask_login import current_user
 
 from cus_app.models import register_user
@@ -22,11 +22,6 @@ from cus_app.supple.helper_functions import is_open
 import cus_app.supple.database_interface as dbi
 
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
-with open(os.path.join(stat_dir, 'labels.json')) as f:
-    _LABELS = json.load(f)
-with open(os.path.join(stat_dir, 'parameter_selections.json')) as f:
-    _PARAM_SELECTIONS = json.load(f)
-
 with open(os.path.join(stat_dir, 'color.json')) as f:
     _COLORS = json.load(f)
 
@@ -65,6 +60,8 @@ def index():
         user = dbi.user_by_name(order_form.username.data)
         if user is not None:
             status_page_order_kwarg = {'order_user': user.id}
+        else:
+            flash("Unknown username. Please verify spelling.")
 
     session['status_page_order_kwarg'] = status_page_order_kwarg
     result = dbi.pull_status(**status_page_order_kwarg)
@@ -109,5 +106,8 @@ def index():
 
 @bp.route('/<id>/<kind>', methods=['GET', 'POST'])
 def perform_signoff(id,kind):
+    """
+    Redirect page for performing the signoff
+    """
     dbi.perform_signoff(id, kind)
     return redirect(url_for('orupdate.index'))

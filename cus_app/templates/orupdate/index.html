@@ -7,6 +7,15 @@
 {% block title %}Target Parameter Status Page{% endblock %}
 {% block main_title %}Target Parameter Status Page{% endblock %}
 {% block app_content %}
+    {% with messages = get_flashed_messages() %}
+    {% if messages %}
+        {% for message in messages %}
+            <p style='color:red; font-size:160%;'>
+                {{ message }}
+            </p>
+        {% endfor %}
+    {% endif %}
+    {% endwith %}
     <p style='font-size:120%;'>
     This form contains all requested updates which have either 
     not been verified or have been verified in the last 24 hours.

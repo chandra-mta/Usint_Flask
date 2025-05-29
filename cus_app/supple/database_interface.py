@@ -10,8 +10,12 @@ Database Interface
 
 :NOTE: Some of the ORM construction functions operate on the SQLalchemy.orm.relationship() mapping to instantiate parameters,
 while others reference foreign and primary keys directly. This is because the relationship() mapping requires related ORM's to be added to the database session
-before instantiation if the relationship mapped key has the NON NULL constraint. Therefore, it's more reliable to instantiate with the primary key id's directly
-for web interface transactions. 
+before instantiation if the relationship mapped key has the NON NULL constraint.
+
+Therefore, it's more reliable to instantiate with the primary key id's directly for web interface transactions wherever possible.
+Such instances would be using the current_user.id rather than the current_user ORM.
+In other cases, this is not possible, for example when adding a Revision and Signoff table entires in a web request. This is not possible because it is not known
+what Primary Key is available in those tables until database transaction time.
 """
 import os
 from datetime import datetime, timedelta
@@ -198,8 +202,11 @@ def determine_signoff(req_dict):
             hrc_si = 'Pending'
     return gen, acis, acis_si, hrc_si
 
-def user_by_name(name):
-    return db.session.execute(select(User).where(User.username == name)).scalars().first()
+def user_by_name(username):
+    """
+    Return User ORM matching provide username. Returns None if no user matches that name.
+    """
+    return db.session.execute(select(User).where(User.username == username)).scalars().first()
 
 def pull_param(param):
     """
@@ -226,11 +233,11 @@ def pull_revision(order_by = {'id': 'asc'}, **kwargs):
     #
     # --- Kwarg processing is ordered by order of execution (WHERE, ORDER_BY, LIMIT)
     #
-    before = _to_epoch(kwargs.pop('before', None))
+    before = to_epoch(kwargs.pop('before', None))
     if before is not None:
         query = query.where(Revision.time <= before)
         
-    after = _to_epoch(kwargs.pop('after', None))
+    after = to_epoch(kwargs.pop('after', None))
     if after is not None:
         query = query.where(Revision.time >= after)
     
@@ -285,7 +292,10 @@ def pull_status(limit = 200, **kwargs):
 
 def find_next_rev_no(obsid):
     """
-    Find the revisions for the provided obsid in the listed revision table, and identify the next revision number
+    Find the revisions for the provided obsid in the listed revision table, and identify the next revision number.
+
+    :return: Next revision number
+    :rtype: int
     """
     revision_numbers = db.session.execute(select(Revision.revision_number).where(Revision.obsid == obsid)).scalars().all()
     if len(revision_numbers) == 0:
@@ -296,6 +306,8 @@ def find_next_rev_no(obsid):
 def is_approved(obsid):
     """
     Check whether an obsid is listed as approved in the usint database
+
+    :rtype: bool
     """
     obsid = int(obsid)
     revision_result = db.session.execute(db.select(Revision).where(Revision.obsid==obsid).order_by(Revision.revision_number)).scalars().all()
@@ -309,7 +321,9 @@ def is_approved(obsid):
 
 def has_open_revision(obsid):
     """
-    Check database for whether there is an open revision for the approval process
+    Check database for whether there is an open revision for the approval process.
+
+    :rtype: bool
     """
     result = db.session.execute(select(Revision, Signoff).join(Revision.signoff).where(Revision.obsid == obsid)).all()
     has_open_revision = False
@@ -321,7 +335,7 @@ def has_open_revision(obsid):
 
 def remove(revision_id, signoff_id, column):
     """
-    Remove table entires with the remove submission page
+    Remove signoff entries with the remove submission page
     """
     if column == 'revision':
         db.session.execute(delete(Revision).where(Revision.id == revision_id))
@@ -333,7 +347,7 @@ def remove(revision_id, signoff_id, column):
         db.session.add(signoff)
     db.session.commit()
 
-def _to_epoch(time):
+def to_epoch(time):
     """
     Convert variety of time input to epoch time
     """

@@ -8,10 +8,7 @@ Remove Submission Page
 :Last Updated: May 15, 2025
 
 """
-import os
-import json
 from datetime import datetime, timedelta
-
 from flask import render_template, request, redirect, url_for
 from flask_login import current_user
 
@@ -75,6 +72,9 @@ def index():
 
 @bp.route('/<revision_id>/<signoff_id>/<column>', methods=['GET'])
 def remove(revision_id, signoff_id, column):
+    """
+    PRG page for removing a signoff from a column
+    """
     dbi.remove(revision_id, signoff_id, column)
     return redirect(url_for('rm_submission.index'))
 
