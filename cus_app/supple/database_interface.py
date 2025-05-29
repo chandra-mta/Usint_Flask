@@ -493,20 +493,22 @@ def update_schedule_entry(schedule_id, user_id, start_string, stop_string):
         can_edit_prev = prev_sched.user is None and prev_duration < 518400
         can_edit_next = next_sched.user is None and next_duration < 518400
 
-        if not can_edit_prev and not can_edit_next:
-            flash("Updated entry less that typical week duration and cannot fit into adjacent entries. Please Correct.")
-            return None
-        
-        if prev_duration < next_duration:
-            if can_edit_prev:
-                prev_sched.stop = start - timedelta(days=1)
-            elif can_edit_next:
-                next_sched.start = stop + timedelta(days=1)
-        else:
-            if can_edit_next:
-                next_sched.start = stop + timedelta(days=1)
-            elif can_edit_prev:
-                prev_sched.stop = start - timedelta(days=1)
+        #: Check if we need to edit the adjacent split values. If so, then runs checks for how to do so.
+        if not ((start - prev_sched.stop).total_seconds() <= 86400 and (next_sched.start - stop).total_seconds() <= 86400 ):
+            if not can_edit_prev and not can_edit_next:
+                flash("Updated entry less that typical week duration and cannot fit into adjacent entries. Please Correct.")
+                return None
+            
+            if prev_duration < next_duration:
+                if can_edit_prev:
+                    prev_sched.stop = start - timedelta(days=1)
+                elif can_edit_next:
+                    next_sched.start = stop + timedelta(days=1)
+            else:
+                if can_edit_next:
+                    next_sched.start = stop + timedelta(days=1)
+                elif can_edit_prev:
+                    prev_sched.stop = start - timedelta(days=1)
     
     #: Ensure the time period entry matches those listed on the form
     sched.start = start
