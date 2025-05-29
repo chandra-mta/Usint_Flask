@@ -166,6 +166,7 @@ class OcatParamForm(FlaskForm):
     phase_start_margin = FloatField(_LABELS.get('phase_start_margin'), validators=[Optional(),NumberRange(min=0, max=0.5)])
     phase_end = FloatField(_LABELS.get('phase_end'), validators=[Optional(),NumberRange(min=0, max=1)])
     phase_end_margin = FloatField(_LABELS.get('phase_end_margin'), validators=[Optional(),NumberRange(min=0, max=0.5)])
+    split_interval = FloatField(_LABELS.get('split_interval'), validators=[Optional()])
     #
     # --- Other (Group)
     #

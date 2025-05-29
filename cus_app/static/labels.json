@@ -92,6 +92,7 @@
     "multitelescope": "Coordinated Observation",
     "observatories": "Observatories",
     "multitelescope_interval": "Max Coordination Offset",
+    "split_interval": "Split Interval",
     "hrc_timing_mode": "HRC Timing Mode",
     "hrc_zero_block": "Zero Block",
     "hrc_si_mode": "SI Mode",

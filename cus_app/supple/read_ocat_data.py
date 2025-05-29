@@ -36,7 +36,7 @@ _GENERAL_PARAM_LIST = ['obsid', 'targid', 'seq_nbr', 'targname', 'obj_flag', 'ob
       'status', 'data_rights', 'tooid', 'description', 'total_fld_cnt_rate', 'extended_src',\
       'uninterrupt', 'multitelescope', 'observatories', 'tooid', 'constr_in_remarks', \
       'group_id', 'obs_ao_str', 'roll_flag', 'window_flag', 'spwindow_flag', \
-      'multitelescope_interval', 'pointing_constraint', 'remarks', 'mp_remarks']
+      'multitelescope_interval', 'pointing_constraint','split_interval', 'remarks', 'mp_remarks']
 
 _ACIS_PARAM_LIST = ['exp_mode', 'ccdi0_on', 'ccdi1_on', 'ccdi2_on', 'ccdi3_on', 'ccds0_on', 'ccds1_on', \
         'ccds2_on', 'ccds3_on', 'ccds4_on', 'ccds5_on', 'bep_pack', 'onchip_sum', \
