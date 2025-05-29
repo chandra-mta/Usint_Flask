@@ -169,6 +169,9 @@ def create_app(_configuration_name):
     #
     @app.route("/")
     def index():
+        """
+        Render the Default Usint page
+        """
         return render_template("index.html")
     #
     # --- Setup file logger for UsintErrorHandler if not using the Werkzeug Browser Debugger

@@ -7,8 +7,27 @@
 :NOTE:In regular SQLAlchemy, the sqlalchemy.orm.DeclarativeBase parent class should be used to define the translation between Python classes that
 represent an SQLAlchemy ORM structure system and relational database model statements.
 For Flask SQLAlchemy, we use the instantiated db.Model as our parent class instead because it performs the same translations
-while also tying the create ORM into the Flask application context.
+while also tying the created ORM into the Flask application context.
 In **__init__.py**, the db = SQLAlchemy() call will define the db.Model class with the sqlalchemy.orm.DeclarativeBase as a parent on our behalf.
+
+:NOTE: Relationship declarations exist on the SQLAlchemy interface level and are not a part of the native SQLite table schema. They exist to provide an
+object oriented relational mapping to related table entires.
+
+:NOTE: The Usint database interface is supported by a set of interworking interfaces which require an understanding of PRG design approaches.
+    This ensures that database writes are formatted successfully and not repeated upon new or refreshed requests.
+        - PRG: https://en.wikipedia.org/wiki/Post/Redirect/Get
+        - ACA Team Sybase Interface: https://github.com/sot/ska_dbi/blob/master/ska_dbi/sqsh.py
+    
+    The SQLite database interface libraries share a single "database" session per web request so that all users operate with the same data.
+    This differs from a "web" session which stores data for the user in between web requests where common usage means they submit multiple web requests in a single sitting.
+
+    Flask-Session commits to the usint database following every edit of the server-side cookie, which will also commit any pending transaction in the 
+    SQLAlchemy database interface used for recording ocat revision information. This has the benefit of ensuring all web application processes are cleanly
+    applied on the user side, at the expense of requiring careful monitoring of development work to ensure SQLAlchemy transactions and Flask-Session cookie updates
+    occur separately during processing.
+        - https://flask-session.readthedocs.io/en/latest/
+        - https://flask-sqlalchemy.readthedocs.io/en/stable/
+        - https://flask.palletsprojects.com/en/stable/api/#flask.session
 
 """
 import os
@@ -21,6 +40,16 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 class User(db.Model, UserMixin):
+    """
+    SQLAlchemy ORM for the Usint users table. Serves as parent table for most other purposes.
+
+    :id: Primary Key
+    :username: HEAD POGO LDAP account username
+    :is_active: Boolean listing if the user is still an active Usint personnel member
+    :email: Email Address
+    :groups: colon separated string listing group membership
+    :full_name: First and last name
+    """
     __tablename__ = "users"
     __table_args__ = {'extend_existing': True}
     
@@ -40,6 +69,7 @@ class User(db.Model, UserMixin):
     schedules: Mapped[List["Schedule"]] = relationship(back_populates='user', foreign_keys="Schedule.user_id")
 
     def to_dict(self):
+        """Maps table columns to value as a python dictionary"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self) -> str:
@@ -47,10 +77,16 @@ class User(db.Model, UserMixin):
 
 class Revision(db.Model):
     """
+    SQLAlchemy ORM for an observation revision. Serves as parent table for Signoffs and parameter state tables Originals and Requests
+
     :id: Primary Key
     :obsid: Observation ID
     :revision_number: Identifying count of revisions for this obsid (indexing at one)
     :kind: Type of revision (norm, asis, remove, clone)
+        - norm: Parameter value change
+        - asis: Observation setup is approved as is
+        - remove: Mark the observation as removed from the approved list
+        - clone: Request the observation be split into multiple obsids.
     :sequence_number: Sequence Number
     :time: Epoch timestamp of when revision was created.
     :notes: JSON formatted notes of revision specifics (usually a special norm change)
@@ -63,6 +99,8 @@ class Revision(db.Model):
         - large_coordinate_change : Boolean, listed for a >8' cumulative shift in RA, DEC coordinates
         - obsdate_under10: Boolean, listed if the soe_st_sched_date or lts_lt_plan dates are within 10 days of the revision
         - on_or_list: Boolean, listed if obsid in the revision is in on the active OR list
+    :user_id: Foreign Key to matching User submitting the revision to
+    
     """
     __tablename__ = "revisions"
     __table_args__ = {'extend_existing': True}
@@ -84,9 +122,11 @@ class Revision(db.Model):
     original: Mapped[List["Original"]] = relationship(back_populates='revision', foreign_keys="Original.revision_id", cascade="all, delete, delete-orphan", passive_deletes=True)
         
     def to_dict(self):
+        """Maps table columns to value as a python dictionary"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
     
     def obsidrev(self):
+        """String representation of the obsid.rev key"""
         return f"{self.obsid}.{self.revision_number:>03}"
 
     def __repr__(self) -> str:
@@ -95,6 +135,7 @@ class Revision(db.Model):
 class Signoff(db.Model):
     """
     Signoff Table ORM. The possible status options are ('Signed', 'Not Required', 'Pending', 'Discard')
+
     :id: Primary Key
     :revision_id: Foreign Key to matching Revision table entry Primary Key
     
@@ -152,12 +193,22 @@ class Signoff(db.Model):
     usint_time: Mapped[Optional[int]]
     
     def to_dict(self):
+        """Maps table columns to value as a python dictionary"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self) -> str:
         return f"Signoff(id={self.id!r}, revision={self.revision!r}, usint_signoff_id={self.usint_signoff_id!r})"
 
 class Parameter(db.Model):
+    """
+    Observation parameters as listed in the OCAT
+
+    :id: Primary key
+    :name: Parameter name as listed in the OCAT.
+    :is_modifiable: Boolean marking if the listed parameter can be changed by Usint users.
+    :data_type: String description of the parameter datatype
+    :description: Paragraph detailing information about the parameter.
+    """
     __tablename__ = 'parameters'
     __table_args__ = {'extend_existing': True}
     
@@ -171,12 +222,21 @@ class Parameter(db.Model):
     description: Mapped[str] = mapped_column(nullable=False)
     
     def to_dict(self):
+        """Maps table columns to value as a python dictionary"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self) -> str:
         return f"Parameter(id={self.id!r}, name={self.name!r}, data_type={self.data_type!r})"
 
 class Request(db.Model):
+    """
+    Table for the set or parameter change requests paired with a revision.
+
+    :id: Primary key
+    :revision_id: Foreign Key to matching Revision table entry Primary Key
+    :parameter_id: Foreign Key to matching Parameter table entry Primary Key
+    :value: JSON formatted string of the requested value change. Can be NULL, which means it's requested to be nullified.
+    """
     __tablename__ = 'requests'
     __table_args__ = {'extend_existing': True}
     
@@ -190,12 +250,21 @@ class Request(db.Model):
     value: Mapped[str] = mapped_column(nullable=True)
 
     def to_dict(self):
+        """Maps table columns to value as a python dictionary"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self) -> str:
         return f"Request(id={self.id!r}, revision_id={self.revision_id!r}, parameter_id={self.parameter_id!r}, value={self.value!r})"
 
 class Original(db.Model):
+    """
+    Table for the set of original parameter values paired with a revision.
+
+    :id: Primary key
+    :revision_id: Foreign Key to matching Revision table entry Primary Key
+    :parameter_id: Foreign Key to matching Parameter table entry Primary Key
+    :value: JSON formatted string of original values. If an observation parameter is not listed for an obsid.rev, assume it's NULL.
+    """
     __tablename__ = 'originals'
     __table_args__ = {'extend_existing': True}
     
@@ -214,12 +283,26 @@ class Original(db.Model):
     value: Mapped[str] = mapped_column(nullable=True)
     
     def to_dict(self):
+        """Maps table columns to value as a python dictionary"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
     def __repr__(self) -> str:
         return f"Original(order_id={self.order_id!r}, revision_id={self.revision_id!r}, parameter_id={self.parameter_id!r}, value={self.value!r})"
 
 class Schedule(db.Model):
+    """
+    Table for recording TOO POC duty scheduled time periods.
+
+    :NOTE: By convention, a time period should not exceed a week of assigned duty (marked as six days since it's understood that the stop occurs at the end of the day)
+
+    
+    :id: Primary Key
+    :order_id: Secondary pseudo-primary key to determine intended order of schedule entires, rather than their creation order demonstrated by the primary key
+    :user_id: User ID for POC on duty for that time period
+    :start: Datetime of the start of POC duty (start of provided date)
+    :stop: Datetime of the end of POC duty (end of provided date)
+    :assigner_id: User ID of the user who assigned this time period's POC duty
+    """
     __tablename__ = 'schedules'
     __table_args__ = {'extend_existing': True}
     
@@ -232,15 +315,20 @@ class Schedule(db.Model):
     user: Mapped["User"] = relationship(back_populates='schedules', foreign_keys=user_id)
     start: Mapped[datetime] = mapped_column(nullable = False)
     stop: Mapped[datetime] = mapped_column(nullable = False)
+    #: Note that the assigner_id is not treated as other Foreign Key relationships as its usage is always the current user in the application.
     assigner_id: Mapped[int] = mapped_column(nullable = True)
     
     def to_dict(self):
+        """Maps table columns to value as a python dictionary"""
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
     
     def __repr__(self) -> str:
         return f"Schedule(order_id={self.order_id!r}, user_id={self.user_id!r}, start={self.start!r}, stop={self.stop!r})"
 
 def register_user():
+    """
+    Function to register the application current_user based off of the LDAP Authenticated username
+    """
     session.clear()
     if os.environ.get("REMOTE_USER") is not None:
         username = os.environ.get("REMOTE_USER") #: Defined in Shell script invoking the flask executable to test application on local host
@@ -252,4 +340,7 @@ def register_user():
 
 @login.user_loader
 def load_user(id):
+    """
+    Flask-Login decorator for pairing a logged-in user to the Usint database.
+    """
     return db.session.get(User,int(id))
