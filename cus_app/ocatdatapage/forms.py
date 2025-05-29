@@ -42,8 +42,6 @@ _CHOICE_SUBMIT = [("norm", "Normal Change"),
 stat_dir =  os.path.join(os.path.dirname(os.path.abspath(__file__)),'..', 'static')
 with open(os.path.join(stat_dir, 'labels.json')) as f:
     _LABELS = json.load(f)
-with open(os.path.join(stat_dir, 'defaults.json')) as f:
-    _DEFAULTS = json.load(f)
 
 class ButtonWidget(Input):
     input_type='button'
@@ -114,8 +112,8 @@ class OcatParamForm(FlaskForm):
     choices = [(x, x) for x in ('GO', 'TOO', 'GTO', 'CAL', 'DDT', 'CAL_ER', 'ARCHIVE', 'CDFS', 'CLP')]
     obs_type = SelectField(_LABELS.get('obs_type'), choices=choices)
 
-    ra_hms = StringField(_LABELS.get('ra_hms'), default=_DEFAULTS.get('ra_hms')) #: TODO make Javascript dynamically change RA, DEC display
-    dec_dms = StringField(_LABELS.get('dec_dms'), default=_DEFAULTS.get('dec_dms'))
+    ra_hms = StringField(_LABELS.get('ra_hms'), default="00:00:00.0000") #: TODO make Javascript dynamically change RA, DEC display
+    dec_dms = StringField(_LABELS.get('dec_dms'), default="+00:00:00.0000")
 
     y_det_offset = FloatField(_LABELS.get('y_det_offset'), validators=[Optional(),NumberRange(min=-120.0, max=120.0)])
     z_det_offset = FloatField(_LABELS.get('z_det_offset'), validators=[Optional(),NumberRange(min=-120.0, max=120.0)])
