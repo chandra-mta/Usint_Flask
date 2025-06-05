@@ -46,7 +46,7 @@ _GENERAL_PARAM_LIST = ['obsid', 'targid', 'seq_nbr', 'targname', 'obj_flag', 'ob
       'phase_constraint_flag', 'ocat_propid', 'acisid', 'hrcid', 'grating', 'instrument', \
       'rem_exp_time', 'soe_st_sched_date', 'type', 'lts_lt_plan', 'mpcat_star_fidlight_file',\
       'status', 'data_rights', 'tooid', 'description', 'total_fld_cnt_rate', 'extended_src',\
-      'uninterrupt', 'multitelescope', 'observatories', 'tooid', 'constr_in_remarks', \
+      'uninterrupt', 'multitelescope', 'observatories', 'constr_in_remarks', \
       'group_id', 'obs_ao_str', 'roll_flag', 'window_flag', 'spwindow_flag', \
       'multitelescope_interval', 'pointing_constraint','split_interval', 'remarks', 'mp_remarks']
 
